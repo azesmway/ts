@@ -4,32 +4,49 @@
  * initialization details.
  */
 Ext.define('etp.Application', {
-    extend: 'Ext.app.Application',
+  extend: 'Ext.app.Application',
 
-    name: 'etp',
+  name: 'etp',
 
-    quickTips: false,
-    platformConfig: {
-        desktop: {
-            quickTips: true
-        }
-    },
-
-    stores: [
-        // TODO: add global / shared stores here
-    ],
-
-    launch: function () {
-        // TODO - Launch the application
-    },
-
-    onAppUpdate: function () {
-        Ext.Msg.confirm('Application Update', 'This application has an update, reload?',
-            function (choice) {
-                if (choice === 'yes') {
-                    window.location.reload();
-                }
-            }
-        );
+  quickTips: false,
+  platformConfig: {
+    desktop: {
+      quickTips: true
     }
+  },
+
+  initEtp: false,
+
+  controllers: [
+    'etp.controller.Main'
+  ],
+
+  stores: [
+    // TODO: add global / shared stores here
+  ],
+
+  loading: true,
+
+  defaultToken: 'home',
+  loginToken: 'login',
+
+  launch: function () {
+    var me = this;
+
+    Ext.util.Format.defaultDateFormat = 'd.m.Y';
+  },
+
+  isLoggedIn: function () {
+    return localStorage.getItem("EtpLoggedIn") === '1';
+  },
+
+  onAppUpdate: function () {
+    Ext.Msg.confirm('Application Update', 'This application has an update, reload?',
+      function (choice) {
+        if (choice === 'yes') {
+          window.location.reload();
+        }
+      }
+    );
+  }
 });

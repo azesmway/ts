@@ -1,13 +1,13 @@
 {
     "builds": {
-        "web": {"default": true},
+        "web": {
+            "default": true
+        },
         "native-ios": {
             "packager": "cordova",
             "cordova" : {
                 "config": {
-                    // Uncomment the line below and add the platforms you wish to build for
                     "platforms": "ios",
-
                     "id": "com.azesm.etp",
                     "name": "etp"
                 }
@@ -17,9 +17,7 @@
             "packager": "cordova",
             "cordova" : {
                 "config": {
-                    // Uncomment the line below and add the platforms you wish to build for
                     "platforms": "android",
-
                     "id": "com.azesm.etp",
                     "name": "etp"
                 }
