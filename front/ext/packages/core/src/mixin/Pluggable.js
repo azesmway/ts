@@ -13,27 +13,31 @@
  * @protected
  * @since 6.2.0
  */
-Ext.define('Ext.mixin.Pluggable', function (Pluggable) { return {
-    requires: [
-        'Ext.plugin.Abstract'
-    ],
+Ext.define('Ext.mixin.Pluggable', function (Pluggable) {
+    var EMPTY = [];
 
+return {
     config: {
         /**
-         * @cfg {Array/Ext.enums.Plugin/Object/Ext.plugin.Abstract} plugins
-         * This config describes one or more plugin config objects used to create plugin
-         * instances for this component.
+         * @cfg {Object/String/Object[]/String[]} plugins
+         * An object or array of objects that will provide custom functionality for this
+         * component. If a string is provided or a string is one of the elements of the
+         * array, that string is treated as the `type` alias. For example, "listpaging"
+         * is the type alias for `Ext.plugin.ListPaging`. The full alias includes the
+         * "plugin." prefix (i.e., 'plugin.listpaging').
          *
-         * Plugins are a way to bundle and reuse custom functionality. Plugins should extend
-         * `Ext.plugin.Abstract` but technically the only requirement for a valid plugin
-         * is that it contain an `init` method that accepts a reference to its owner. Once
-         * a plugin is created, the owner will call the `init` method, passing a reference
-         * to itself. Each plugin can then call methods or respond to events on its owner
-         * as needed to provide its functionality.
+         * Plugins should derive from `Ext.plugin.Abstract` but this is not required. The
+         * only requirement for a valid plugin is that it contain an `init()` method that
+         * accepts a reference to the owning component.
          *
-         * This config's value can take several different forms.
+         * When a component is created, if any plugins are available, the component will
+         * call the `{@link Ext.plugin.Abstract#method-init init}` method on each plugin,
+         * passing a reference to itself. Each plugin can then call methods or respond to
+         * events on the component as needed to provide its functionality.
          *
-         * The value can be a single string with the plugin's {@link Ext.enums.Plugin alias}:
+         * ## Example code
+         *
+         * A plugin by alias:
          *
          *      var list = Ext.create({
          *          xtype: 'list',
@@ -43,36 +47,7 @@ Ext.define('Ext.mixin.Pluggable', function (Pluggable) { return {
          *          plugins: 'listpaging'
          *      });
          *
-         * In the above examples, the string "listpaging" is the type alias for
-         * `Ext.dataview.plugin.ListPaging`. The full alias includes the "plugin." prefix
-         * (i.e., 'plugin.listpaging').
-         *
-         * The preferred form for multiple plugins or to configure plugins is the
-         * keyed-object form (new in version 6.5):
-         *
-         *      var list = Ext.create({
-         *          xtype: 'list',
-         *          itemTpl: '<div class="item">{title}</div>',
-         *          store: 'Items',
-         *
-         *          plugins: {
-         *              pullrefresh: true,
-         *              listpaging: {
-         *                  autoPaging: true,
-         *                  weight: 10
-         *              }
-         *          }
-         *      });
-         *
-         * The object keys are the `id`'s as well as the default type alias. This form
-         * allows the value of the `plugins` to be merged from base class to derived class
-         * and finally with the instance configuration. This allows classes to define a
-         * set of plugins that derived classes or instantiators can further configure or
-         * disable. This merge behavior is a feature of the
-         * {@link Ext.Class#cfg!config config system}.
-         *
-         * The `plugins` config can also be an array of plugin aliases (arrays are not
-         * merged so this form does not respect plugins defined by the class author):
+         * Multiple plugins by alias:
          *
          *      var list = Ext.create({
          *          xtype: 'list',
@@ -82,19 +57,35 @@ Ext.define('Ext.mixin.Pluggable', function (Pluggable) { return {
          *          plugins: ['listpaging', 'pullrefresh']
          *      });
          *
-         * An array can also contain elements that are config objects with a `type`
-         * property holding the type alias:
+         * Single plugin by class name with config options:
          *
          *      var list = Ext.create({
          *          xtype: 'list',
          *          itemTpl: '<div class="item">{title}</div>',
          *          store: 'Items',
          *
-         *          plugins: ['pullrefresh', {
+         *          plugins: {
+         *              type: 'listpaging',
+         *              autoPaging: true
+         *          }
+         *      });
+         *
+         * Multiple plugins by type and class name with config options:
+         *
+         *      var list = Ext.create({
+         *          xtype: 'list',
+         *          itemTpl: '<div class="item">{title}</div>',
+         *          store: 'Items',
+         *
+         *          plugins: [{
+         *              xclass: 'Ext.plugin.PullRefresh',
+         *              pullRefreshText: 'Pull to refresh...'
+         *          }, {
          *              type: 'listpaging',
          *              autoPaging: true
          *          }]
          *      });
+         *
          */
         plugins: null
     },
@@ -125,7 +116,6 @@ Ext.define('Ext.mixin.Pluggable', function (Pluggable) { return {
             plugins.push(plugin);
         } else {
             me.setPlugins(plugin);
-            plugin = me.getPlugins()[0];
         }
 
         return plugin;
@@ -190,10 +180,10 @@ Ext.define('Ext.mixin.Pluggable', function (Pluggable) { return {
      *          itemTpl: '<div class="item">{title}</div>',
      *          store: 'Items',
      *
-     *          plugins: [{
-     *              type: 'pullrefresh',
+     *          plugins: {
+     *              xclass: 'Ext.plugin.PullRefresh',
      *              id: 'foo'
-     *          }]
+     *          }
      *      });
      *
      *      list.getPlugin('foo').setPullRefreshText('Pull to refresh...');
@@ -279,14 +269,11 @@ Ext.define('Ext.mixin.Pluggable', function (Pluggable) { return {
                 config = me.initialConfig,
                 plugins = config && config.plugins,
                 ret = null,
-                i, include, p;
+                i, p;
             
             if (plugins) {
-                include = me.config.plugins;
-                include = (include && typeof include === 'object') ? include : null;
-
-                plugins = Ext.plugin.Abstract.decode(plugins, 'type', include);
-
+                plugins = EMPTY.concat(plugins); // we need an array we can modify
+    
                 for (i = plugins.length; i-- > 0; ) {
                     p = plugins[i];
 
@@ -315,12 +302,11 @@ Ext.define('Ext.mixin.Pluggable', function (Pluggable) { return {
             var me = this,
                 oldCount = oldPlugins && oldPlugins.length || 0,
                 count, i, plugin;
-
+    
             // Ensure we have an array if we got a single thing or a copy of the array
             // if we got an array.
-            if (plugins) {
-                plugins = Ext.plugin.Abstract.decode(plugins, 'type');
-            }
+            plugins = plugins ? EMPTY.concat(plugins) : null;
+            count = plugins && plugins.length || 0;
 
             // We need to destroy() old plugins that aren't being brought forward in
             // the new array...
@@ -333,7 +319,6 @@ Ext.define('Ext.mixin.Pluggable', function (Pluggable) { return {
             // did this pass first then called init() so we preserve the timings and do
             // the same.
             //
-            count = plugins && plugins.length || 0;
             for (i = 0; i < count; ++i) {
                 plugins[i] = me.createPlugin(plugins[i]); // ensure we have an instance
             }

@@ -251,17 +251,9 @@
  * * `first` Filters out all except the first matching item for a selector.
  * * `last` Filters out all except the last matching item for a selector.
  * * `focusable` Filters out all except Components which by definition and configuration are
- *      potentially able to receieve focus, and can be focused at this time. Component can be
- *      focused when it is rendered, visible, and not disabled. Some Components can be focusable
- *      even when disabled (e.g. Menu items) via their parent Container configuration.
- *      Containers such as Panels generally are not focusable by themselves but can use
- *      focus delegation (`defaultFocus` config). Some Containers such as Menus and Windows
- *      are focusable by default.
- * * `canfocus` Filters out all except Components which are curently able to receieve focus.
+ *      potentially able to recieve focus, regardless of their current state
+ * * `canfocus` Filters out all except Components which are curently able to recieve focus.
  *      That is, they are defined and configured focusable, and they are also visible and enabled.
- *      Note that this selector intentionally bypasses some checks done by `focusable` selector
- *      and works in a subtly different way. It is used internally by the framework and is not
- *      a replacement for `:focusable` selector.
  * * `nth-child` Filters Components by ordinal position in the selection.
  * * `scrollable` Filters out all except Components which are scrollable.
  * * `visible` Filters out hidden Components. May test deep visibility using `':visible(true)'`
@@ -295,8 +287,6 @@
  *
  *      // Find every 3rd field in a form
  *      form.query('field:nth-child(3n)');
- *
- * **Note:** The `nth-child` selector returns 1-based result sets.
  *
  * Pseudo classes can be combined to further filter the results, e.g., in the
  * form example above we can modify the query to exclude hidden fields:
@@ -479,11 +469,9 @@ Ext.define('Ext.ComponentQuery', {
                     i = 0,
                     length = items.length,
                     candidate;
-                
                 for (; i < length; i++) {
                     candidate = items[i];
-                    
-                    if (!candidate.destroyed && candidate.isXType(xtype, shallow)) {
+                    if (candidate.isXType(xtype, shallow)) {
                         result.push(candidate);
                     }
                 }
@@ -551,7 +539,7 @@ Ext.define('Ext.ComponentQuery', {
                     if (propValue != null && compareTo.test(propValue)) {
                         result.push(candidate);
                     }
-                } else if (!compareTo ? !!propValue : queryOperators[operator](Ext.coerce(propValue, compareTo), compareTo)) {
+                } else if (!compareTo ? !!candidate[property] : queryOperators[operator](Ext.coerce(propValue, compareTo), compareTo)) {
                     result.push(candidate);
                 }
             }
@@ -1016,7 +1004,7 @@ Ext.define('Ext.ComponentQuery', {
         query: function(selector, root) {
             // An empty query will match every Component
             if (!selector) {
-                return Ext.ComponentManager.getAll();
+                return Ext.ComponentManager.all.getArray();
             }
             
             var results = [],
@@ -1149,8 +1137,7 @@ Ext.define('Ext.ComponentQuery', {
          * An empty selector will always match.
          *
          * @param {Ext.Component} component The Component to test
-         * @param {String/Function} selector The selector string to test against.
-         * Or a filter function which returns `true` if the component matches.
+         * @param {String} selector The selector string to test against.
          * @param {Ext.Component} [root=null] The root component.
          * @return {Boolean} True if the Component matches the selector.
          * @member Ext.ComponentQuery
@@ -1159,16 +1146,13 @@ Ext.define('Ext.ComponentQuery', {
             if (!selector) {
                 return true;
             }
-
-            if (typeof selector ==='function') {
-                return selector(component);
-            } else {
-                var query = cq.cache.get(selector);
-                if (!query) {
-                    query = cq.cache.add(selector, cq.parse(selector));
-                }
-                return query.is(component, root);
+            
+            var query = cq.cache.get(selector);
+            if (!query) {
+                query = cq.cache.add(selector, cq.parse(selector));
             }
+            
+            return query.is(component, root);
         },
 
         parse: function(selector) {
@@ -1338,5 +1322,5 @@ Ext.define('Ext.ComponentQuery', {
     Ext.first = function () {
         var matches = cq.query.apply(cq, arguments);
         return (matches && matches[0]) || null;
-    };
+    }
 });

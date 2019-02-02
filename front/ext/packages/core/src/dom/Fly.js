@@ -33,30 +33,24 @@ Ext.define('Ext.dom.Fly', {
     },
 
     attach: function (dom) {
-        var me = this,
-            data;
+        var me = this;
 
         if (!dom) {
             return me.detach();
         }
-        
-        // Sometimes we want to attach to the DOM of Ext.Element instance
-        me.dom = Ext.getDom(dom);
+        me.dom = dom;
 
         // If the element is not being managed by an Ext.Element instance,
         // we have to assume that the classList/classMap in the data object are out of sync with reality.
         if (!Ext.cache[dom.id]) {
-            data = me.peekData();
-            if (data) {
-                data.isSynchronized = false;
-            }
+            me.getData().isSynchronized = false;
         }
 
         return me;
     },
 
     detach: function() {
-        return (this.dom = null);
+        this.dom = null;
     },
 
     addListener:
@@ -123,7 +117,7 @@ Ext.define('Ext.dom.Fly', {
             nodeType, data;
 
         // name the flyweight after the calling method name if possible.
-        named = named || (fn.caller && (fn.caller.$name || fn.caller.name)) || '_global';
+        named = named || (fn.caller && fn.caller.$name) || '_global';
 
         dom = Ext.getDom(dom);
 
@@ -140,16 +134,9 @@ Ext.define('Ext.dom.Fly', {
 
                 // If there's no Element cached, or the element cached is for another DOM node, return a Fly
                 if (!fly || fly.dom !== dom) {
-                    // Since the `flyweights` map is simply an object, it has the `constructor`
-                    // property, just like any object, so to prevent the `Ext.fly` from failing
-                    // when it's called from the `constructor` method, we use the `$constructor`
-                    // as the key.
-                    if (named === 'constructor') {
-                        named = '$constructor';
-                    }
                     fly = flyweights[named] || (flyweights[named] = new Fly());
                     fly.dom = dom;
-                    data = fly.peekData();
+                    data = fly.getData(true);
                     if (data) {
                         data.isSynchronized = false;
                     }

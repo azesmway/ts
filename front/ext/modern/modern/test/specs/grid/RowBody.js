@@ -1,9 +1,6 @@
 /* global Ext, expect */
 
-xtopSuite("Ext.grid.RowBody",
-    ['Ext.grid.Grid', 'Ext.data.ArrayStore', 'Ext.layout.Fit',
-     'Ext.grid.plugin.RowExpander', 'Ext.app.ViewModel'],
-function() {
+describe("Ext.grid.RowBody", function () {
     var numRecords = 5,
         fields = ['d1', 'd2', 'd3', {
             name: 'expanded',
@@ -12,6 +9,15 @@ function() {
         TestModel = Ext.define(null, {
             extend: 'Ext.data.Model',
             fields: fields
+        }),
+        TestGrid = Ext.define(null, {
+            extend: 'Ext.grid.Grid',
+
+            // This method forces a synchronous layout of the grid to make testing easier
+            $testRefresh: function () {
+                var container = this.container;
+                this.onContainerResize(container, {height: container.element.getHeight()});
+            }
         }),
         store, grid, expandField;
 
@@ -62,7 +68,7 @@ function() {
         };
 
         config = Ext.apply(defaults, config);
-        return new Ext.grid.Grid(config);
+        return new TestGrid(config);
     }
 
     function getWidgetGrid(config, numRecords) {
@@ -94,7 +100,7 @@ function() {
         };
 
         config = Ext.apply(defaults, config);
-        return new Ext.grid.Grid(config);
+        return new TestGrid(config);
     }
 
     runTests('expanded state in grid', null);
@@ -115,8 +121,8 @@ function() {
                     grid = getTplGrid();
                     store = grid.getStore();
 
-                    grid.render(Ext.getBody());
-                    grid.refresh();
+                    grid.renderTo(Ext.getBody());
+                    grid.$testRefresh();
                 });
 
                 it("should be collapsed and hidden by default", function () {
@@ -152,6 +158,15 @@ function() {
                     expect(body.getHidden()).toBe(true);
                     expect(body.el.isVisible()).toBe(false);
                 });
+
+                it("should trigger grid item layout when expanded", function () {
+                    var top = grid.getItemAt(0);
+
+                    spyOn(grid, 'onItemHeightChange');
+                    top.expand();
+
+                    expect(grid.onItemHeightChange).toHaveBeenCalled();
+                });
             });
 
             describe("Template Based Row Body", function () {
@@ -159,8 +174,8 @@ function() {
                     grid = getTplGrid();
                     store = grid.getStore();
 
-                    grid.render(Ext.getBody());
-                    grid.refresh();
+                    grid.renderTo(Ext.getBody());
+                    grid.$testRefresh();
                 });
 
                 describe("Template Based ViewModel Access", function () {
@@ -230,8 +245,8 @@ function() {
             describe('recycling Rows', function() {
                 it('should maintain expanded/collapsed state in the plugin context', function() {
                     grid = getTplGrid(null, 500);
-                    grid.render(Ext.getBody());
-                    grid.refresh();
+                    grid.renderTo(Ext.getBody());
+                    grid.$testRefresh();
 
                     var scroller = grid.getScrollable(),
                         row = grid.getItemAt(0),
@@ -243,13 +258,10 @@ function() {
                     expect((expandedHeight = row.el.getHeight())).toBeGreaterThan(collapsedHeight);
 
                     // Scroll until the row gets recycled for use by another record
-                    jasmine.waitsForScroll(scroller, function(scroller, x, y) {
-                        // Allow 5px wiggle room to detect that we're at the end of the scroll range
-                        if (row.getRecord() !== recZero) {
-                            return true;
-                        }
+                    waitsFor(function() {
                         scroller.scrollBy(0, 50);
-                    }, 'grid to recycle row', 40000);
+                        return row.getRecord() !== recZero;
+                    });
 
                     // When the row is in use for another record, it must no longer be expanded
                     runs(function() {
@@ -258,13 +270,10 @@ function() {
                     });
 
                     // Scroll until the row gets its original record
-                    jasmine.waitsForScroll(scroller, function(scroller, x, y) {
-                        // Allow 5px wiggle room to detect that we're at the end of the scroll range
-                        if (row.getRecord() === recZero) {
-                            return true;
-                        }
+                    waitsFor(function() {
                         scroller.scrollBy(0, -50);
-                    }, 'grid to recycle row', 40000);
+                        return row.getRecord() === recZero;
+                    });
 
                     runs(function() {
                         expect(row.getCollapsed()).toBe(false);
@@ -279,8 +288,8 @@ function() {
                     grid = getWidgetGrid();
                     store = grid.getStore();
 
-                    grid.render(Ext.getBody());
-                    grid.refresh();
+                    grid.renderTo(Ext.getBody());
+                    grid.$testRefresh();
                 });
 
                 describe("Widget Based ViewModel Access", function () {
@@ -318,16 +327,14 @@ function() {
                             count = grid.getStore().getCount(), i, row, padding, y;
 
                         top.expand();
-
-                        rowBodyHeight = top.getBody().el.getHeight();
+                        // Widget height is set to 42
+                        rowBodyHeight = 42;
 
                         for (i = 1; i < count; ++i) {
                             row = grid.getItemAt(i);
                             padding = row.getBody().contentElement.getPadding('tb');
-                            y = headerHeight + (i * (rowHeight + rowBodyHeight));
-                            
-                            // Allow 1px tolerance for older browsers
-                            expect(row.el.getY()).toBeApprox(Math.round(y));
+                            y = headerHeight + (i * (padding + rowHeight + rowBodyHeight));
+                            expect(row.el.getY()).toBe(Math.round(y));
                             row.expand();
                         }
                     });

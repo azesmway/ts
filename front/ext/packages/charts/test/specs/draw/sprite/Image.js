@@ -1,9 +1,5 @@
-topSuite("Ext.draw.sprite.Image", ['Ext.draw.Container'], function() {
-    beforeEach(function() {
-        // Silence warnings regarding Sencha download server
-        spyOn(Ext.log, 'warn');
-    });
-    
+describe('Ext.draw.sprite.Image', function () {
+
     describe("hitTest", function () {
         var sprite, surface, container;
 

@@ -1,4 +1,4 @@
-topSuite("Ext.Template", ["Ext.dom.Element"], function() {
+describe("Ext.Template", function() {
 
     describe("instantiation", function() {
         var tpl;
@@ -170,12 +170,6 @@ topSuite("Ext.Template", ["Ext.dom.Element"], function() {
             describe("with a simple template", function() {
                 it("should apply the supplied value and return an HTML fragments", function() {
                     expect(simpleTpl.apply(appliedArr)).toEqual('<div class="template">Hello world.</div>');
-                });
-                
-                it("should expand tokens with $ characters", function() {
-                    var result = new Ext.Template('foo {$foo$}').apply({ $foo$: 'bar' });
-                    
-                    expect(result).toBe('foo bar');
                 });
             });
 

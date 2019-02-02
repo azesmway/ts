@@ -1,12 +1,6 @@
-/* global expect, jasmine, Ext, xit, it, topSuite */
-/* eslint indent: off */
+/* global expect, jasmine, Ext */
 
-topSuite("grid-rowedit",
-    [false, 'Ext.grid.Panel', 'Ext.data.ArrayStore', 'Ext.grid.plugin.RowEditing',
-     'Ext.form.field.ComboBox', 'Ext.form.FieldContainer', 'Ext.grid.column.Action',
-     'Ext.form.field.Trigger'],
-function() {
-    var itNotIE8 = Ext.isIE8 ? xit : it;
+describe("grid-rowedit", function() {
     function createSuite(buffered) {
         describe(buffered ? "with buffered rendering" : "without buffered rendering", function() {
             var ENTER = 13,
@@ -55,38 +49,21 @@ function() {
                 return grid.getView().getCellInclusive({
                     row: rowIdx,
                     column: cellIdx
-                }, true);
+                });
             }
             
             function startEdit(rec, column) {
                 if (!rec || !rec.isModel) {
                     rec = store.getAt(rec || 0);
                 }
-                if (column == null) {
-                    column = 0;
-                }
-
+                
                 if (typeof column === 'number') {
-                    // Ensure it's an editable column so that focus happens.
-                    while (colRef[column] && !(colRef[column].getEditor&& colRef[column].getEditor() && colRef[column].getEditor().focusable)) {
-                        ++column;
-                    }
-
-                    // Found no editable columns.
-                    // Editor will still display
-                    // but will not focus
-                    if (column === colRef.length) {
-                        column = null;
-                    } else {
-                        column = colRef[column];
-                    }
+                    column = colRef[column];
                 }
-
+                
                 plugin.startEdit(rec, column);
                 
-                if (column) {
-                    waitsForFocus(plugin.context.column.getEditor());
-                }
+                editor = plugin.getEditor();
             }
             
             // Prevent validity from running on a delay
@@ -129,7 +106,7 @@ function() {
                     hasCols = true;
                     colRef = defaultCols = getDefaultColumns(locked);
                 }
-
+                    
                 for (i = 1; i <= 10; ++i) {
                     data.push({
                         field1: i + '.' + 1,
@@ -145,15 +122,10 @@ function() {
                     });
                 }
                 
-                if (gridCfg && gridCfg.store && gridCfg.store.isStore) {
-                    store = gridCfg.store;
-                }
-                else {
-                    store = new Ext.data.Store({
-                        model: GridEventModel,
-                        data: data
-                    });
-                }
+                store = new Ext.data.Store({
+                    model: GridEventModel,
+                    data: data
+                });
                 
                 plugin = new Ext.grid.plugin.RowEditing(pluginCfg);
 
@@ -176,11 +148,11 @@ function() {
                 }
                 view = grid.getView();
                 scroller = view.getScrollable ? view.getScrollable() : grid.normalGrid.view.getScrollable();
-                editor = plugin.getEditor();
             }
             
             afterEach(function() {
-                plugin = editor = grid = store = view = Ext.destroy(grid, store);
+                Ext.destroy(grid, store);
+                plugin = editor = grid = store = view = null;
                 Ext.data.Model.schema.clear();
             });
 
@@ -205,36 +177,30 @@ function() {
                 });
             });
 
-            (Ext.isIE8 ? xdescribe :describe)("Editing in a locked grid", function() {
+            describe("Editing in a locked grid", function() {
                 beforeEach(function() {
                     makeGrid(null, null, true);
                 });
 
                 it('should move an editor from one side to another when a column is locked during editing', function() {
-                    grid.setActionableMode(true, new Ext.grid.CellContext(grid.normalGrid.view).setPosition(0, 0));
+                    var ed;
+
+                    triggerCellMouseEvent('dblclick', 0, 2);
+                    ed = colRef[2].getEditor();
+                    expect(plugin.editing).toBe(true);
+
+                    // The editor of the 3rd column (first normal column) should be active
+                    expect(Ext.Element.getActiveElement() === ed.inputEl.dom).toBe(true);
                     
-                    var ed = colRef[2].getEditor();
+                    // The editor should be in the right container
+                    expect(ed.up('container') === plugin.editor.items.items[1]).toBe(true);
 
-                    // normal view context 0, 0 yields colRef[2] because 1st 2 coliumns are locked
-                    focusAndWait(ed, undefined, 'column 0 editor to gain focus');
-                    
-                    runs(function() {
-                        // The editor should be in the right container
-                        expect(ed.up('container') === plugin.editor.items.items[1]).toBe(true);
+                    // Locking the first normal column should not throw error.
+                    grid.lock(colRef[2]);
+                    expect(plugin.editing).toBe(true);
 
-                        // Locking the first normal column should not throw error.
-                        grid.lock(colRef[2]);
-                    });
-
-                    // Wait for async focusing to untangle.
-                    focusAndWait(ed, undefined, 'focus to return to the editor field after the column was locked');
-
-                    runs(function() {
-                        expect(plugin.editing).toBe(true);
-
-                        // The editor should now be in the left container
-                        expect(ed.up('container') === plugin.editor.items.items[0]).toBe(true);
-                    });
+                    // The editor should now be in the left container
+                    expect(ed.up('container') === plugin.editor.items.items[0]).toBe(true);
                 });
             });
 
@@ -289,11 +255,8 @@ function() {
                     makeGrid();
                     var rec = store.first();
                     startEdit(rec);
-                    
-                    runs(function() {
-                        expect(plugin.editing).toBe(true);
-                        expect(plugin.getEditor().getRecord() === rec).toBe(true);
-                    });
+                    expect(plugin.editing).toBe(true);
+                    expect(plugin.getEditor().getRecord() === rec).toBe(true);
                 });
 
                 it("should trigger the first time when clicking a cell without a defined editor", function() {
@@ -315,11 +278,9 @@ function() {
                     var rec = store.first();
                     startEdit(rec);
 
-                    runs(function() {
-                        var toFocus = plugin.getEditor().items.getAt(0);
-                        jasmine.waitForFocus(toFocus);
-                        jasmine.expectFocused(toFocus);
-                    });
+                    var toFocus = plugin.getEditor().items.getAt(0);
+                    jasmine.waitForFocus(toFocus);
+                    jasmine.expectFocused(toFocus);
                 });
 
                 it("should focus the first column that isn't a displayfield", function() {
@@ -346,15 +307,12 @@ function() {
                     makeGrid();
                     var rec = store.first();
                     plugin.startEdit(rec, colRef[2]);
-                    
-                    runs(function() {
-                        expect(plugin.editing).toBe(true);
-                        expect(plugin.getEditor().getRecord() === rec).toBe(true);
+                    expect(plugin.editing).toBe(true);
+                    expect(plugin.getEditor().getRecord() === rec).toBe(true);
 
-                        var toFocus = plugin.getEditor().items.getAt(2);
-                        jasmine.waitForFocus(toFocus);
-                        jasmine.expectFocused(toFocus);
-                    });
+                    var toFocus = plugin.getEditor().items.getAt(2);
+                    jasmine.waitForFocus(toFocus);
+                    jasmine.expectFocused(toFocus);
                 });
 
                 it("should scroll horizontally to display the field being edited", function() {
@@ -362,47 +320,38 @@ function() {
                         width: 300
                     });
                     var rec = store.first(),
-                        x;
+                        x, offset=0;
 
-                    // this will scroll the grid all the way to the right.
-                    view.scrollBy(300, 0);
+                    // IE 8 has a 2px offset when the editor is visible
+                    if(Ext.isIE8) {
+                        offset = 2;
+                    }
 
-                    // Wait until it's all synced up.
-                    // Cannot call getPosition immediately because this kills partner synching.
-                    // TOOD: Revisit when https://sencha.jira.com/browse/EXTJS-23182 is closed.
+                    // this will scroll the grid all the way to the right
+                    view.scrollBy(300,0);
                     waitsFor(function() {
-                        var viewX = view.getScrollable().getScrollElement().dom.scrollLeft;
-                        return viewX >= 200 &&
-                               view.grid.headerCt.getScrollable().getScrollElement().dom.scrollLeft === viewX;
+                        return view.getScrollX() >= 200;
                     });
 
                     runs(function(){
                         x = view.getScrollX();
-                        plugin.startEdit(rec, colRef[4]);
-                    });
+                        plugin.startEdit(rec,colRef[4]);
 
-                    // We fudge the scroll because it scrolls just the required editor's
-                    // element *just* into view, and then syncs the view to match that.
-                    runs(function() {
-                        expect(view.getScrollX()).toBeApprox(x, 3);
+                        // expects the grid not to scroll when editing the last field
+                        expect(view.getScrollX()).toBe(x-offset);
                         plugin.cancelEdit();
                         // expects the grid not to scroll when cancelling the edit
-                        expect(view.getScrollX()).toBeApprox(x, 3);
-                        plugin.startEdit(rec, colRef[0]);
-                    });
-
-                    waitsFor(function() {
-                        return view.getScrollX() <= 3;
+                        expect(view.getScrollX()).toBe(x);
+                        plugin.startEdit(rec,colRef[0]);
+                        // expects the grid to scroll left when editing the first field
+                        expect(view.getScrollX()).toBe(offset);
                     });
                 });
 
                 it("should not be dirty when the field has values", function() {
                     makeGrid();
                     startEdit(store.first());
-                    
-                    runs(function() {
-                        expect(plugin.getEditor().isDirty()).toBe(false);
-                    });
+                    expect(plugin.getEditor().isDirty()).toBe(false);
                 });
                 
                 it("should commit changes with autoUpdate", function() {
@@ -411,20 +360,14 @@ function() {
                     });
 
                     startEdit(0, 0);
-
-                    runs(function() {
-                        editor.activeField.setValue('foo');
-                        expect(editor.isDirty()).toBe(true);
-                    });
                     
-                    runs(function() {
-                        startEdit(1, 1);
-                    });
-
-                    runs(function() {
-                        expect(getRec(0).get('field1')).toBe('foo');
-                        expect(editor.isDirty()).toBe(false);
-                    });
+                    editor.activeField.setValue('foo');
+                    expect(editor.isDirty()).toBe(true);
+                    
+                    startEdit(1, 1);
+                    
+                    expect(getRec(0).get('field1')).toBe('foo');
+                    expect(editor.isDirty()).toBe(false);
                 });
                 
                 it("should reset changes with autoCancel", function() {
@@ -432,19 +375,13 @@ function() {
                     
                     startEdit(0, 0);
                     
-                    runs(function() {
-                        editor.activeField.setValue('bar');
-                        expect(editor.isDirty()).toBe(true);
-                    });
+                    editor.activeField.setValue('bar');
+                    expect(editor.isDirty()).toBe(true);
                     
-                    runs(function() {
-                        startEdit(1, 1);
-                    });
-
-                    runs(function() {
-                        expect(getRec(0).get('field1')).toBe('1.1');
-                        expect(editor.isDirty()).toBe(false);
-                    });
+                    startEdit(1, 1);
+                    
+                    expect(getRec(0).get('field1')).toBe('1.1');
+                    expect(editor.isDirty()).toBe(false);
                 });
             });
             
@@ -522,12 +459,14 @@ function() {
                         var firstField, lastField;
                         
                         startEdit(store.last(), colRef[4]);
+                        
                         firstField = plugin.getEditor().items.getAt(0);
                         lastField = plugin.getEditor().items.getAt(4);
                         
-                        runs(function() {
-                            pressTabKey(lastField, true);
-                        });
+                        // Async from now on
+                        waitForFocus(lastField);
+                        
+                        pressTabKey(lastField, true);
                         
                         waitForFocus(firstField);
                         
@@ -540,13 +479,15 @@ function() {
                         var firstField, lastField;
                         
                         startEdit(store.first(), colRef[0]);
+                        
                         firstField = plugin.getEditor().items.getAt(0);
                         lastField = plugin.getEditor().items.getAt(4);
-
-                        runs(function() {
-                            pressTabKey(firstField, false); 
-                        });
-                       
+                        
+                        // Async from now on
+                        waitForFocus(firstField);
+                        
+                        pressTabKey(firstField, false);
+                        
                         waitForFocus(lastField);
                         
                         runs(function() {
@@ -559,24 +500,24 @@ function() {
                     describe("autoUpdate == false", function() {
                         it("should tab to Update button from last field", function() {
                             startEdit(0, 4);
-
-                            runs(function() {
-                                editor.activeField.setValue('blerg');
-                                pressTabKey(editor.activeField, true);
-                            });
                             
-                            waitsForFocus(editor.down('#update'));
+                            var button = editor.down('#update');
+                            
+                            editor.activeField.setValue('blerg');
+                            pressTabKey(editor.activeField, true);
+                            
+                            expectFocused(button);
                         });
                         
                         it("should shift-tab to Update button from first field", function() {
                             startEdit(0, 0);
-
-                            runs(function() {                           
-                                editor.activeField.setValue('throbbe');
-                                pressTabKey(editor.activeField, false);
-                            });
                             
-                            waitsForFocus(editor.down('#update'));
+                            var button = editor.down('#update');
+                            
+                            editor.activeField.setValue('throbbe');
+                            pressTabKey(editor.activeField, false);
+                            
+                            expectFocused(button);
                         });
                     });
                     
@@ -584,26 +525,24 @@ function() {
                         it("should tab to the next row from the last field", function() {
                             startEdit(0, 4);
 
-                            runs(function() {
-                                editor.autoUpdate = true;
-                                editor.autoCancel = false;
-                                editor.activeField.setValue('zumbo');
-                                pressTabKey(editor.activeField, true);
-                            });
+                            editor.autoUpdate = true;
+                            editor.autoCancel = false;
                             
-                            waitsForFocus(editor.items.getAt(0));
+                            editor.activeField.setValue('zumbo');
+                            pressTabKey(editor.activeField, true);
+                            
+                            expectFocused(editor.items.getAt(0));
                         });
                         
                         it("should shift-tab to the previous row from the first field", function() {
                             startEdit(1, 0);
 
-                            runs(function() {
-                                editor.autoUpdate = true;
-                                editor.autoCancel = false;
-                                editor.activeField.setValue('ghurl');
-                                pressTabKey(editor.activeField, false);
-                            });
-
+                            editor.autoUpdate = true;
+                            editor.autoCancel = false;
+                            
+                            editor.activeField.setValue('ghurl');
+                            pressTabKey(editor.activeField, false);
+                            
                             expectFocused(editor.items.getAt(4));
                         });
                     });
@@ -620,11 +559,8 @@ function() {
                         }
                     }]);
                     startEdit(store.first());
-                    
-                    runs(function() {
-                        var field = plugin.getEditor().items.getAt(0);
-                        expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
-                    });
+                    var field = plugin.getEditor().items.getAt(0);
+                    expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
                 });
 
                 describe("with align: right", function() {
@@ -636,11 +572,8 @@ function() {
                                 field: 'textfield'
                             }]);
                             startEdit(store.first());
-                            
-                            runs(function() {
-                                var field = plugin.getEditor().items.getAt(0);
-                                expect(field.inputEl.getStyle('text-align')).toBe('right');
-                            });
+                            var field = plugin.getEditor().items.getAt(0);
+                            expect(field.inputEl.getStyle('text-align')).toBe('right');
                         });
                     });
 
@@ -657,12 +590,9 @@ function() {
                                         }
                                     }]);
                                     startEdit(store.first());
-                                    
-                                    runs(function() {
-                                        var field = plugin.getEditor().items.getAt(0);
-                                        expect(field.inputEl.getStyle('text-align')).toBe('left');
-                                        expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
-                                    });
+                                    var field = plugin.getEditor().items.getAt(0);
+                                    expect(field.inputEl.getStyle('text-align')).toBe('left');
+                                    expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
                                 });
                             });
 
@@ -677,12 +607,9 @@ function() {
                                         }
                                     }]);
                                     startEdit(store.first());
-                                    
-                                    runs(function() {
-                                        var field = plugin.getEditor().items.getAt(0);
-                                        expect(field.inputEl.getStyle('text-align')).toBe('right');
-                                        expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
-                                    });
+                                    var field = plugin.getEditor().items.getAt(0);
+                                    expect(field.inputEl.getStyle('text-align')).toBe('right');
+                                    expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
                                 });
                             });
                         });
@@ -702,12 +629,9 @@ function() {
                                         }
                                     }]);
                                     startEdit(store.first());
-                                    
-                                    runs(function() {
-                                        var field = plugin.getEditor().items.getAt(0);
-                                        expect(field.inputEl.getStyle('text-align')).toBe('left');
-                                        expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
-                                    });
+                                    var field = plugin.getEditor().items.getAt(0);
+                                    expect(field.inputEl.getStyle('text-align')).toBe('left');
+                                    expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
                                 });
 
                                 it("should respect a configured camel cased value and keep other styles", function() {
@@ -723,12 +647,9 @@ function() {
                                         }
                                     }]);
                                     startEdit(store.first());
-                                    
-                                    runs(function() {
-                                        var field = plugin.getEditor().items.getAt(0);
-                                        expect(field.inputEl.getStyle('text-align')).toBe('left');
-                                        expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
-                                    });
+                                    var field = plugin.getEditor().items.getAt(0);
+                                    expect(field.inputEl.getStyle('text-align')).toBe('left');
+                                    expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
                                 });
                             });
 
@@ -745,12 +666,9 @@ function() {
                                         }
                                     }]);
                                     startEdit(store.first());
-                                    
-                                    runs(function() {
-                                        var field = plugin.getEditor().items.getAt(0);
-                                        expect(field.inputEl.getStyle('text-align')).toBe('right');
-                                        expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
-                                    });
+                                    var field = plugin.getEditor().items.getAt(0);
+                                    expect(field.inputEl.getStyle('text-align')).toBe('right');
+                                    expect(field.inputEl.getStyle('text-transform')).toBe('uppercase');
                                 });
                             });
                         });
@@ -767,24 +685,20 @@ function() {
                     store.remove(records);
                     // Only 1 record, not scrolling
                     startEdit();
-                    
-                    runs(function() {
-                        expect(plugin.getEditor()._buttonsOnTop).toBe(false);
-                    });
+                    expect(plugin.getEditor()._buttonsOnTop).toBe(false);
                 });
 
                 it("should position buttons correctly for the first row when content does overflow", function() {
                     makeGrid();
                     startEdit();
-                    runs(function() {
-                        expect(plugin.getEditor()._buttonsOnTop).toBe(false);
-                    });
+                    expect(plugin.getEditor()._buttonsOnTop).toBe(false);
                 });
             });
 
             describe("scrolling while editing", function() {
                 beforeEach(function() {
-                    var data = [];
+                    var data = [],
+                        bufferPlugin;
 
                    makeGrid([{
                         dataIndex: 'field1',
@@ -808,41 +722,36 @@ function() {
                     });
 
 
-                    for (var i = 11; i <= 100; ++i) {
-                        data.push({
-                            field1: i + '.' + 1,
-                            field2: i + '.' + 2,
-                            field3: i + '.' + 3,
-                            field4: i + '.' + 4,
-                            field5: i + '.' + 5,
-                            field6: i + '.' + 6,
-                            field7: i + '.' + 7,
-                            field8: i + '.' + 8,
-                            field9: i + '.' + 9,
-                            field10: i + '.' + 10
-                        });
-                    }
-    
-                    store.insert(10,data);
+                for (var i = 11; i <= 100; ++i) {
+                    data.push({
+                        field1: i + '.' + 1,
+                        field2: i + '.' + 2,
+                        field3: i + '.' + 3,
+                        field4: i + '.' + 4,
+                        field5: i + '.' + 5,
+                        field6: i + '.' + 6,
+                        field7: i + '.' + 7,
+                        field8: i + '.' + 8,
+                        field9: i + '.' + 9,
+                        field10: i + '.' + 10
+                    });
+                }
+
+                store.insert(10,data);
+
                 });
 
-                it('should keep the editor active if scrolling out of view', function() {
+                it('it should keep the editor active if scrolling out of view', function() {
                     startEdit();
-
-                    waitsFor(function() {
-                        return plugin.editing && plugin.getEditor().containsFocus;
-                    });
 
                     // this will scroll the grid view down
                     // to a point where rows get de-rendered
                     // if the grid has a bufferedRenderer plugin
-                    jasmine.waitsForScroll(view.getScrollable(), function (scroller, x, y) {
+                    waitsFor(function () {
+                        view.scrollBy(0, 100);
                         // Wait until a record begin edit is cached
                         // or verified if it is not a grid with bufferedRenderer
-                        if (plugin.editor._cachedNode || !grid.bufferedRenderer) {
-                            return true;
-                        }
-                        scroller.scrollBy(0, 100);
+                         return plugin.editor._cachedNode || !grid.bufferedRenderer;
                     }, 'scroll to the bottom', 10000);
 
                     runs(function(){
@@ -853,13 +762,10 @@ function() {
                         }
                     });
 
-                    jasmine.waitsForScroll(view.getScrollable(), function(scroller, x, y) {
-                        if (y === 0 && plugin.editor.getLocalY() === 0) {
-                            return true;
-                        }
-
-                        scroller.scrollBy(0, -100);
-                    }, 'view to scroll to top and RowEditor to reappear', 10000, 50);
+                    waitsFor(function() {
+                        view.scrollBy(0, -100);
+                        return view.getScrollY() === 0 && plugin.editor.getLocalY() === 0;
+                    }, 'view to scroll to top and RowEditor to reappear', 10000);
 
                     runs(function(){
                         // the cached record should have been erased
@@ -877,12 +783,9 @@ function() {
                     columns[3].sort();
 
                     startEdit();
-                    
-                    runs(function() {
-                        plugin.getEditor().items.items[3].setValue(99999999);
-                        plugin.completeEdit();
-                        expect(grid.getSelectionModel().getSelection()[0]).toEqual(plugin.context.record);
-                    });
+                    plugin.getEditor().items.items[3].setValue(99999999);
+                    plugin.completeEdit();
+                    expect(grid.getSelectionModel().getSelection()[0]).toEqual(plugin.context.record);
                 });
             });
 
@@ -918,11 +821,9 @@ function() {
                 }
                 
                 function expectWidths() {
-                    runs(function() {
-                        var items = plugin.getEditor().items;
-                        items.each(function(item, index) {
-                            expectWidth(item, colRef[index].getWidth());
-                        });
+                    var items = plugin.getEditor().items;
+                    items.each(function(item, index) {
+                        expectWidth(item, colRef[index].getWidth());
                     });
                 }
                 
@@ -992,25 +893,19 @@ function() {
                     it("should set the widths after the editor has already been shown", function() {
                         makeGrid();
                         plugin.startEdit(store.first());
-                        
-                        runs(function() {
-                            plugin.cancelEdit();
-                            grid.reconfigure(null, [{
-                                dataIndex: 'field1',
-                                width: 200,
-                                field: 'textfield'
-                            }, {
-                                dataIndex: 'field2',
-                                width: 300,
-                                field: 'textfield'
-                            }]);
-                            colRef = grid.getColumnManager().getColumns();
-                        });
-                        
-                        runs(function() {
-                            startEdit();
-                            expectWidths();
-                        });
+                        plugin.cancelEdit();
+                        grid.reconfigure(null, [{
+                            dataIndex: 'field1',
+                            width: 200,
+                            field: 'textfield'
+                        }, {
+                            dataIndex: 'field2',
+                            width: 300,
+                            field: 'textfield'
+                        }]);
+                        colRef = grid.getColumnManager().getColumns();
+                        startEdit();
+                        expectWidths();
                     });
                 });
             });
@@ -1312,30 +1207,21 @@ function() {
                 
                 it("should focus the first visible field", function() {
                     startEdit();
-                    
-                    runs(function() {
-                        var toFocus = plugin.getEditor().items.getAt(1);
-                        jasmine.waitForFocus(toFocus);
-                        jasmine.expectFocused(toFocus);
-                    });
+                    var toFocus = plugin.getEditor().items.getAt(1);
+                    jasmine.waitForFocus(toFocus);
+                    jasmine.expectFocused(toFocus);
                 });
 
                 it("should show the editor when the column is shown", function() {
                     startEdit();
-                    
-                    runs(function() {
-                        colRef[0].show();
-                        expect(plugin.getEditor().items.getAt(0).isVisible()).toBe(true);
-                    });
+                    colRef[0].show();
+                    expect(plugin.getEditor().items.getAt(0).isVisible()).toBe(true);
                 });
                 
                 it("should hide the editor when the column is hidden", function() {
                     startEdit();
-                    
-                    runs(function() {
-                        colRef[6].show();
-                        expect(plugin.getEditor().items.getAt(6).isVisible()).toBe(true);
-                    });
+                    colRef[6].show();
+                    expect(plugin.getEditor().items.getAt(6).isVisible()).toBe(true);
                 });
             });
             
@@ -1419,17 +1305,11 @@ function() {
                     makeGrid();
                     startEdit(0);
                     var field = plugin.getEditor().items.getAt(0);
-                    
-                    runs(function() {
-                        expect(field.getValue()).toBe('1.1');
-                        plugin.completeEdit();
-                        store.insert(0, {});
-                    });
-                    
-                    runs(function() {
-                        startEdit(0);
-                        expect(field.getValue()).toBe('');
-                    });
+                    expect(field.getValue()).toBe('1.1');
+                    plugin.completeEdit();
+                    store.insert(0, {});
+                    startEdit(0);
+                    expect(field.getValue()).toBe('');
                 });
                 
                 describe("buttons", function() {
@@ -1462,19 +1342,13 @@ function() {
                         store.removeAll();
                         store.insert(0, {});
                         startEdit(0);
-                        
-                        runs(function() {
-                            clearFormDelay();
-                            plugin.getEditor().items.first().setValue('Foo');
-                            plugin.completeEdit();
-                            store.insert(0, {});
-                        });
-                        
-                        runs(function() {
-                            startEdit(0);
-                            plugin.getEditor().items.first().setValue('Foo');
-                            expect(plugin.getEditor().down('#update').disabled).toBe(false);
-                        });
+                        clearFormDelay();
+                        plugin.getEditor().items.first().setValue('Foo');
+                        plugin.completeEdit();
+                        store.insert(0, {});
+                        startEdit(0);
+                        plugin.getEditor().items.first().setValue('Foo');
+                        expect(plugin.getEditor().down('#update').disabled).toBe(false);
                     });
                });
                
@@ -1682,12 +1556,14 @@ function() {
             
             describe("adding/removing/moving columns", function() {
                 function dragColumn(from, to, onRight) {
-                    var fromBox = from.titleEl.getBox(),
+                    var fromBox = from.el.getBox(),
                         fromMx = fromBox.x + fromBox.width/2,
                         fromMy = fromBox.y + fromBox.height/2,
-                        toBox = to.titleEl.getBox(),
-                        toMx = onRight ? toBox.right - 10 : toBox.left + 10,
+                        toBox = to.el.getBox(),
+                        toMx = toBox.x,
                         toMy = toBox.y + toBox.height/2,
+                        offset = onRight ? toBox.width - 6 : 5,
+                        moveOffset = toMx + offset,
                         dragThresh = onRight ? Ext.dd.DragDropManager.clickPixelThresh + 1 : -Ext.dd.DragDropManager.clickPixelThresh - 1;
 
                     // Mousedown on the header to drag
@@ -1698,10 +1574,10 @@ function() {
                     jasmine.fireMouseEvent(from.el.dom, 'mousemove', fromMx + dragThresh, fromMy);
 
                     // The move to left of the centre of the target element
-                    jasmine.fireMouseEvent(to.el.dom, 'mousemove', toMx, toMy);
+                    jasmine.fireMouseEvent(to.el.dom, 'mousemove', moveOffset, toMy);
 
                     // Drop to left of centre of target element
-                    jasmine.fireMouseEvent(to.el.dom, 'mouseup', toMx, toMy);
+                    jasmine.fireMouseEvent(to.el.dom, 'mouseup', moveOffset, toMy);
                 }
 
                 describe("modification while visible with the grid pending layouts", function() {
@@ -1709,13 +1585,11 @@ function() {
                         makeGrid();
                         startEdit();
 
-                        runs(function() {
-                            var editor = plugin.getEditor(),
-                                count = editor.componentLayoutCounter;
+                        var editor = plugin.getEditor(),
+                            count = editor.componentLayoutCounter;
 
-                            dragColumn(colRef[3], colRef[0], false);
-                            expect(editor.componentLayoutCounter).toBe(count + 1);
-                        });
+                        dragColumn(colRef[3], colRef[0], false);
+                        expect(editor.componentLayoutCounter).toBe(count + 1);
                     });
                 });
 
@@ -1730,75 +1604,51 @@ function() {
                                 if (!beforeFirstShow) {
                                     startEdit();
                                 }
-                                
-                                runs(function() {
-                                    grid.headerCt.add({
-                                        dataIndex: 'field6',
-                                        field: {
-                                            xtype: 'textfield',
-                                            id: 'field6'
-                                        }
-                                    });
-                                    if (beforeFirstShow) {
-                                        startEdit();
+                                grid.headerCt.add({
+                                    dataIndex: 'field6',
+                                    field: {
+                                        xtype: 'textfield',
+                                        id: 'field6'
                                     }
-                                });
-
-                                runs(function() {
-                                    expect(plugin.getEditor().getComponent('field6').getValue()).toBe('1.6');
-                                });
+                                });  
+                                if (beforeFirstShow) {
+                                    startEdit();
+                                }
+                                expect(plugin.getEditor().getComponent('field6').getValue()).toBe('1.6');
                             });  
                         
                             it("should remove an existing field & destroy it", function() {
                                 if (!beforeFirstShow) {
                                     startEdit();
                                 }
-                                
-                                runs(function() {
-                                    grid.headerCt.remove(1);
-                                    if (beforeFirstShow) {
-                                        startEdit();
-                                    }
-                                });
-                                
-                                runs(function() {
-                                    expect(plugin.getEditor().getComponent('field2')).toBeFalsy();
-                                    expect(Ext.getCmp('field2')).toBeFalsy();
-                                });
+                                grid.headerCt.remove(1);
+                                if (beforeFirstShow) {
+                                    startEdit();
+                                }
+                                expect(plugin.getEditor().getComponent('field2')).toBeFalsy();
+                                expect(Ext.getCmp('field2')).toBeFalsy();    
                             });
                         
                             it("should move the field in the editor", function() {
                                 if (!beforeFirstShow) {
                                     startEdit();
                                 }
-                                
-                                runs(function() {
-                                    grid.headerCt.move(0, 5);
-                                    if (beforeFirstShow) {
-                                        startEdit();
-                                    }
-                                });
-                                
-                                runs(function() {
-                                    expect(plugin.getEditor().items.last().getItemId()).toBe('field1');    
-                                });
+                                grid.headerCt.move(0, 5);
+                                if (beforeFirstShow) {
+                                    startEdit();
+                                }
+                                expect(plugin.getEditor().items.last().getItemId()).toBe('field1');    
                             });
                         
                             it("should remove all fields", function() {
                                 if (!beforeFirstShow) {
                                     startEdit();
                                 }
-                                
-                                runs(function() {
-                                    grid.headerCt.removeAll();
-                                    if (beforeFirstShow) {
-                                        startEdit();
-                                    }
-                                });
-                                
-                                runs(function() {
-                                    expect(plugin.getEditor().items.getCount()).toBe(0);
-                                });
+                                grid.headerCt.removeAll();
+                                if (beforeFirstShow) {
+                                    startEdit();
+                                }
+                                expect(plugin.getEditor().items.getCount()).toBe(0);
                             });
                         });
 
@@ -1828,18 +1678,12 @@ function() {
                                 if (!beforeFirstShow) {
                                    startEdit();
                                 }
-                                
-                                runs(function() {
-                                    // insert before the first visible column
-                                    grid.headerCt.move(4, 1);
-                                    if (beforeFirstShow) {
-                                       startEdit();
-                                    }
-                                });
-                                
-                                runs(function() {
-                                    expect(plugin.getEditor().items.getAt(1).getItemId()).toBe('field5');  
-                                });
+                                // insert before the first visible column
+                                grid.headerCt.move(4, 1);
+                                if (beforeFirstShow) {
+                                   startEdit();
+                                }
+                                expect(plugin.getEditor().items.getAt(1).getItemId()).toBe('field5');  
                             });
 
                             it("should insert before the last hidden column", function() {
@@ -1847,18 +1691,12 @@ function() {
                                 if (!beforeFirstShow) {
                                    startEdit();
                                 }
-                                
-                                runs(function() {
-                                    // insert after the last visible column
-                                    grid.headerCt.move(0, 3);
-                                    if (beforeFirstShow) {
-                                       startEdit();
-                                    }
-                                });
-                                
-                                runs(function() {
-                                    expect(plugin.getEditor().items.getAt(3).getItemId()).toBe('field1');
-                                });
+                                // insert after the last visible column
+                                grid.headerCt.move(0, 3);
+                                if (beforeFirstShow) {
+                                   startEdit();
+                                }
+                                expect(plugin.getEditor().items.getAt(3).getItemId()).toBe('field1');  
                             });
 
                             it("should position properly with hidden columns in the middle", function() {
@@ -1866,19 +1704,13 @@ function() {
                                 if (!beforeFirstShow) {
                                    startEdit();
                                 }
-                                
-                                runs(function() {
-                                    grid.headerCt.move(0, 3);
-                                    grid.headerCt.insert(1, colRef[6]);
-                                    if (beforeFirstShow) {
-                                       startEdit();
-                                    }
-                                });
-                                
-                                runs(function() {
-                                    expect(plugin.getEditor().items.getAt(1).getItemId()).toBe('field7'); 
-                                    expect(plugin.getEditor().items.getAt(4).getItemId()).toBe('field1'); 
-                                });
+                                grid.headerCt.move(0, 3);
+                                grid.headerCt.insert(1, colRef[6]);
+                                if (beforeFirstShow) {
+                                   startEdit();
+                                }
+                                expect(plugin.getEditor().items.getAt(1).getItemId()).toBe('field7'); 
+                                expect(plugin.getEditor().items.getAt(4).getItemId()).toBe('field1'); 
                             });
                         });
 
@@ -1936,37 +1768,25 @@ function() {
                             }
 
                             it("should move all leaf columns to the left", function() {
-                                if (beforeFirstShow) {
-                                    grid.normalGrid.headerCt.move(1, 0);
-                                }
-
-                                startEdit();                                
                                 if (!beforeFirstShow) {
-                                    runs(function() {
-                                         grid.normalGrid.headerCt.move(1, 0);
-                                    });
+                                   startEdit();
                                 }
-
-                                runs(function() {
-                                    expectOrder(['field4', 'field5', 'field6', 'field1', 'field2', 'field3', 'field7', 'field8', 'field9']);
-                                });
+                                grid.normalGrid.headerCt.move(1, 0);
+                                if (beforeFirstShow) {
+                                   startEdit();
+                                }
+                                expectOrder(['field4', 'field5', 'field6', 'field1', 'field2', 'field3', 'field7', 'field8', 'field9']);
                             });
 
                             it("should move all leaf columns to the right", function() {
-                                if (beforeFirstShow) {
-                                    grid.normalGrid.headerCt.move(1, 2);
-                                }
-
-                                startEdit();                                
                                 if (!beforeFirstShow) {
-                                    runs(function() {
-                                         grid.normalGrid.headerCt.move(1, 2);
-                                    });
+                                   startEdit();
                                 }
-                                
-                                runs(function() {
-                                    expectOrder(['field1', 'field2', 'field3', 'field7', 'field8', 'field9', 'field4', 'field5', 'field6']);
-                                });
+                                grid.normalGrid.headerCt.move(1, 2);
+                                if (beforeFirstShow) {
+                                   startEdit();
+                                }
+                                expectOrder(['field1', 'field2', 'field3', 'field7', 'field8', 'field9', 'field4', 'field5', 'field6']);
                             });
                         });
                     });
@@ -1976,7 +1796,7 @@ function() {
             });
 
             describe('using a textarea as an editor', function() {
-                itNotIE8('should align to the bottom of the editor when at the end', function() {
+                it('should align to the bottom of the editor when at the end', function() {
                     store = Ext.create('Ext.data.Store', {
                         storeId: 'simpsonsStore',
                         fields:[ 'name', 'email', 'phone'],
@@ -2001,8 +1821,12 @@ function() {
                             { name: 'Marge', email: 'marge@simpsons.com', phone: '555-222-1254' }
                         ]
                     });
-                    
-                    makeGrid([
+
+                    grid = Ext.create({
+                        xtype: 'grid',
+                        title: 'Simpsons',
+                        store: Ext.data.StoreManager.lookup('simpsonsStore'),
+                        columns: [
                             {header: 'Name', dataIndex: 'name', editor: 'textfield'},
                             {header: 'Email', dataIndex: 'email', flex:1,
                              editor: {
@@ -2011,25 +1835,29 @@ function() {
                              }
                             },
                             {header: 'Phone', dataIndex: 'phone', width: 140}
-                        ], { clicksToEdit: 1 }, false, {
-                            xtype: 'grid',
-                            title: 'Simpsons',
-                            store: Ext.data.StoreManager.lookup('simpsonsStore'),
-                            selModel: 'rowmodel',
-                            height: 400,
-                            width: 600,
-                            renderTo: document.body
+                        ],
+                        selModel: 'rowmodel',
+                        plugins: {
+                            ptype: 'rowediting',                
+                            clicksToEdit: 1
+                        },
+                        height: 400,
+                        width: 600,
+                        renderTo: document.body
                     });
-                    
                     view = grid.view;
                     plugin = grid.findPlugin('rowediting');
 
-                    startEdit(store.last(), 1);
+                    plugin.startEdit(store.last(), 1);
+
+                    waitsFor(function() {
+                        return plugin.editor.activeField && plugin.editor.activeField.hasFocus;
+                    });
 
                     runs(function() {
                         var viewYScroll = view.getScrollY(),
 
-                            // Return the scrollTo position required to being the activeField fully into view
+                            // Return the scrollTo posirtion required to being the activeField fully into view
                             scrollPos = plugin.editor.activeField.el.getScrollIntoViewXY(view.el, view.getScrollX(), viewYScroll);
 
                         // The field being edited must already be fully scrolled into view by the editor positioning.
@@ -2043,28 +1871,19 @@ function() {
                     makeGrid(getDefaultColumns(false, {
                         width: 200
                     }, 10));
-                    
                     scroller.scrollBy(300);
 
                     waitsForEvent(scroller, 'scrollend', 'view to scroll');
-                    
                     runs(function() {
                         startEdit(0, 3);
-                    });
-                    
-                    waitsFor(function() {
-                        return plugin.context && plugin.context.column.getEditor().el.contains(document.activeElement) &&
-                               plugin.editor.getScrollable().getPosition().x === scroller.getPosition().x;
-                    }, 'field to focus and scroll into view along with the view', 5000, 100);
-
-                    runs(function() {
                         colRef[5].setWidth(colRef[5].getWidth() - 50);
                     });
 
                     waitsFor(function() {
+
                         // X positions must be synced
                         return plugin.editor.getScrollable().getPosition().x === scroller.getPosition().x;
-                    }, 'scroll positions to sync', 5000, 100);
+                    }, 'scroll positions to sync');
                 });
             });
 
@@ -2078,13 +1897,11 @@ function() {
                     grid.normalGrid.getView().scrollBy(1000, 0);
 
                     // Start editing in the locked grid.
-                    startEdit(0, 0);
+                    plugin.startEdit(0, 0);
 
                     // The normal grid has been scrolled.
-                    // The RowEditor should sync with it on show.
-                    runs(function() {
-                        expect(plugin.editor.normalColumnContainer.getScrollX()).toBe(grid.normalGrid.getView().getScrollable().getPosition().x);
-                    });
+                    // Thr RowEditor should sync with it on show.
+                    expect(plugin.editor.normalColumnContainer.getScrollX()).toBe(grid.normalGrid.getView().getScrollable().getPosition().x);
                 });
             });
 
@@ -2100,13 +1917,11 @@ function() {
                     // Begin editing a new record
                     store.insert(0, new GridEventModel());
                     expect(store.getCount()).toBe(storeCount + 1);
-                    startEdit(0, 0);
+                    plugin.startEdit(0, 0);
 
-                    runs(function() {
-                        // Cancel without modifying the new record, the record should be removed
-                        plugin.cancelEdit();
-                        expect(store.getCount()).toBe(storeCount);
-                    });
+                    // Cancel without modifying the new record, the record should be removed
+                    plugin.cancelEdit();
+                    expect(store.getCount()).toBe(storeCount);
                 });
             });
 
@@ -2115,7 +1930,7 @@ function() {
 
                 function triggerAction(type, row, colIdx) {
                     var cell = findCell(row || 0, colIdx || 0);
-                    jasmine.fireMouseEvent(cell.querySelector('.' + Ext.grid.column.Action.prototype.actionIconCls), type || 'click');
+                    jasmine.fireMouseEvent(cell.down('.' + Ext.grid.column.Action.prototype.actionIconCls, true), type || 'click');
                     return cell;
                 }
                 
@@ -2132,7 +1947,7 @@ function() {
                         sortable: false,
                         width: 50,
                         items: [{
-                            icon: 'resources/images/delete_task.png',
+                            icon: 'https://cdn.sencha.com/ext/commercial/6.0.2/examples/classic/simple-tasks/resources/images/delete_task.png',
                             tooltip: 'Delete user',
                             handler: function(view, rowIndex, colIndex, item, event, record) {
                                 store.remove(record);

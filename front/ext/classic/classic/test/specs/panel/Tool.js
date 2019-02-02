@@ -1,8 +1,7 @@
 /* global expect, Ext, jasmine, spyOn */
 
-topSuite("Ext.panel.Tool", function() {
-    var describeNotTouch = jasmine.supportsTouch ? xdescribe : describe,
-        tool, el;
+describe("Ext.panel.Tool", function() {
+    var tool, el;
     
     function makeTool(cfg) {
         cfg = Ext.apply({
@@ -133,7 +132,7 @@ topSuite("Ext.panel.Tool", function() {
         });
         
         describe("pointer", function() {
-            describeNotTouch("mouseover", function() {
+            describe("mouseover", function() {
                 beforeEach(function() {
                     jasmine.fireMouseEvent(el, 'mouseover', 1, 1);
                 });
@@ -152,10 +151,6 @@ topSuite("Ext.panel.Tool", function() {
             describe("mousedown", function() {
                 beforeEach(function() {
                     jasmine.fireMouseEvent(el, 'mousedown', 1, 1);
-                });
-                
-                afterEach(function() {
-                    jasmine.fireMouseEvent(el, 'mouseup', 1, 1);
                 });
                 
                 it("should add toolPressedCls", function() {

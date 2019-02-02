@@ -1,8 +1,6 @@
 /* global Ext, expect, jasmine, spyOn */
 
-topSuite("Ext.grid.filters.filter.Number",
-    ['Ext.grid.Panel', 'Ext.grid.filters.Filters'],
-function() {
+describe("Ext.grid.filters.filter.Number", function () {
     var grid, store, plugin, columnFilter, headerCt, menu, rootMenuItem,
         synchronousLoad = true,
         proxyStoreLoad = Ext.data.ProxyStore.prototype.load,
@@ -69,19 +67,18 @@ function() {
     }
 
     function showMenu() {
-        // Show the main grid menu.
-        Ext.testHelper.showHeaderMenu(grid.getColumnManager().getLast());
-        
-        runs(function() {
-            headerCt = grid.headerCt;
+        var header = grid.getColumnManager().getLast();
 
-            // Show the filter menu.
-            rootMenuItem = headerCt.menu.items.last();
-            rootMenuItem.activated = true;
-            rootMenuItem.expandMenu(null, 0);
+        // Show the grid menu.
+        headerCt = grid.headerCt;
+        headerCt.showMenuBy(null, header.triggerEl.dom, header);
 
-            menu = rootMenuItem.menu;
-        });
+        // Show the filter menu.
+        rootMenuItem = headerCt.menu.items.last();
+        rootMenuItem.activated = true;
+        rootMenuItem.expandMenu(null, 0);
+
+        menu = rootMenuItem.menu;
     }
 
     beforeEach(function() {
@@ -102,9 +99,7 @@ function() {
             createGrid();
             showMenu();
 
-            runs(function() {
-                expect(menu.down('menuseparator')).not.toBeNull();
-            });
+            expect(menu.down('menuseparator')).not.toBeNull();
         });
     });
 
@@ -225,11 +220,9 @@ function() {
             });
             showMenu();
 
-            runs(function() {
-                field = columnFilter.fields.eq;
-                startTime = new Date().getTime();
-                jasmine.fireKeyEvent(field.inputEl, 'keyup', 83);
-            });
+            field = columnFilter.fields.eq;
+            startTime = new Date().getTime();
+            jasmine.fireKeyEvent(field.inputEl, 'keyup', 83);
 
             waitsFor(function () {
                 return endTime;
@@ -253,11 +246,9 @@ function() {
             expect(columnFilter.getUpdateBuffer()).toBe(ms);
             showMenu();
 
-            runs(function() {
-                field = columnFilter.fields.eq;
-                startTime = new Date().getTime();
-                jasmine.fireKeyEvent(field.inputEl, 'keyup', 83);
-            });
+            field = columnFilter.fields.eq;
+            startTime = new Date().getTime();
+            jasmine.fireKeyEvent(field.inputEl, 'keyup', 83);
 
             waitsFor(function () {
                 return endTime;
@@ -285,10 +276,7 @@ function() {
                 spyOn(columnFilter, 'addStoreFilter');
 
                 showMenu();
-                
-                runs(function() {
-                    expect(columnFilter.addStoreFilter).not.toHaveBeenCalled();
-                });
+                expect(columnFilter.addStoreFilter).not.toHaveBeenCalled();
             });
         }
 
@@ -301,21 +289,16 @@ function() {
             createGrid();
             showMenu();
 
-            runs(function() {
-                columnFilter.setValue({eq: 44});
-                expect(rootMenuItem.checked).toBe(true);
+            columnFilter.setValue({eq: 44});
+            expect(rootMenuItem.checked).toBe(true);
 
-                // Now, let's hide the menu and clear the filters, which will deactivate all the filters.
-                // Note that it's not enough to check the root menu item's checked state, we must show the menu again.
-                headerCt.getMenu().hide();
-                plugin.clearFilters();
-            });
-
+            // Now, let's hide the menu and clear the filters, which will deactivate all the filters.
+            // Note that it's not enough to check the root menu item's checked state, we must show the menu again.
+            headerCt.getMenu().hide();
+            plugin.clearFilters();
             showMenu();
 
-            runs(function() {
-                expect(rootMenuItem.checked).toBe(false);
-            });
+            expect(rootMenuItem.checked).toBe(false);
         });
     });
 
@@ -326,22 +309,20 @@ function() {
             createGrid();
             showMenu();
 
-            runs(function() {
-                filterCollection = grid.getStore().getFilters();
-                field = columnFilter.fields.lt;
+            filterCollection = grid.getStore().getFilters();
+            field = columnFilter.fields.lt;
 
-                // Sanity.
-                expect(filterCollection.length).toBe(0);
-                expect(columnFilter.active).toBe(false);
+            // Sanity.
+            expect(filterCollection.length).toBe(0);
+            expect(columnFilter.active).toBe(false);
 
-                // Simulate a paste.
-                field.setRawValue('invalid text');
-                // Simulate C-v.
-                jasmine.fireKeyEvent(field.inputEl.dom, 'keyup', 86, null, true);
+            // Simulate a paste.
+            field.setRawValue('invalid text');
+            // Simulate C-v.
+            jasmine.fireKeyEvent(field.inputEl.dom, 'keyup', 86, null, true);
 
-                expect(filterCollection.length).toBe(0);
-                expect(columnFilter.active).toBe(false);
-            });
+            expect(filterCollection.length).toBe(0);
+            expect(columnFilter.active).toBe(false);
         });
     });
 
@@ -357,9 +338,7 @@ function() {
 
                     showMenu();
 
-                    runs(function() {
-                        expect(rootMenuItem.checked).toBe(active);
-                    });
+                    expect(rootMenuItem.checked).toBe(active);
                 });
 
                 it("should set any field values that map to a configured value", function () {
@@ -374,13 +353,11 @@ function() {
                     });
 
                     showMenu();
-                    
-                    runs(function() {
-                        fields = columnFilter.fields;
-                        expect(fields.gt.inputEl.getValue()).toBe('10');
-                        expect(fields.lt.inputEl.getValue()).toBe('20');
-                        expect(fields.eq.inputEl.getValue()).toBe('');
-                    });
+                    fields = columnFilter.fields;
+
+                    expect(fields.gt.inputEl.getValue()).toBe('10');
+                    expect(fields.lt.inputEl.getValue()).toBe('20');
+                    expect(fields.eq.inputEl.getValue()).toBe('');
                 });
 
                 describe("when a store filter is created", function () {
@@ -398,13 +375,11 @@ function() {
                         });
 
                         showMenu();
-                        
-                        runs(function() {
-                            columnFilter.setValue({
-                                eq: 5
-                            });
-                            expect(called).toBe(1);
+                        columnFilter.setValue({
+                            eq: 5
                         });
+
+                        expect(called).toBe(1);
                     });
                 });
             });
@@ -430,12 +405,11 @@ function() {
 
                         len = store.data.length;
                         showMenu();
-                        
-                        runs(function() {
-                            expect(store.data.length).toBe(len);
-                            columnFilter.setActive(true);
-                            expect(store.data.length).toBe(0);
-                        });
+                        expect(store.data.length).toBe(len);
+
+                        columnFilter.setActive(true);
+
+                        expect(store.data.length).toBe(0);
                     });
                 }
 
@@ -450,14 +424,14 @@ function() {
 
                         showMenu();
 
-                        runs(function() {
-                            columnFilter.setValue({
-                                eq: val
-                            });
-                            columnFilter.setActive(false);
-                            columnFilter.setActive(true);
-                            expect(store.data.length).toBe(0);
+                        columnFilter.setValue({
+                            eq: val
                         });
+
+                        columnFilter.setActive(false);
+                        columnFilter.setActive(true);
+
+                        expect(store.data.length).toBe(0);
                     });
                 }
 
@@ -477,12 +451,11 @@ function() {
                         });
 
                         showMenu();
-                        
-                        runs(function() {
-                            expect(store.data.length).toBe(0);
-                            columnFilter.setActive(false);
-                            expect(store.data.length > 0).toBe(true);
-                        });
+                        expect(store.data.length).toBe(0);
+
+                        columnFilter.setActive(false);
+
+                        expect(store.data.length > 0).toBe(true);
                     });
                 }
 
@@ -500,14 +473,15 @@ function() {
                         len = store.data.length;
                         showMenu();
 
-                        runs(function() {
-                            columnFilter.setValue({
-                                eq: val
-                            });
-                            expect(store.data.length).toBe(0);
-                            columnFilter.setActive(false);
-                            expect(store.data.length).toBe(len);
+                        columnFilter.setValue({
+                            eq: val
                         });
+
+                        expect(store.data.length).toBe(0);
+
+                        columnFilter.setActive(false);
+
+                        expect(store.data.length).toBe(len);
                     });
                 }
 

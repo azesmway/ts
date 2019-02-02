@@ -12,55 +12,22 @@ Ext.define('Ext.chart.series.sprite.Line', {
         def: {
             processors: {
                 /**
-                 * @cfg {Object} [curve={type: 'linear'}]
-                 * The type of curve that connects the data points.
-                 *
-                 * For example:
-                 *
-                 *     // The data points are connected by line segments.
-                 *     // This is the default setting.
-                 *     curve: {
-                 *         type: 'linear'
-                 *     }
-                 *
-                 *     // Cardinal spline interpolation is used to produce the curve
-                 *     // that connects the data points. The `tension` parameter can
-                 *     // be used to control the smoothness of the curve. A tension
-                 *     // of 0 corresponds to infinite tension, which results in straight
-                 *     // lines between data points. A tension of 1 corresponds to
-                 *     // no tension, allowing the spline to take the path of least
-                 *     // total bend. With tension values greater than 1, the curve
-                 *     // behaves like a compressed spring, pushed to take a longer path.
-                 *     // A cardinal spline with a tension of 0.5 is a special case.
-                 *     // It is then called a Catmull-Rom spline. Catmull-Rom splines are
-                 *     // thought to be esthetically pleasing and are quite common.
-                 *     // Note: spline interpolation only works on gapless data.
-                 *     curve: {
-                 *         type: 'cardinal,
-                 *         tension: 0.5
-                 *     }
-                 *
-                 *     // Produces a natural cubic spline with the second derivative
-                 *     // of the spline set to zero at the endpoints.
-                 *     curve: {
-                 *         type: 'natural'
-                 *     }
-                 *
-                 *     // The data points are connected by alternating horizontal and
-                 *     // vertical lines. The y-value changes after the x-value.
-                 *     curve: {
-                 *         type: 'step-after'
-                 *     }
-                 *
+                 * @cfg {Boolean} [smooth=false]
+                 * `true` if the sprite uses line smoothing.
+                 * Line smoothing only works with gapless data.
                  */
-                curve: 'default',
-
+                smooth: 'bool',
                 /**
                  * @cfg {Boolean} [fillArea=false]
                  * `true` if the sprite paints the area underneath the line.
                  */
                 fillArea: 'bool',
-
+                /**
+                 * @cfg {Boolean} [step=false]
+                 * `true` if the line uses steps instead of straight lines to connect the dots.
+                 * It is ignored if `smooth` is `true`.
+                 */
+                step: 'bool',
                 /**
                  * @cfg {"gap"/"connect"/"origin"} [nullStyle="gap"]
                  * Possible values:
@@ -75,13 +42,11 @@ Ext.define('Ext.chart.series.sprite.Line', {
                  * This requires that at least the x-coordinate of a point is a valid value.
                  */
                 nullStyle: 'enums(gap,connect,origin)',
-
                 /**
                  * @cfg {Boolean} [preciseStroke=true]
                  * `true` if the line uses precise stroke.
                  */
                 preciseStroke: 'bool',
-
                 /**
                  * @private
                  * The x-axis associated with the Line series.
@@ -89,7 +54,6 @@ Ext.define('Ext.chart.series.sprite.Line', {
                  * the stroke properly.
                  */
                 xAxis: 'default',
-
                 /**
                  * @cfg {Number} [yCap=Math.pow(2, 20)]
                  * Absolute maximum y-value.
@@ -99,11 +63,10 @@ Ext.define('Ext.chart.series.sprite.Line', {
             },
 
             defaults: {
-                curve: {
-                    type: 'linear'
-                },
+                smooth: false,
                 nullStyle: 'connect',
                 fillArea: false,
+                step: false,
                 preciseStroke: true,
                 xAxis: null,
                 yCap: Math.pow(2, 20),
@@ -111,44 +74,28 @@ Ext.define('Ext.chart.series.sprite.Line', {
             },
 
             triggers: {
-                dataX: 'dataX,bbox,curve',
-                dataY: 'dataY,bbox,curve',
-                curve: 'curve'
+                dataX: 'dataX,bbox,smooth',
+                dataY: 'dataY,bbox,smooth',
+                smooth: 'smooth'
             },
 
             updaters: {
-                curve: 'curveUpdater'
+                smooth: function (attr) {
+                    var dataX = attr.dataX,
+                        dataY = attr.dataY;
+                    if (attr.smooth && dataX && dataY && dataX.length > 2 && dataY.length > 2) {
+                        this.smoothX = Ext.draw.Draw.spline(dataX);
+                        this.smoothY = Ext.draw.Draw.spline(dataY);
+                    } else {
+                        delete this.smoothX;
+                        delete this.smoothY;
+                    }
+                }
             }
         }
     },
 
     list: null,
-
-    curveUpdater: function (attr) {
-        var me = this,
-            dataX = attr.dataX,
-            dataY = attr.dataY,
-            curve = attr.curve,
-            smoothable = dataX && dataY && dataX.length > 2 && dataY.length > 2,
-            type = curve.type;
-
-        if (smoothable) {
-            if (type === 'natural') {
-                me.smoothX = Ext.draw.Draw.naturalSpline(dataX);
-                me.smoothY = Ext.draw.Draw.naturalSpline(dataY);
-            } else if (type === 'cardinal') {
-                me.smoothX = Ext.draw.Draw.cardinalSpline(dataX, curve.tension);
-                me.smoothY = Ext.draw.Draw.cardinalSpline(dataY, curve.tension);
-            } else {
-                smoothable = false;
-            }
-        }
-
-        if (!smoothable) {
-            delete me.smoothX;
-            delete me.smoothY;
-        }
-    },
 
     updatePlainBBox: function (plain) {
         var attr = this.attr,
@@ -174,8 +121,7 @@ Ext.define('Ext.chart.series.sprite.Line', {
             isConnect = nullStyle === 'connect',
             isOrigin = nullStyle === 'origin',
             renderer = attr.renderer,
-            curve = attr.curve,
-            step = curve.type === 'step-after',
+            step = attr.step,
             needMoveTo = true,
             ln = list.length,
             lineConfig = {
@@ -525,7 +471,7 @@ Ext.define('Ext.chart.series.sprite.Line', {
 
     drawStroke: function (surface, ctx, start, end, list, xAxis) {
         var me = this,
-            isSmooth = me.smoothX && me.smoothY;
+            isSmooth = me.attr.smooth && me.smoothX && me.smoothY;
 
         if (isSmooth) {
             me.drawSmoothStroke(surface, ctx, start, end, list, xAxis);

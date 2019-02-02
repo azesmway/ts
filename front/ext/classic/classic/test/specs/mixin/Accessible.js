@@ -1,4 +1,4 @@
-topSuite("Ext.mixin.Accessible", 'Ext.Container', function() {
+describe("Ext.mixin.Accessible", function() {
     var c, cnt;
     
     function makeComponent(config) {

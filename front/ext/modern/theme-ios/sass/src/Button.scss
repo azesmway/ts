@@ -1,48 +1,46 @@
+
 // Menu Button UI until we have button icon UI mixin
-.#{$prefix}button-menu .#{$prefix}icon-el {
-    display: flex;
-    color: $button-color;
+.#{$prefix}button-menu .#{$prefix}button-icon{
     &:before {
         content: $ios-menu !important;
         font-family: 'iOS' !important;
-        font-size: 20px;
+        color: $button-color;
+        font-size: 1.4em;
         line-height: 0;
-        padding-right: 3px;
+        padding-right: .2em;
         position: relative;
-        top: 2px;
+        top: .15em;
         font-weight: bold;
     }
 }
 
-.#{$prefix}button-menu.#{$prefix}pressing .#{$prefix}icon-el {
+.#{$prefix}button-menu.#{$prefix}button-pressing .#{$prefix}button-icon:before {
     color: $button-pressed-color;
 }
 
-.#{$prefix}button-menu.#{$prefix}disabled .#{$prefix}icon-el {
+.#{$prefix}button-menu.#{$prefix}button-disabled .#{$prefix}button-icon:before {
     color: $button-disabled-color;
 }
 
 // Back Button UI until we have button icon UI mixin
-.#{$prefix}button-back {
-    &.#{$prefix}pressing .#{$prefix}icon-el {
-        color: $button-pressed-color
-    }
-
-    &.#{$prefix}disabled .#{$prefix}icon-el {
-        color: $button-disabled-color;
-    }
-
-    .#{$prefix}icon-el {
-        display: flex;
+.#{$prefix}button-back{
+    &:before {
+        content: $ios-back-arrow;
+        font-family: 'iOS';
         color: $button-color;
-        &:before {
-            content: $ios-back-arrow;
-            font-family: 'iOS';
-            font-size: $button-font-size-big;
-            line-height: $button-line-height-big;
-            position: relative;
-            top: 1px;
-            font-weight: bold;
-        }
+        font-size: 1.4em;
+        line-height: 0;
+        padding-right: .2em;
+        position: relative;
+        top: .05em;
+        font-weight: bold;
     }
+}
+
+.#{$prefix}button-back.#{$prefix}button-pressing:before {
+    color: $button-pressed-color;
+}
+
+.#{$prefix}button-back.#{$prefix}button-disabled:before {
+    color: $button-disabled-color;
 }

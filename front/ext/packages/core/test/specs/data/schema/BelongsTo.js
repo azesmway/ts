@@ -1,8 +1,7 @@
 // BelongsTo is not a real class, but is an alternate way of declaring ManyToOne.
 // The purpose of these tests is to check that they set everything up correctly,
 // functionality tested in ManyToOne.
-// false in dependencies means don't attempt to load "Ext.data.schema.BelongsTo"
-topSuite("Ext.data.schema.BelongsTo", [false, 'Ext.data.ArrayStore'], function() {
+describe("Ext.data.schema.BelongsTo", function() {
 
     var Thread, Post, User;
 

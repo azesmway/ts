@@ -1,4 +1,4 @@
-topSuite("Ext.form.Panel", function() {
+describe("Ext.form.Panel", function() {
     var panel;
 
     function createPanel(config) {

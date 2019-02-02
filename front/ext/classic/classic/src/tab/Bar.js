@@ -13,6 +13,10 @@ Ext.define('Ext.tab.Bar', {
         'Ext.util.Point',
         'Ext.layout.component.Body'
     ],
+    
+    mixins: [
+        'Ext.util.FocusableContainer'
+    ],
 
     componentLayout: 'body',
 
@@ -82,7 +86,6 @@ Ext.define('Ext.tab.Bar', {
     ensureActiveVisibleOnChange: true,
     
     ariaRole: 'tablist',
-    focusableContainer: true,
 
     childEls: [
         'body', 'strip'
@@ -91,6 +94,9 @@ Ext.define('Ext.tab.Bar', {
     _stripCls: Ext.baseCSSPrefix + 'tab-bar-strip',
     _baseBodyCls: Ext.baseCSSPrefix + 'tab-bar-body',
 
+    /**
+     * @private
+     */
     renderTpl:
         '<tpl if="hasTabGuard">{% this.renderTabGuard(out, values, \'before\'); %}</tpl>' +
         '<div id="{id}-body" data-ref="body" role="presentation" class="{baseBodyCls} {baseBodyCls}-{ui} ' +
@@ -103,15 +109,13 @@ Ext.define('Ext.tab.Bar', {
     /**
      * @cfg {Number} minTabWidth
      * The minimum width for a tab in this tab Bar. Defaults to the tab Panel's {@link Ext.tab.Panel#minTabWidth minTabWidth} value.
-     * @deprecated 6.5.0 This config is deprecated. Please use the
-     * {@link Ext.tab.Panel#minTabWidth minTabWidth} config on the TabPanel.
+     * @deprecated This config is deprecated. It is much easier to use the {@link Ext.tab.Panel#minTabWidth minTabWidth} config on the TabPanel.
      */
 
     /**
      * @cfg {Number} maxTabWidth
      * The maximum width for a tab in this tab Bar. Defaults to the tab Panel's {@link Ext.tab.Panel#maxTabWidth maxTabWidth} value.
-     * @deprecated 6.5.0 This config is deprecated. Please use the
-     * {@link Ext.tab.Panel#maxTabWidth maxTabWidth} config on the TabPanel.
+     * @deprecated This config is deprecated. It is much easier to use the {@link Ext.tab.Panel#maxTabWidth maxTabWidth} config on the TabPanel.
      */
 
     _reverseDockNames: {
@@ -147,14 +151,13 @@ Ext.define('Ext.tab.Bar', {
             me.addCls(me.baseCls + '-plain');
         }
 
-        // Will be applied to Ext.panel.Bar's layout config in parent initComponent
-        me.layout = Ext.apply({
-            align: initialAlign || (me.getTabStretchMax() ? 'stretchmax' :
-                me._layoutAlign[me.dock]),
-            overflowHandler: initialOverflowHandler || 'scroller'
-        }, me.layout);
-
         me.callParent();
+
+        me.setLayout({
+            align: initialAlign || (me.getTabStretchMax() ? 'stretchmax' :
+                    me._layoutAlign[me.dock]),
+            overflowHandler: initialOverflowHandler || 'scroller'
+        });
 
         me.on({
             click: me.onClick,

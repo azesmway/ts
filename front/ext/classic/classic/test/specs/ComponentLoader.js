@@ -1,4 +1,4 @@
-topSuite("Ext.ComponentLoader", 'Ext.Container', function(){
+describe("Ext.ComponentLoader", function(){
     var getAjaxOptions, loadAndComplete, loadAndFail, mockComplete, makeLoader, makeContainer, makeComponent, loader, comp;
 
     beforeEach(function(){

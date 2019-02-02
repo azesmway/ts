@@ -1,4 +1,4 @@
-topSuite("Ext.data.writer.Xml", ['Ext.data.ArrayStore'], function() {
+describe("Ext.data.writer.Xml", function(){
     var writer, buildWriter, makeOperation, buildRecords, Article, simpleData = {
         id: 1,
         title: 'Article 1',

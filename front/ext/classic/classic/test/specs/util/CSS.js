@@ -1,4 +1,4 @@
-topSuite("Ext.util.CSS", 'Ext.dom.Element', function() {
+describe('Ext.util.CSS', function() {
     var div;
 
     beforeEach(function() {
@@ -8,7 +8,6 @@ topSuite("Ext.util.CSS", 'Ext.dom.Element', function() {
         });
         div.dom.className = 'ext-css-test';
     });
-    
     afterEach(function() {
         div.destroy();
     });

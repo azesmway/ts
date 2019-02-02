@@ -191,13 +191,14 @@
  */
 Ext.define('Ext.data.reader.Json', {
     extend: 'Ext.data.reader.Reader',
-    alternateClassName: 'Ext.data.JsonReader',
-    alias: 'reader.json',
-
+    
     requires: [
         'Ext.JSON'
     ],
     
+    alternateClassName: 'Ext.data.JsonReader',
+    alias : 'reader.json',
+
     config: {
         /**
         * @cfg {String} record The optional location within the JSON response that the record data itself can be found at.
@@ -236,11 +237,6 @@ Ext.define('Ext.data.reader.Json', {
         preserveRawData: false
     },
     
-    /**
-     * @private
-     */
-    responseType: 'json',
-    
     updateRootProperty: function() {
         this.forceBuildExtractors();    
     },
@@ -260,10 +256,6 @@ Ext.define('Ext.data.reader.Json', {
 
     getResponseData: function(response) {
         var error;
-        
-        if (typeof response.responseJson === 'object') {
-            return response.responseJson;
-        }
 
         try {
             return Ext.decode(response.responseText);
@@ -276,17 +268,23 @@ Ext.define('Ext.data.reader.Json', {
         }
     },
 
-    buildExtractors : function(force) {
+    buildExtractors : function() {
         var me = this,
-            emptyFn = Ext.emptyFn,
-            prop;
+            metaProp, rootProp;
 
         // Will only return true if we need to build
-        if (me.callParent([force])) {
-            me.getRoot = me.setupExtractor(me.getRootProperty(), Ext.identityFn);
-            me.getGroupRoot = me.setupExtractor(me.getGroupRootProperty(), emptyFn);
-            me.getSummaryRoot = me.setupExtractor(me.getSummaryRootProperty(), emptyFn);
-            me.getMeta = me.setupExtractor(me.getMetaProperty(), emptyFn);
+        if (me.callParent(arguments)) {
+            metaProp = me.getMetaProperty();
+            rootProp = me.getRootProperty();
+            if (rootProp) {
+                me.getRoot = me.getAccessor(rootProp);
+            } else {
+                me.getRoot = Ext.identityFn;
+            }
+        
+            if (metaProp) {
+                me.getMeta = me.getAccessor(metaProp);
+            }
         }
     },
 
@@ -341,7 +339,8 @@ Ext.define('Ext.data.reader.Json', {
         var re = /[\[\.]/;
 
         return function(expr) {
-            var simple = this.getUseSimpleAccessors(),
+            var me = this,
+                simple = me.getUseSimpleAccessors(),
                 operatorIndex, result,
                 current, parts, part, inExpr,
                 isDot, isLeft, isRight,
@@ -361,7 +360,7 @@ Ext.define('Ext.data.reader.Json', {
             
             if (simple === true || operatorIndex < 0) {
                 result = function(raw) {
-                    return raw == null ? null : raw[expr];
+                    return raw[expr];
                 };
             } else {
                 // The purpose of this part is to generate a "safe" accessor for any complex 
@@ -445,8 +444,8 @@ Ext.define('Ext.data.reader.Json', {
             
         if (hasMap) {
             if (typeof map === 'function') {
-                return function(raw, self) {
-                    return field.mapping(raw, self);
+                return function(raw) {
+                    return field.mapping(raw, me);
                 };
             } else {
                 return me.createAccessor(map);
@@ -456,17 +455,13 @@ Ext.define('Ext.data.reader.Json', {
 
     getAccessorKey: function(prop) {
         var simple = this.getUseSimpleAccessors() ? 'simple' : '';
-        return this.callParent([simple + prop]);
+        return this.$className + simple + prop;
     },
 
     privates: {
         copyFrom: function(reader) {
             this.callParent([reader]);
             this.getRoot = reader.getRoot;
-        },
-
-        setupExtractor: function(prop, defaultFn) {
-            return prop ? this.getAccessor(prop) : defaultFn;
         }
     }
 });

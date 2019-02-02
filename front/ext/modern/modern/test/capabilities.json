@@ -1,59 +1,60 @@
 [
     {
-        "platformName": "Android",
-        "browserName": "Chrome",
-        "platformVersion": "7.1",
-        "appiumVersion": "1.8.0",
-        "deviceType": "tablet",
-        "deviceName": "Android GoogleAPI Emulator",
-        "deviceOrientation": "landscape",
-        "displayName": "Android 7.1@Chrome",
-        "chunks": 10
-    },
+        "platform": "OS X 10.10",
+        "browserName": "iPad",
+        "version": "8.1",
+        "device-orientation": "landscape",
+        "chunks": 1
+    }
+    ,
+    {
+        "platform": "Linux",
+        "deviceName": "Android Emulator",
+        "version": "5.0",
+        "browserName": "Android",
+        "device-orientation": "portrait",
+        "chunks": 1
+    }
+    ,
+    {
+        "platform": "Windows 7",
+        "browserName": "internet explorer",
+        "version": "10",
+        "chunks": 1
+    }
+    ,
     {
         "platform": "Windows 7",
         "browserName": "internet explorer",
         "version": "11",
-        "chunks": 8
-    },
+        "chunks": 1
+    }
+    ,
     {
-        "browserName": "MicrosoftEdge",
-        "platform": "Windows 10",
-        "version": "latest",
-        "chunks": 5
-    },
-    {
-        "platformName": "iOS",
-        "browserName": "Safari",
-        "platformVersion": "11.2",
-        "appiumVersion": "1.8.0",
-        "deviceName": "iPad Simulator",
-        "deviceOrientation": "landscape",
-        "displayName": "iOS 11.2@Safari",
-        "chunks": 8
-    },
-    {
-        "platform": "OS X 10.11",
+        "platform": "OS X 10.9",
         "browserName": "safari",
-        "version": "9",
-        "chunks": 5
-    },
+        "version": "7",
+        "chunks": 1
+    }
+    ,
     {
-        "platform": "OS X 10.12",
+        "platform": "OS X 10.10",
         "browserName": "safari",
-        "version": "11",
-        "chunks": 2
-    },
+        "version": "8",
+        "chunks": 1
+    }
+    ,
     {
-        "platform": "Windows 10",
+        "platform": "Windows 7",
         "browserName": "firefox",
-        "version": "latest",
-        "chunks": 5
-    },
+        "version": "34",
+        "chunks": 1
+    }
+    ,
     {
-        "platform": "Windows 10",
+        "platform": "Windows 7",
         "browserName": "chrome",
-        "version": "latest",
-        "chunks": 5
+        "version": "39",
+        "chunks": 1
     }
 ]

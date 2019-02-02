@@ -1,7 +1,4 @@
-topSuite("Ext.plugin.Viewport",
-    ['Ext.container.Viewport', 'Ext.Panel', 'Ext.app.ViewModel',
-     'Ext.app.ViewController'],
-function() {
+describe("Ext.plugin.Viewport", function() {
     var c;
 
     function makeComponent(cfg, ComponentClass) {
@@ -229,9 +226,6 @@ function() {
                 it('should only fire one global scroll event per scroll', function() {
                     c.scrollTo(null, 500);
 
-                    // Read to force synchronous layout
-                    document.body.offsetHeight;
-
                     // Wait for potentially asynchronous scroll events to fire.
                     waitsFor(function() {
                         return viewportScrollCount === 1;
@@ -250,17 +244,15 @@ function() {
     describe("global DOM scroll viewport", function() {
         function makeSuite(name, cls) {
             describe("auto layout " + name, function() {
-                var viewportScrollCount = 0,
-                    incrementFn = function() {
-                        viewportScrollCount++;
-                    };
+                var viewportScrollCount = 0;
 
                 beforeEach(function() {
                     document.documentElement.style.height = '2000px';
                     document.documentElement.style.overflow = 'auto';
 
-                    Ext.on('scroll', incrementFn);
-                    
+                    Ext.on('scroll', function() {
+                        viewportScrollCount++;
+                    });
                     makeComponent({
                         scrollable: true,
                         items: {
@@ -273,7 +265,6 @@ function() {
 
                 afterEach(function() {
                     document.documentElement.style.height = document.documentElement.style.overflow = '';
-                    Ext.un('scroll', incrementFn);
                 });
                 
                 it('should only fire one global scroll event per scroll', function() {

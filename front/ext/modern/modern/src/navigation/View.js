@@ -55,6 +55,12 @@ Ext.define('Ext.navigation.View', {
 
     config: {
         /**
+         * @cfg
+         * @inheritdoc
+         */
+        baseCls: Ext.baseCSSPrefix + 'navigationview',
+
+        /**
          * @cfg {Boolean/Object} navigationBar
          * The NavigationBar used in this navigation view. It defaults to be docked to the top.
          *
@@ -142,8 +148,6 @@ Ext.define('Ext.navigation.View', {
         }
     },
 
-    baseCls: Ext.baseCSSPrefix + 'navigationview',
-
     /**
      * @event push
      * Fires when a view is pushed into this navigation view
@@ -171,8 +175,6 @@ Ext.define('Ext.navigation.View', {
         var me     = this,
             navBar = me.getNavigationBar();
 
-        me.callParent();
-
         //add a listener onto the back button in the navigationbar
         if (navBar) {
             navBar.on({
@@ -194,6 +196,15 @@ Ext.define('Ext.navigation.View', {
             Ext.Logger.error('The base layout for a NavigationView must always be a Card Layout');
         }
         //</debug>
+    },
+
+    /**
+     * @private
+     */
+    applyLayout: function(config) {
+        config = config || {};
+
+        return config;
     },
 
     /**

@@ -1,12 +1,12 @@
 /**
  * This view is an example list of people.
  */
-Ext.define('GTS.view.main.List', {
+Ext.define('etp.view.main.List', {
     extend: 'Ext.grid.Grid',
     xtype: 'mainlist',
 
     requires: [
-        'GTS.store.Personnel'
+        'etp.store.Personnel'
     ],
 
     title: 'Personnel',
@@ -15,22 +15,11 @@ Ext.define('GTS.view.main.List', {
         type: 'personnel'
     },
 
-    columns: [{ 
-        text: 'Название',
-        dataIndex: 'name',
-        width: 100,
-        cell: {
-            userCls: 'bold'
-        }
-    }, {
-        text: 'Email',
-        dataIndex: 'email',
-        width: 230 
-    }, { 
-        text: 'Телефон',
-        dataIndex: 'phone',
-        width: 150 
-    }],
+    columns: [
+        { text: 'Name',  dataIndex: 'name', width: 100 },
+        { text: 'Email', dataIndex: 'email', width: 230 },
+        { text: 'Phone', dataIndex: 'phone', width: 150 }
+    ],
 
     listeners: {
         select: 'onItemSelected'

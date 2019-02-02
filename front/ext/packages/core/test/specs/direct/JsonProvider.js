@@ -1,4 +1,4 @@
-topSuite("Ext.direct.JsonProvider", ['Ext.direct.*'], function() {
+describe("Ext.direct.JsonProvider", function() {
     var provider,
         eventData = [{
             type: 'event',

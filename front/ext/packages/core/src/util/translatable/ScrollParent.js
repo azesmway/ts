@@ -6,8 +6,6 @@
 Ext.define('Ext.util.translatable.ScrollParent', {
     extend: 'Ext.util.translatable.Dom',
 
-    alias: 'translatable.scrollparent', // also configures Factoryable
-
     isScrollParent: true,
 
     applyElement: function(element) {

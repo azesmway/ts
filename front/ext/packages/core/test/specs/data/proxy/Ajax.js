@@ -1,4 +1,4 @@
-topSuite("Ext.data.proxy.Ajax", ['Ext.data.ArrayStore'], function() {
+describe("Ext.data.proxy.Ajax", function() {
     var proxy;
     
     function makeProxy(cfg) {
@@ -246,13 +246,9 @@ topSuite("Ext.data.proxy.Ajax", ['Ext.data.ArrayStore'], function() {
 
         it("should return the null result set if status 204 is returned", function() {
             request = proxy.read(operation);
-            operation.destroy = Ext.emptyFn;
             spyOn(proxy, 'afterRequest');
             complete(204, 'No Content', '');
             expect(operation.getResultSet()).toBe(Ext.data.reader.Reader.prototype.nullResultSet);
-            
-            delete operation.destroy;
-            operation.destroy();
         });
         
         describe("successful request", function() {

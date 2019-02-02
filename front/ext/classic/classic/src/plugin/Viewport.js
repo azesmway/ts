@@ -21,9 +21,7 @@
  * With this plugin you can create the `tabpanel` as the viewport:
  *
  *      Ext.create('Ext.tab.Panel', {
- *          plugins: {
- *              viewport: true
- *          },
+ *          plugins: 'viewport',
  *
  *          items: [{
  *              ...
@@ -57,18 +55,6 @@ Ext.define('Ext.plugin.Viewport', {
                 cmp.flushRenderConfigs();
             }
             cmp.setupViewport();
-        }
-    },
-
-    destroy: function() {
-        var el = this.cmp.el;
-
-        this.callParent();
-        // Remove the injected overrides so that the bodyEl singleton
-        // can be reused by subsequent code (eg, unit tests)
-        if (el) {
-            delete el.setHeight;
-            delete el.setWidth;
         }
     },
 
@@ -120,13 +106,13 @@ Ext.define('Ext.plugin.Viewport', {
                     // Note that nothing says that components that use configured elements have to have
                     // matching ids (they probably won't), but this is at least making the attempt so that
                     // getCmp *may* be able to find the component. However, in these cases, it's really
-                    // better to use Component#from to find the owner component.
+                    // better to use Component#fromElement to find the owner component.
                     if (!el.id) {
                         el.id = me.id;
                     }
 
                     // In addition, stamp on the data-componentid so lookups using Component's
-                    // from will work.
+                    // fromElement will work.
                     el.setAttribute('data-componentid', me.id);
                     
                     if (!me.ariaStaticRoles[me.ariaRole]) {
@@ -213,19 +199,7 @@ Ext.define('Ext.plugin.Viewport', {
                 doDestroy: function() {
                     var me = this,
                         root = Ext.rootInheritedState,
-                        scroller = me.scrollable,
                         key;
-
-                    // We set the global body scroller aboce in onRender.
-                    // Just relinquish it here and allow it to live on.
-                    if (scroller) {
-                        // Return the body scroller to default; X and Y scrolling
-                        scroller.setConfig({
-                            x: true,
-                            y: true
-                        });
-                        me.scrollable = null;
-                    }
 
                     // Clear any properties from the inheritedState so we don't pollute the
                     // global namespace. If we have a rtl flag set, leave it alone because it's
@@ -236,8 +210,6 @@ Ext.define('Ext.plugin.Viewport', {
                         }
                     }
 
-                    delete me.el.setHeight;
-                    delete me.el.setWidth;
                     me.removeUIFromElement();
                     me.el.removeCls(me.baseCls);
                     Ext.fly(document.body.parentNode).removeCls(me.viewportCls);
@@ -250,7 +222,7 @@ Ext.define('Ext.plugin.Viewport', {
 
                     meta.setAttribute('name', name);
                     meta.setAttribute('content', content);
-                    Ext.getHead().appendChild(meta, true);
+                    Ext.getHead().appendChild(meta);
                 },
 
                 privates: {
@@ -279,7 +251,7 @@ Ext.define('Ext.plugin.Viewport', {
                         var el = this.el;
                         
                         if (el) {
-                            el.restoreTabbableState({ skipSelf: true });
+                            el.restoreTabbableState(/* skipSelf = */ true);
                         }
                     }
                 }

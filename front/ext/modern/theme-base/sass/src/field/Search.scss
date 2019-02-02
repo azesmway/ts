@@ -5,9 +5,11 @@
         &::-webkit-search-decoration {
             -webkit-appearance: none;
         }
+    }
+}
 
-        &::-webkit-search-cancel-button {
-            -webkit-appearance: none;
-        }
+.#{$prefix}ie .#{$prefix}field.#{$prefix}searchfield {
+    .#{$prefix}mask-el {
+        z-index: -1;
     }
 }

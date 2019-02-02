@@ -1,10 +1,6 @@
-/* global expect, Ext, jasmine, topSuite */
-/* eslint indent: off */
+/* global expect, Ext, jasmine */
 
-topSuite("grid-columns",
-    [false, 'Ext.grid.Panel', 'Ext.grid.column.*', 'Ext.data.ArrayStore',
-     'Ext.grid.filters.*', 'Ext.form.field.Text'],
-function() {
+describe("grid-columns", function() {
     function createSuite(buffered) {
         describe(buffered ? "with buffered rendering" : "without buffered rendering", function() {
             var defaultColNum = 4,
@@ -80,18 +76,16 @@ function() {
                 colRef = grid.getColumnManager().getColumns();
             }
 
-            function getCell(rowIdx, colIdx, asDom) {
-                var cell = grid.getView().getCellInclusive({
+            function getCell(rowIdx, colIdx) {
+                return grid.getView().getCellInclusive({
                     row: rowIdx,
                     column: colIdx
-                }, true);
-                
-                return asDom ? cell : Ext.fly(cell);
+                });
             }
 
             function getCellInner(rowIdx, colIdx) {
-                var cell = getCell(rowIdx, colIdx, true);
-                return cell.querySelector(grid.getView().innerSelector);
+                var cell = getCell(rowIdx, colIdx);
+                return Ext.fly(cell).down(grid.getView().innerSelector).dom;
             }
 
             function getCellText(rowIdx, colIdx) {
@@ -285,7 +279,6 @@ function() {
                         makeGrid([{
                             text: 'Foo',
                             dataIndex: 'field0',
-                            flex: 1,
                             items: [{
                                 xtype: 'textfield',
                                 itemId: 'foo'
@@ -301,10 +294,6 @@ function() {
 
                     it('should not give the titleEl the leaf column class', function () {
                         expect(col.titleEl.hasCls(leafCls)).toBe(false);
-                    });
-
-                    it("should retain a flex value", function() {
-                        expect(col.getWidth()).toBe(grid.getWidth());
                     });
 
                     describe('focusing', function () {
@@ -1237,7 +1226,14 @@ function() {
                         plugins: 'gridfilters'
                     });
 
-                    Ext.testHelper.showHeaderMenu(colRef[0]);
+                    var col = colRef[0],
+                        menu;
+
+                    col.triggerEl.show();
+                    jasmine.fireMouseEvent(col.triggerEl.dom, 'click');
+                    menu = col.activeMenu;
+                    expect(menu.isVisible()).toBe(true);
+                    expect(col.requiresMenu).toBe(true);
                 });
             });
 
@@ -1269,81 +1265,6 @@ function() {
                     expect(sorters.getCount()).toBe(1);
                     expect(sorters.first().getProperty()).toBe('field0');
                     expect(sorters.first().getDirection()).toBe('ASC');
-                });
-
-                it("should be able to initally sort a custom sorter with direction DESC", function() {
-                    makeGrid([{
-                        dataIndex: 'field0',
-                        sorter: {
-                            sorterFn: function (a, b) {
-                                a = a.get("field0");
-                                b = b.get("field0");
-                                return a > b ? 1 : (a === b) ? 0 : -1;
-
-
-                            },
-                            direction: "ASC"
-                        }
-                    }]);
-
-                    colRef[0].sort('DESC');
-
-                    expect(colRef[0].getSorter().getDirection()).toBe('DESC');
-                });
-
-                it("should be able sort to any direction when switching sorters", function() {
-                    makeGrid([{
-                        dataIndex: 'field0',
-                        sorter: {
-                            sorterFn: function (a, b) {
-                                a = a.get("field0");
-                                b = b.get("field0");
-                                return a > b ? 1 : (a === b) ? 0 : -1;
-
-
-                            },
-                            direction: "ASC"
-                        }
-                    }, {
-                        dataIndex: 'field1'
-                    }]);
-
-                    colRef[0].sort('DESC');
-                    expect(colRef[0].getSorter().getDirection()).toBe('DESC');
-
-                    colRef[1].sort('ASC');
-
-                    colRef[0].sort('ASC');
-                    expect(colRef[0].getSorter().getDirection()).toBe('ASC');
-                });
-
-                it("should not lose track of direction when sorting via header and menu with a custom sorter", function() {
-                    makeGrid([{
-                        dataIndex: 'field0',
-                        sorter: {
-                            sorterFn: function (a, b) {
-                                a = a.get("field0");
-                                b = b.get("field0");
-                                return a > b ? 1 : (a === b) ? 0 : -1;
-
-
-                            },
-                            direction: "ASC"
-                        }
-                    }]);
-                    clickHeader(colRef[0]);
-                    var sorters = store.getSorters();
-                    expect(sorters.getCount()).toBe(1);
-                    expect(sorters.first().getDirection()).toBe('ASC');
-                    
-                    Ext.testHelper.showHeaderMenu(colRef[0]);
-
-                    runs(function() {
-                        var menu = colRef[0].activeMenu;
-
-                        jasmine.fireMouseEvent(menu.items.getByKey('ascItem').el, 'click');
-                        expect(sorters.first().getDirection()).toBe('ASC');
-                    });
                 });
 
                 it("should not sort when configured with sortable false", function() {
@@ -2596,16 +2517,7 @@ function() {
                             });
 
                             it("should not merge classes when changing tdStyle", function() {
-                                var testEl = Ext.getBody().createChild({
-                                        style: 'text-decoration: underline'
-                                    }),
-
-                                    // We need implementation-specific style string
-                                    underlineStyle = Ext.fly(testEl).getStyle('text-decoration'),
-                                    cell;
-
-                                testEl.destroy();
-
+                                var cell;
                                 makeGrid([{
                                     width: 100,
                                     dataIndex: 'field0',
@@ -2619,27 +2531,12 @@ function() {
                                     }
                                 }]);
 
-                                cell = Ext.fly(grid.view.body.dom.querySelector('.x-grid-cell'));
+                                cell = grid.view.body.el.down('.x-grid-cell');
 
-                                // Edge returns rgb(255, 0, 0) here :(
-                                var style = cell.getStyle('background-color');
-                                
-                                if (style === 'rgb(255, 0, 0)') {
-                                    style = 'red';
-                                }
-                                
-                                expect(style).toBe('red');
-                                
+                                expect(cell.dom.style['background-color']).toBe('red');
                                 store.getAt(0).set('foo', true);
-                                
-                                style = cell.getStyle('background-color');
-                                
-                                if (style === 'rgb(255, 0, 0)') {
-                                    style = 'red';
-                                }
-                                
-                                expect(style).not.toBe('red');
-                                expect(cell.getStyle('text-decoration')).toBe(underlineStyle);
+                                expect(cell.dom.style['background-color']).not.toBe('red');
+                                expect(cell.dom.style['text-decoration']).toBe('underline');
                             });
                         });
 
@@ -2777,357 +2674,9 @@ function() {
                     expect(dragSpy).not.toHaveBeenCalled();
                 });
             });
-            
-            describe("auto hiding headers", function() {
-                // Unit test setup defines hideHeaders as false in setup
-                // because many tests lazily use empty headers and 
-                // contain layout measurement which assumes visible headers.
-                // Undo that interference for this test case.
-                beforeEach(function() {
-                    delete Ext.grid.Panel.prototype.config.hideHeaders;
-                });
-                afterEach(function() {
-                    Ext.grid.Panel.prototype.config.hideHeaders = false;
-                });
-                function isHidden(theGrid) {
-                    theGrid = theGrid || grid;
-                    return theGrid.hasCls(theGrid.hiddenHeaderCls);
-                }
-
-                describe("not locked grid", function() {
-                    describe("with a configured value", function() {
-                        describe("at construction time", function() {
-                            it("should hide the columns even if the columns have text", function() {
-                                makeGrid([{
-                                    text: 'Foo'
-                                }], {
-                                    hideHeaders: true
-                                });
-                                expect(isHidden()).toBe(true);
-                            });
-
-                            it("should not hide the columns even if the columns have no text", function() {
-                                makeGrid([{
-                                    text: ''
-                                }], {
-                                    hideHeaders: false
-                                });
-                                expect(isHidden()).toBe(false);
-                            });
-                        });
-
-                        describe("dynamic", function() {
-                            it("should be able to toggle from hidden to visible", function() {
-                                makeGrid([{
-                                    text: 'Foo'
-                                }], {
-                                    hideHeaders: true
-                                });
-                                grid.setHideHeaders(false);
-                                expect(isHidden()).toBe(false);
-                            });
-
-                            it("should be able to toggle from visible to hidden", function() {
-                                makeGrid([{
-                                    text: ''
-                                }], {
-                                    hideHeaders: false
-                                });
-                                grid.setHideHeaders(true);
-                                expect(isHidden()).toBe(true);
-                            });
-
-                            it("should compute to hidden", function() {
-                                makeGrid([{
-                                    text: ''
-                                }], {
-                                    hideHeaders: false
-                                });
-                                grid.setHideHeaders(null);
-                                expect(isHidden()).toBe(true);
-                            });
-
-                            it("should compute to visible", function() {
-                                makeGrid([{
-                                    text: 'Foo'
-                                }], {
-                                    hideHeaders: true
-                                });
-                                grid.setHideHeaders(null);
-                                expect(isHidden()).toBe(false);
-                            });
-                        });
-                    });
-
-                    describe("with no configured value", function() {
-                        describe("at construction time", function() {
-                            it("should hide headers when none of the headers have text", function() {
-                                makeGrid([{}, {}, {}, {}]);
-                                expect(isHidden()).toBe(true);
-                            });
-
-                            it("should not hide headers if any header has text", function() {
-                                makeGrid([{}, {}, {
-                                    text: 'Foo'
-                                }, {}]);
-                                expect(isHidden()).toBe(false);
-                            });
-
-                            it("should not hide an empty header when it's the only sibling when it's not a top level header", function() {
-                                makeGrid([{
-                                    text: 'main'
-                                }, {
-                                    text: 'group',
-                                    columns: [{
-                                        itemId: 'empty-header'
-                                    }]
-                                }]);
-                        
-                                var h = grid.down('#empty-header');
-
-                                // Text should be non-empty, so same line-height
-                                expect(h.textContainerEl.dom.offsetHeight).toBe(h.ownerCt.textContainerEl.dom.offsetHeight);
-                            });
-                        });
-
-                        describe("dynamic", function() {
-                            it("should be able to hide headers", function() {
-                                makeGrid([{}, {}, {
-                                    text: 'Foo'
-                                }, {}]);
-                                grid.setHideHeaders(true);
-                                expect(isHidden()).toBe(true);
-                            });
-
-                            it("should be able to show headers", function() {
-                                makeGrid([{}, {}, {}, {}]);
-                                grid.setHideHeaders(true);
-                                expect(isHidden()).toBe(true);
-                            });
-                        });
-                    });
-
-                    describe("setting column text", function() {
-                        it("should compute to hidden", function() {
-                            makeGrid([{
-                                text: 'Foo'
-                            }, {
-                                text: ''
-                            }]);
-                            colRef[0].setText('');
-                            expect(isHidden()).toBe(true);
-                        });
-
-                        it("should compute to visible", function() {
-                            makeGrid([{
-                                text: ''
-                            }, {
-                                text: ''
-                            }]);
-                            colRef[0].setText('Foo');
-                            expect(isHidden()).toBe(false);
-                        });
-                    });
-                });
-
-                describe("locked grid", function() {
-                    describe("with a configured value", function() {
-                        describe("at construction time", function() {
-                            it("should hide the columns even if the columns have text", function() {
-                                makeGrid([{
-                                    text: 'Foo',
-                                    locked: true
-                                }, {
-                                    text: 'Bar'
-                                }], {
-                                    hideHeaders: true
-                                });
-                                expect(isHidden(grid.lockedGrid)).toBe(true);
-                                expect(isHidden(grid.normalGrid)).toBe(true);
-                            });
-
-                            it("should not hide the columns even if the columns have no text", function() {
-                                makeGrid([{
-                                    text: '',
-                                    locked: true
-                                }, {
-                                    text: ''
-                                }], {
-                                    hideHeaders: false
-                                });
-                                expect(isHidden()).toBe(false);
-                            });
-                        });
-
-                        describe("dynamic", function() {
-                            it("should be able to toggle from hidden to visible", function() {
-                                makeGrid([{
-                                    text: 'Foo',
-                                    locked: true
-                                }, {
-                                    text: 'Bar'
-                                }], {
-                                    hideHeaders: true
-                                });
-                                grid.setHideHeaders(false);
-                                expect(isHidden(grid.lockedGrid)).toBe(false);
-                                expect(isHidden(grid.normalGrid)).toBe(false);
-                            });
-
-                            it("should be able to toggle from visible to hidden", function() {
-                                makeGrid([{
-                                    text: '',
-                                    locked: true
-                                }, {
-                                    text: ''
-                                }], {
-                                    hideHeaders: false
-                                });
-                                grid.setHideHeaders(true);
-                                expect(isHidden(grid.lockedGrid)).toBe(true);
-                                expect(isHidden(grid.normalGrid)).toBe(true);
-                            });
-
-                            it("should compute to hidden", function() {
-                                makeGrid([{
-                                    locked: true,
-                                    text: ''
-                                }, {
-                                    text: ''
-                                }], {
-                                    hideHeaders: false
-                                });
-                                grid.setHideHeaders(null);
-                                expect(isHidden(grid.lockedGrid)).toBe(true);
-                                expect(isHidden(grid.normalGrid)).toBe(true);
-                            });
-
-                            it("should compute to visible", function() {
-                                makeGrid([{
-                                    locked: true,
-                                    text: 'Foo'
-                                }, {
-                                    text: 'Bar'
-                                }], {
-                                    hideHeaders: true
-                                });
-                                grid.setHideHeaders(null);
-                                expect(isHidden(grid.lockedGrid)).toBe(false);
-                                expect(isHidden(grid.normalGrid)).toBe(false);
-                            });
-                        });
-                    });
-
-                    describe("with no configured value", function() {
-                        describe("at construction time", function() {
-                            it("should hide the headers when no columns have text", function() {
-                                makeGrid([{
-                                    locked: true
-                                }, {}]);
-                                expect(isHidden(grid.lockedGrid)).toBe(true);
-                                expect(isHidden(grid.normalGrid)).toBe(true);
-                            });
-
-                            it("should not hide headers when the locked side has header text", function() {
-                                makeGrid([{
-                                    text: 'Foo',
-                                    locked: true
-                                }, {}]);
-                                expect(isHidden(grid.lockedGrid)).toBe(false);
-                                expect(isHidden(grid.normalGrid)).toBe(false);
-                            });
-
-                            it("should not hide headers when the normal side has header text", function() {
-                                makeGrid([{
-                                    locked: true
-                                }, {
-                                    text: 'Foo'
-                                }]);
-                                expect(isHidden(grid.lockedGrid)).toBe(false);
-                                expect(isHidden(grid.normalGrid)).toBe(false);
-                            });
-                        });
-
-                        describe("dynamic", function() {
-                            it("should be able to hide headers", function() {
-                                makeGrid([{
-                                    locked: true,
-                                    text: 'Foo'
-                                }, {
-                                    text: 'Bar'
-                                }]);
-                                grid.setHideHeaders(true);
-                                expect(isHidden(grid.lockedGrid)).toBe(true);
-                                expect(isHidden(grid.normalGrid)).toBe(true);
-                            });
-
-                            it("should be able to show headers", function() {
-                                makeGrid([{
-                                    locked: true,
-                                    text: ''
-                                }, {
-                                    text: ''
-                                }]);
-                                grid.setHideHeaders(false);
-                                expect(isHidden(grid.lockedGrid)).toBe(false);
-                                expect(isHidden(grid.normalGrid)).toBe(false);
-                            });
-                        });
-                    });
-
-                    describe("setting column text", function() {
-                        it("should compute to hidden when setting the locked column", function() {
-                            makeGrid([{
-                                text: 'Foo',
-                                locked: true
-                            }, {
-                                text: ''
-                            }]);
-                            colRef[0].setText('');
-                            expect(isHidden(grid.lockedGrid)).toBe(true);
-                            expect(isHidden(grid.normalGrid)).toBe(true);
-                        });
-
-                        it("should compute to hidden when setting the unlocked column", function() {
-                            makeGrid([{
-                                text: '',
-                                locked: true
-                            }, {
-                                text: 'Foo'
-                            }]);
-                            colRef[1].setText('');
-                            expect(isHidden(grid.lockedGrid)).toBe(true);
-                            expect(isHidden(grid.normalGrid)).toBe(true);
-                        });
-
-                        it("should compute to visible when setting the locked column", function() {
-                            makeGrid([{
-                                text: '',
-                                locked: true
-                            }, {
-                                text: ''
-                            }]);
-                            colRef[0].setText('Foo');
-                            expect(isHidden(grid.lockedGrid)).toBe(false);
-                            expect(isHidden(grid.normalGrid)).toBe(false);
-                        });
-
-                        it("should compute to visible when setting the unlocked column", function() {
-                            makeGrid([{
-                                text: '',
-                                locked: true
-                            }, {
-                                text: ''
-                            }]);
-                            colRef[1].setText('Foo');
-                            expect(isHidden(grid.lockedGrid)).toBe(false);
-                            expect(isHidden(grid.normalGrid)).toBe(false);
-                        });
-                    });
-                });
-            });
         });
     }
     createSuite(false);
     createSuite(true);
 });
+

@@ -1,8 +1,6 @@
 /* global Ext, expect, jasmine, xit, spyOn */
 
-topSuite("Ext.selection.CheckboxModel",
-    ['Ext.grid.Panel', 'Ext.grid.column.Widget', 'Ext.Button'],
-function() {
+describe('Ext.selection.CheckboxModel', function() {
     var grid, column, view, store, checkboxModel, data,
         donRec, evanRec, nigeRec,
         synchronousLoad = true,
@@ -107,17 +105,15 @@ function() {
         var cell = view.getCellByPosition({
             row: rowIdx,
             column: 0
-        }, true);
-        
-        jasmine.fireMouseEvent(cell.querySelector(checkboxModel.checkSelector), 'click');
+        });
+        jasmine.fireMouseEvent(cell.down(checkboxModel.checkSelector), 'click');
     }
 
     function clickCell(rowIdx, colIdx) {
         var cell = view.getCellByPosition({
             row: rowIdx,
             column: colIdx
-        }, true);
-        
+        });
         jasmine.fireMouseEvent(cell, 'click');
     }
 
@@ -125,9 +121,8 @@ function() {
         var cell = grid.getView().getCellByPosition({
             row: rowIdx,
             column: 0
-        }, true);
-        
-        jasmine.fireKeyEvent(cell.querySelector(checkboxModel.checkSelector), 'keydown', keyCode, shiftKey, ctrlKey, altKey);
+        });
+        jasmine.fireKeyEvent(cell.down(checkboxModel.checkSelector), 'keydown', keyCode, shiftKey, ctrlKey, altKey);
     }
 
     describe("grid reconfigure", function() {
@@ -142,7 +137,7 @@ function() {
 
             grid.reconfigure(store2, [{dataIndex: 'foo'}]);
 
-            expect(grid.view.body.el.dom.querySelector('.x-grid-checkcolumn')).not.toBeNull();
+            expect(grid.view.body.el.down('.x-grid-checkcolumn')).not.toBeNull();
         });
     });
 
@@ -253,20 +248,6 @@ function() {
                     text: 'Name3',
                     dataIndex: 'name'
                 }];
-            });
-
-            it('should be able to be locked without any other locked columns', function() {
-                var checkColumn;
-                makeGrid({
-                    locked: true
-                },{
-                    enableLocking: true,
-                    column: cols
-                });
-
-                checkColumn = grid.down('[isCheckerHd]');
-
-                expect(checkColumn.up('grid') === grid.lockedGrid).toBe(true);
             });
 
             it('should migrate the check column to locked when the first column is locked', function() {
@@ -412,7 +393,9 @@ function() {
                 grid.focus();
 
                 // Wait for the asynchronous focus processing to occur for IE
-                waitsForFocus(view, 'view to gain focus');
+                waitsFor(function() {
+                    return view.cellFocused;
+                });
                 
                 runs(function() {
                     clickCheckbox(0);
@@ -650,7 +633,7 @@ function() {
                     mode: 'SINGLE'
                 });
 
-                expect(checkboxModel.column.el.dom.querySelector(checkboxModel.checkSelector)).toBe(null);
+                expect(checkboxModel.column.el.down(checkboxModel.checkSelector)).toBe(null);
             });
 
             it('should not render the header checkbox by config', function () {
@@ -764,7 +747,7 @@ function() {
             return grid.getView().getCellByPosition({
                 row: row,
                 column: col
-            }, true);
+            });
         }
 
         function makeCheckGrid(checkOnly, mode) {
@@ -802,7 +785,7 @@ function() {
                 });
 
                 it("should select when clicking on the checkbox", function() {
-                    var checker = byPos(0, 0).querySelector(checkboxModel.checkSelector);
+                    var checker = byPos(0, 0).down(checkboxModel.checkSelector);
                     jasmine.fireMouseEvent(checker, 'click');
                     expect(checkboxModel.isSelected(donRec)).toBe(true);
                 });
@@ -841,7 +824,7 @@ function() {
                 });
 
                 it("should select when clicking on the checkbox", function() {
-                    var checker = byPos(0, 0).querySelector(checkboxModel.checkSelector);
+                    var checker = byPos(0, 0).down(checkboxModel.checkSelector);
                     jasmine.fireMouseEvent(checker, 'click');
                     expect(checkboxModel.isSelected(donRec)).toBe(true);
                 });
@@ -868,7 +851,7 @@ function() {
                 });
 
                 it("should select when clicking on the checkbox", function() {
-                    var checker = byPos(0, 0).querySelector(checkboxModel.checkSelector);
+                    var checker = byPos(0, 0).down(checkboxModel.checkSelector);
                     jasmine.fireMouseEvent(checker, 'click');
                     expect(checkboxModel.isSelected(donRec)).toBe(true);
                 });
@@ -899,7 +882,7 @@ function() {
                 });
 
                 it("should select when clicking on the checkbox", function() {
-                    var checker = byPos(0, 0).querySelector(checkboxModel.checkSelector);
+                    var checker = byPos(0, 0).down(checkboxModel.checkSelector);
                     jasmine.fireMouseEvent(checker, 'click');
                     expect(checkboxModel.isSelected(donRec)).toBe(true);
                 });
@@ -1198,7 +1181,7 @@ function() {
                         var cell = view.getCellByPosition({
                             row: 0,
                             column: 0
-                        }, true);
+                        });
                         
                         expectFocused(cell, true);
                     });
@@ -1215,7 +1198,7 @@ function() {
                         var cell = view.getCellByPosition({
                             row: 1,
                             column: 0
-                        }, true);
+                        });
                         
                         expectFocused(cell, true);
                     });
@@ -1277,19 +1260,19 @@ function() {
                         cell = view.getCellByPosition({
                             row: 0,
                             column: 0
-                        }, true);
+                        });
                     });
                     
                     afterEach(function() {
                         cell = null;
                     });
                     
-                    it("should have tabIndex", function() {
-                        expect(cell).toHaveAttr('tabIndex');
+                    it("should not have tabIndex", function() {
+                        expect(cell).not.toHaveAttr('tabIndex');
                     });
                     
-                    it("should have gridcell role", function() {
-                        expect(cell).toHaveAttr('role', 'gridcell');
+                    it("should have presentation role", function() {
+                        expect(cell).toHaveAttr('role', 'presentation');
                     });
                     
                     it("should not have aria-label", function() {
@@ -1343,19 +1326,19 @@ function() {
                         cell = view.getCellByPosition({
                             row: 0,
                             column: 0
-                        }, true);
+                        });
                     });
                     
                     afterEach(function() {
                         cell = null;
                     });
                     
-                    it("should have tabIndex", function() {
-                        expect(cell).toHaveAttr('tabIndex');
+                    it("should not have tabIndex", function() {
+                        expect(cell).not.toHaveAttr('tabIndex');
                     });
                     
-                    it("should have gridcell role", function() {
-                        expect(cell).toHaveAttr('role', 'gridcell');
+                    it("should have presentation role", function() {
+                        expect(cell).toHaveAttr('role', 'presentation');
                     });
                     
                     it("should not have aria-label", function() {
@@ -1416,7 +1399,7 @@ function() {
                         cell = view.getCellByPosition({
                             row: 0,
                             column: 0
-                        }, true);
+                        });
                     });
                     
                     afterEach(function() {
@@ -1492,7 +1475,7 @@ function() {
                         cell = view.getCellByPosition({
                             row: 0,
                             column: 0
-                        }, true);
+                        });
                     });
                     
                     afterEach(function() {

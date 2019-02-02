@@ -48,9 +48,7 @@ Ext.define('Ext.event.publisher.Dom', {
         // Scroll can be captured, but it is listed here as one of directEvents instead of
         // captureEvents because in some browsers capturing the scroll event does not work
         // if the window object itself fired the scroll event.
-        scroll: 1,
-        online: 1,
-        offline: 1
+        scroll: 1
     },
 
     /**
@@ -99,11 +97,8 @@ Ext.define('Ext.event.publisher.Dom', {
     },
 
     constructor: function() {
-        var me = this,
-            supportsPassive = Ext.supports.PassiveEventListener;
+        var me = this;
 
-        me.listenerOptions = supportsPassive ? { passive: false } : false;
-        me.captureOptions = supportsPassive ? { passive: false, capture: true } : true;
         me.bubbleSubscribers = {};
         me.captureSubscribers = {};
         me.directSubscribers = {};
@@ -119,22 +114,23 @@ Ext.define('Ext.event.publisher.Dom', {
         Ext.onInternalReady(me.onReady, me);
 
         me.callParent();
-
-        me.registerDomEvents();
     },
 
-    registerDomEvents: function() {
+    registerEvents: function() {
         var me = this,
             publishersByEvent = Ext.event.publisher.Publisher.publishersByEvent,
             domEvents = me.handledDomEvents,
             ln = domEvents.length,
-            i, eventName;
+            i = 0,
+            eventName;
 
-        for (i = 0; i < ln; i++) {
+        for (; i < ln; i++) {
             eventName = domEvents[i];
             me.handles[eventName] = 1;
             publishersByEvent[eventName] = me;
         }
+
+        this.callParent();
     },
 
     onReady: function() {
@@ -153,12 +149,7 @@ Ext.define('Ext.event.publisher.Dom', {
             }
         }
 
-        // DOM publishers should be the last thing to go since they are used
-        // to remove any element listeners which is typically part
-        // of the unload destroy process.
-        Ext.getWin().on('unload', me.destroy, me, {
-            priority: -10000
-        });
+        Ext.getWin().on('unload', me.destroy, me);
     },
 
     initHandlers: function() {
@@ -170,46 +161,32 @@ Ext.define('Ext.event.publisher.Dom', {
     },
 
     addDelegatedListener: function(eventName) {
-        var me = this;
-
-        me.delegatedListeners[eventName] = 1;
-
-        me.target.addEventListener(
-            eventName,
-            me.onDelegatedEvent,
-            me.captureEvents[eventName] ? me.captureOptions : me.listenerOptions
+        this.delegatedListeners[eventName] = 1;
+        this.target.addEventListener(
+            eventName, this.onDelegatedEvent, !!this.captureEvents[eventName]
         );
     },
 
     removeDelegatedListener: function(eventName) {
-        var me = this;
-
-        delete me.delegatedListeners[eventName];
-
-        me.target.removeEventListener(
-            eventName,
-            me.onDelegatedEvent,
-            me.captureEvents[eventName] ? me.captureOptions : me.listenerOptions
+        delete this.delegatedListeners[eventName];
+        this.target.removeEventListener(
+            eventName, this.onDelegatedEvent, !!this.captureEvents[eventName]
         );
     },
 
     addDirectListener: function(eventName, element, capture) {
-        var me = this;
-
         element.dom.addEventListener(
             eventName,
-            capture ? me.onDirectCaptureEvent : me.onDirectEvent,
-            capture ? me.captureOptions : me.listenerOptions
+            capture ? this.onDirectCaptureEvent : this.onDirectEvent,
+            capture
         );
     },
 
     removeDirectListener: function(eventName, element, capture) {
-        var me = this;
-
         element.dom.removeEventListener(
             eventName,
-            capture ? me.onDirectCaptureEvent : me.onDirectEvent,
-            capture ? me.captureOptions : me.listenerOptions
+            capture ? this.onDirectCaptureEvent : this.onDirectEvent,
+            capture
         );
     },
 
@@ -485,14 +462,9 @@ Ext.define('Ext.event.publisher.Dom', {
 
             Ext.frameStartTime = timeStamp;
 
-            me.reEnterCountAdjusted = false;
             me.reEnterCount++;
             me.publishDelegatedDomEvent(e);
-            
-            // Gesture publisher deals with exceptions in recognizers
-            if (!me.reEnterCountAdjusted) {
-                me.reEnterCount--;
-            }
+            me.reEnterCount--;
 
             me.afterEvent(e);
         }
@@ -551,14 +523,9 @@ Ext.define('Ext.event.publisher.Dom', {
         if (el) {
             // Since natural DOM propagation has occurred, no emulated propagation is needed.
             // Simply dispatch the event on the currentTarget element
-            me.reEnterCountAdjusted = false;
             me.reEnterCount++;
             me.fire(el, e.type, e, true, capture);
-
-            // Gesture publisher deals with exceptions in recognizers
-            if (!me.reEnterCountAdjusted) {
-                me.reEnterCount--;
-            }
+            me.reEnterCount--;
         }
 
         me.afterEvent(e);
@@ -615,8 +582,8 @@ Ext.define('Ext.event.publisher.Dom', {
             self.lastTouchEndTime = Ext.now();
         }
 
-        if (!this.reEnterCount && !GlobalEvents.idleEventMask[type]) {
-            Ext.fireIdle();
+        if (!this.reEnterCount && GlobalEvents.hasListeners.idle && !GlobalEvents.idleEventMask[type]) {
+            GlobalEvents.fireEvent('idle');
         }
     },
 
@@ -722,8 +689,6 @@ Ext.define('Ext.event.publisher.Dom', {
         // both reset flags on the same object.
         var self = Ext.event.publisher.Dom;
 
-        this.reEnterCount = 0;
-
         // set to undefined, not null, because that is the initial state of these vars and
         // undefined/null return different results when used in math operations
         // (see isEventBlocked)
@@ -747,7 +712,6 @@ Ext.define('Ext.event.publisher.Dom', {
         prototype.target = doc;
     } else {
         /**
-         * @member Ext.event.publisher.Dom
          * @property {Object} target the DOM target to which listeners are attached for
          * delegated events.
          * @private

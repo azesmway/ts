@@ -1,4 +1,4 @@
-topSuite("Ext.data.writer.Json", ['Ext.data.ArrayStore'], function(){
+describe("Ext.data.writer.Json", function(){
     var writer, buildWriter, buildRecords, makeOperation, Article, simpleData = {
         id: 1,
         title: 'Article 1',

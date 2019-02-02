@@ -78,27 +78,11 @@ Ext.define('Ext.chart.sprite.Label', {
         /**
          * @cfg {Object} fx Animation configuration.
          */
-        animation: {
+        fx: {
             customDurations: {
                 callout: 200
             }
         },
-        /**
-         * @cfg {String} field The store record field used by the label sprite.
-         *
-         * Note: the label sprite is typically used indirectly (by a Ext.chart.MarkerHolder
-         * series sprite, via a Ext.chart.Markers sprite, where the latter is passed to the
-         * label renderer), so to get to the label field one has to do:
-         *
-         *     renderer: function (text, sprite, config, data, index) {
-         *         var field = sprite.getTemplate().getField();
-         *     }
-         *
-         * To get the actual label sprite instance one can use:
-         *
-         *     sprite.get(index)
-         *
-         */
         field: null,
         /**
          * @cfg {Boolean|Object} calloutLine
@@ -109,13 +93,7 @@ Ext.define('Ext.chart.sprite.Label', {
          *
          * Default value: false.
          */
-        calloutLine: true,
-
-        /**
-         * @cfg {Number} [hideLessThan=20]
-         * Hides labels for pie slices with segment length less than this value (in pixels).
-         */
-        hideLessThan: 20
+        calloutLine: true
     },
 
     applyCalloutLine: function (calloutLine) {
@@ -124,13 +102,11 @@ Ext.define('Ext.chart.sprite.Label', {
         }
     },
 
-    createModifiers: function () {
-        var me = this,
-            mods = me.callParent(arguments);
-
-        mods.callout = new Ext.chart.modifier.Callout({sprite: me});
-        mods.animation.setUpper(mods.callout);
-        mods.callout.setUpper(mods.target);
+    prepareModifiers: function () {
+        this.callParent(arguments);
+        this.calloutModifier = new Ext.chart.modifier.Callout({sprite: this});
+        this.fx.setUpper(this.calloutModifier);
+        this.calloutModifier.setUpper(this.topModifier);
     },
 
     render: function (surface, ctx) {

@@ -1,4 +1,5 @@
-topSuite("Ext.ProgressBar", function() {
+describe("Ext.ProgressBar", function() {
+
     var c;
 
     function makeProgress(config) {
@@ -166,7 +167,7 @@ topSuite("Ext.ProgressBar", function() {
 
             waitsFor(function() {
                 return c.text !== 'Foo...';
-            }, 'callback text', 2000);
+            }, 'callback text');
 
             runs(function (){
                 expect(c.text).toBe('Bar');

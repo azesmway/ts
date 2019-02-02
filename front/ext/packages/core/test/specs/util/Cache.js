@@ -1,4 +1,4 @@
-topSuite("Ext.util.Cache", function () {
+describe("Ext.util.Cache", function () {
     var evicted = [],
         cache;
 

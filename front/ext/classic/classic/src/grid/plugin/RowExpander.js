@@ -67,7 +67,7 @@ Ext.define('Ext.grid.plugin.RowExpander', {
      * `true` to ensure that the full row expander body is visible when clicking on the expander icon
      * (defaults to `true`)
      */
-    scrollIntoViewOnExpand: true,
+     scrollIntoViewOnExpand: true,
 
     /**
      * @cfg {Number}
@@ -123,7 +123,7 @@ Ext.define('Ext.grid.plugin.RowExpander', {
         var me = this,
             features;
 
-        me.callParent([grid]);
+        me.callParent(arguments);
 
         // Keep track of which record internalIds are expanded.
         me.recordsExpanded = {};
@@ -204,15 +204,16 @@ Ext.define('Ext.grid.plugin.RowExpander', {
             normalView = me.normalView = me.normalGrid.getView();
         }
 
-        me.callParent([grid]);
+        me.callParent(arguments);
         me.grid = grid;
         view = me.view = grid.getView();
+
+        // Bind to view for key and mouse events
+        me.bindView(view);
 
         // If the owning grid is lockable, ensure the collapsed class is applied to the locked side by adding
         // a row processor to both views.
         if (ownerLockable) {
-            me.bindView(lockedView);
-            me.bindView(normalView);
             me.addExpander(me.lockedGrid.headerCt.items.getCount() ? me.lockedGrid : me.normalGrid);
 
             // Add row processor which adds collapsed class.
@@ -232,7 +233,6 @@ Ext.define('Ext.grid.plugin.RowExpander', {
         } 
         // Add row processor which adds collapsed class
         else {
-            me.bindView(view);
             // Ensure tpl and view can access this plugin
             view.addRowTpl(me.addCollapsedCls).rowExpander =
                 view.rowExpander = me;
@@ -260,9 +260,13 @@ Ext.define('Ext.grid.plugin.RowExpander', {
 
     beforeReconfigure: function(grid, store, columns, oldStore, oldColumns) {
         var me = this;
+
+        if (me.viewListeners) {
+            me.viewListeners.destroy();    
+        }
         
         if (columns) {
-            me.expanderColumn = new Ext.grid.column.Column(me.getHeaderConfig());    
+            me.expanderColumn = new Ext.grid.Column(me.getHeaderConfig());    
             columns.unshift(me.expanderColumn);
         }
         
@@ -351,7 +355,8 @@ Ext.define('Ext.grid.plugin.RowExpander', {
             nextBd = normalRow.down(me.rowBodyTrSelector, true),
             wasCollapsed = normalRow.hasCls(me.rowCollapsedCls),
             addOrRemoveCls = wasCollapsed ? 'removeCls' : 'addCls',
-            ownerLockable = me.grid.lockable && me.grid;
+            ownerLockable = me.grid.lockable && me.grid,
+            componentLayoutCounter;
 
         normalRow[addOrRemoveCls](me.rowCollapsedCls);
         Ext.fly(nextBd)[addOrRemoveCls](me.rowBodyHiddenCls);
@@ -361,6 +366,8 @@ Ext.define('Ext.grid.plugin.RowExpander', {
 
         // Sync the collapsed/hidden classes on the locked side
         if (ownerLockable) {
+            componentLayoutCounter = ownerLockable.componentLayoutCounter;
+
             // It's the top level grid's LockingView that does the firing when there's a lockable assembly involved.
             fireView = ownerLockable.getView();
 
@@ -397,6 +404,12 @@ Ext.define('Ext.grid.plugin.RowExpander', {
 
         if (me.scrollIntoViewOnExpand && wasCollapsed) {
             me.grid.ensureVisible(rowIdx);
+        }
+
+        // The two sides are layout roots. The top grid will not have layed out.
+        // We must postprocess it now.
+        if (ownerLockable && ownerLockable.componentLayoutCounter === componentLayoutCounter) {
+            ownerLockable.syncLockableLayout();
         }
     },
 

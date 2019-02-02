@@ -26,9 +26,7 @@
  *         height: 250,
  *         width: 250,
  *         store: shows,
- *         plugins: {
- *             gridfilters: true
- *         },
+ *         plugins: 'gridfilters',
  *         columns: [{
  *             dataIndex: 'id',
  *             text: 'ID',
@@ -129,12 +127,13 @@ Ext.define('Ext.grid.filters.Filters', {
      */
     filterCls: Ext.baseCSSPrefix + 'grid-filters-filtered-column',
 
+    //<locale>
     /**
-     * @cfg {String} [menuFilterText]
+     * @cfg {String} [menuFilterText="Filters"]
      * The text for the filters menu.
-     * @locale
      */
     menuFilterText: 'Filters',
+    //</locale>
 
     /**
      * @cfg {Boolean} showMenu
@@ -175,22 +174,18 @@ Ext.define('Ext.grid.filters.Filters', {
             menucreate: me.onMenuCreate
         });
 
-        // if menu is already created before filter is initialized
-        if (headerCt.menu && !headerCt.menu.destroyed) {
-            this.onMenuCreate(headerCt, headerCt.menu);
-        }
-
         me.gridListeners = grid.on({
             destroyable: true,
             scope: me,
             reconfigure: me.onReconfigure
         });
 
-        if (store.isEmptyStore) {
-            return;
+        me.bindStore(store);
+
+        if (grid.stateful) {
+            store.statefulFilters = true;
         }
 
-        me.bindStore(store);
         me.initColumns();
     },
 
@@ -272,17 +267,9 @@ Ext.define('Ext.grid.filters.Filters', {
      * Handle creation of the grid's header menu.
      */
     onMenuCreate: function (headerCt, menu) {
-        var me = this;
-
-        if (me.headerMenuListeners) {
-            Ext.destroy(me.headerMenuListeners);
-            me.headerMenuListeners = null;
-        }
-
-        me.headerMenuListeners = menu.on({
-            beforeshow: me.onMenuBeforeShow,
-            destroyable: true,
-            scope: me
+        menu.on({
+            beforeshow: this.onMenuBeforeShow,
+            scope: this
         });
     },
 
@@ -356,7 +343,7 @@ Ext.define('Ext.grid.filters.Filters', {
             filterMenuItem = me.filterMenuItem,
             item;
 
-        Ext.destroy(me.headerCtListeners, me.gridListeners, me.headerMenuListeners);
+        Ext.destroy(me.headerCtListeners, me.gridListeners);
 
         me.bindStore(null);
         me.sep = Ext.destroy(me.sep);
@@ -375,13 +362,8 @@ Ext.define('Ext.grid.filters.Filters', {
     },
 
     onBindStore: function(store, initial, propName) {
-        var me = this;
-        me.local = !store.getRemoteFilter();
-        store.getFilters().on('remove', me.onFilterRemove, me);
-
-        if (me.grid.stateful && store.initialConfig.statefulFilters !== false) {
-            store.statefulFilters = true;
-        }
+        this.local = !store.getRemoteFilter();
+        store.getFilters().on('remove', this.onFilterRemove, this);
     },
 
     onFilterRemove: function (filterCollection, list) {

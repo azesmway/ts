@@ -45,57 +45,58 @@
 Ext.define('Ext.field.TextArea', {
     extend: 'Ext.field.Text',
     xtype: 'textareafield',
-    
+    requires: ['Ext.field.TextAreaInput'],
     alternateClassName: 'Ext.form.TextArea',
 
     config: {
         /**
-         * @cfg autoCapitalize
+         * @cfg
          * @inheritdoc
          */
         autoCapitalize: false,
 
         /**
-         * @cfg {Number} maxRows
-         * The maximum number of lines made visible by the input.
+         * @cfg
+         * @inheritdoc
+         */
+        component: {
+            xtype: 'textareainput'
+        },
+
+        /**
+         * @cfg {Number} maxRows The maximum number of lines made visible by the input.
+         * @accessor
          */
         maxRows: null,
 
-        /**
-         * @cfg clearable
-         * @inheritdoc
-         */
-        clearable: false
+        clearIcon: false
     },
 
-    /**
-     * @property tag
-     * @inheritdoc
-     */
-    tag: 'textarea',
-
-    /**
-     * @property classCls
-     * @inheritdoc
-     */
     classCls: Ext.baseCSSPrefix + 'textareafield',
 
-    //<debug>
-    applyMaxRows: function(maxRows) {
-        if (maxRows !== null && typeof maxRows !== 'number') {
-            throw new Error("Ext.field.TextArea: [applyMaxRows] trying to pass a value which is not a number");
-        }
-
-        return maxRows;
-    },
-    //</debug>
-
+    /**
+     * @private
+     */
     updateMaxRows: function(newRows) {
-        this.setInputAttribute('rows', newRows);
+        this.getComponent().setMaxRows(newRows);
     },
 
+    updateHeight: function(height, oldHeight) {
+        this.callParent([height, oldHeight]);
+        this.getComponent().inputElement.setHeight(height);
+    },
+
+    updateWidth: function(width, oldWidth) {
+        this.callParent([width, oldWidth]);
+        this.getComponent().inputElement.setWidth(width);
+    },
+
+    /**
+     * Called when a key has been pressed in the `<input>`
+     * @private
+     */
     doKeyUp: function(me) {
-        // Do not call parent - we don't want to fire action on enter key press
-        this.syncEmptyState();
+        // getValue to ensure that we are in sync with the dom
+        this.toggleClearTrigger(this.getValue());
     }
 });

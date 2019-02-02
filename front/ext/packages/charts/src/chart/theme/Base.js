@@ -27,7 +27,6 @@
  * 'fontStyle', 'fontVariant', 'fontWeight', 'fontSize' and 'fontFamily'.
  */
 Ext.define('Ext.chart.theme.Base', {
-    extend: 'Ext.chart.theme.BaseTheme',
 
     mixins: {
         factoryable: 'Ext.mixin.Factoryable'
@@ -40,7 +39,6 @@ Ext.define('Ext.chart.theme.Base', {
     },
 
     isTheme: true,
-    isBase: true,
 
     config: {
         /**
@@ -98,40 +96,6 @@ Ext.define('Ext.chart.theme.Base', {
          */
         chart: {
             defaults: {
-                captions: {
-                    title: {
-                        docked: 'top',
-                        padding: 5,
-                        style: {
-                            textAlign: 'center',
-                            fontFamily: 'default',
-                            fontWeight: '500',
-                            fillStyle: 'black',
-                            fontSize: 'default*1.6'
-                        }
-                    },
-                    subtitle: {
-                        docked: 'top',
-                        style: {
-                            textAlign: 'center',
-                            fontFamily: 'default',
-                            fontWeight: 'normal',
-                            fillStyle: 'black',
-                            fontSize: 'default*1.3'
-                        }
-                    },
-                    credits: {
-                        docked: 'bottom',
-                        padding: 5,
-                        style: {
-                            textAlign: 'left',
-                            fontFamily: 'default',
-                            fontWeight: 'lighter',
-                            fillStyle: 'black',
-                            fontSize: 'default'
-                        }
-                    }
-                },
                 background: 'white'
             }
         },
@@ -303,27 +267,19 @@ Ext.define('Ext.chart.theme.Base', {
         },
 
         /**
-         * @deprecated 5.0.1 Use the {@link Ext.draw.Container#gradients} config instead.
+         * @deprecated Use the {@link Ext.draw.Container#gradients} config instead.
+         * @since 5.0.1
          */
         useGradients: false,
 
         /**
-         * @deprecated 5.0.1 Use the {@link Ext.chart.AbstractChart#background} config instead.
+         * @deprecated Use the {@link Ext.chart.AbstractChart#background} config instead.
+         * @since 5.0.1
          */
         background: null
     },
 
-    colorDefaults: [
-        '#94ae0a',
-        '#115fa6',
-        '#a61120',
-        '#ff8809',
-        '#ffd13e',
-        '#a61187',
-        '#24ad9a',
-        '#7c7474',
-        '#a66111'
-    ],
+    colorDefaults: [ '#94ae0a', '#115fa6', '#a61120', '#ff8809', '#ffd13e', '#a61187', '#24ad9a', '#7c7474', '#a66111' ],
 
     constructor: function (config) {
         this.initConfig(config);
@@ -344,29 +300,9 @@ Ext.define('Ext.chart.theme.Base', {
         }
     },
 
-    resolveChartDefaults: function () {
-        var chart = Ext.clone(this.getChart()),
-            chartType, captionName,
-            chartConfig, captionConfig;
-
-        for (chartType in chart) {
-            chartConfig = chart[chartType];
-            if ('captions' in chartConfig) {
-                for (captionName in chartConfig.captions) {
-                    captionConfig = chartConfig.captions[captionName];
-                    if (captionConfig) {
-                        this.replaceDefaults(captionConfig.style);
-                    }
-                }
-            }
-        }
-        this.setChart(chart);
-    },
-
     resolveDefaults: function () {
         var me = this;
-
-        Ext.onInternalReady(function () {
+        Ext.onReady(function () {
             var sprites = Ext.clone(me.getSprites()),
                 legend = Ext.clone(me.getLegend()),
                 axis = Ext.clone(me.getAxis()),
@@ -374,10 +310,7 @@ Ext.define('Ext.chart.theme.Base', {
                 div, key, config;
 
             if (!me.superclass.defaults) {
-                div = Ext.getBody().createChild({
-                    tag: 'div',
-                    cls: me.defaultsDivCls
-                });
+                div = Ext.getBody().createChild({tag: 'div', cls: 'x-component'});
                 me.superclass.defaults = {
                     fontFamily: div.getStyle('fontFamily'),
                     fontWeight: div.getStyle('fontWeight'),
@@ -387,8 +320,6 @@ Ext.define('Ext.chart.theme.Base', {
                 };
                 div.destroy();
             }
-
-            me.resolveChartDefaults();
 
             me.replaceDefaults(sprites.text);
             me.setSprites(sprites);

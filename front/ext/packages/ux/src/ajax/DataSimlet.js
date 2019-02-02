@@ -121,12 +121,8 @@ Ext.define('Ext.ux.ajax.DataSimlet', function () {
             fields = params.sort;
             if (params.dir) {
                 fields = [{ direction: params.dir, property: fields }];
-            }
-            else if (params.sort) {
+            } else {
                 fields = Ext.decode(params.sort);
-            }
-            else {
-                fields = null;
             }
 
             if (ctx.filterSpec) {

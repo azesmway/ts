@@ -7,8 +7,7 @@ Ext.define('Ext.ux.colorpick.ColorPreview', {
     alias      : 'widget.colorpickercolorpreview',
 
     requires: [
-        'Ext.util.Format',
-        'Ext.XTemplate'
+        'Ext.util.Format'
     ],
 
     //hack to solve issue with IE, when applying a filter the click listener is not being fired.

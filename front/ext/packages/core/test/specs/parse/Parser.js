@@ -1,4 +1,4 @@
-topSuite('Ext.parse.Parser', function () {
+describe('Ext.parse.Parser', function () {
     var parser;
 
     beforeEach(function () {

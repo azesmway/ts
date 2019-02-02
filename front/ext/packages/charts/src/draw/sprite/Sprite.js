@@ -83,7 +83,7 @@
  * see the changes on-screen.
  * 
  * For information on configuring a sprite with an initial transformation see 
- * {@link #scaling}, {@link #rotation}, and {@link #translation}.
+ * {@link #scaling}, {@link rotation}, and {@link translation}.
  * 
  * For information on applying a transformation to an existing sprite see the 
  * Ext.draw.Matrix class.
@@ -105,8 +105,6 @@ Ext.define('Ext.draw.sprite.Sprite', {
     ],
 
     isSprite: true,
-
-    $configStrict: false,
 
     statics: {
         defaultHitTestOptions: {
@@ -724,8 +722,7 @@ Ext.define('Ext.draw.sprite.Sprite', {
             // since it is initialized lazily) before the attributes
             // are initialized ('initializeAttributes' call).
             defaults = attributeDefinition.getDefaults(),
-            processors = attributeDefinition.getProcessors(),
-            modifiers, name;
+            modifiers;
 
         config = Ext.isObject(config) ? config : {};
 
@@ -733,13 +730,14 @@ Ext.define('Ext.draw.sprite.Sprite', {
         me.attr = {};
         // Observable's constructor also calls the initConfig for us.
         me.mixins.observable.constructor.apply(me, arguments);
-
+        
         modifiers = Ext.Array.from(config.modifiers, true);
-        me.createModifiers(modifiers);
+        me.prepareModifiers(modifiers);
         me.initializeAttributes();
         me.setAttributes(defaults, true);
         //<debug>
-        for (name in config) {
+        var processors = attributeDefinition.getProcessors();
+        for (var name in config) {
             if (name in processors && me['get' + name.charAt(0).toUpperCase() + name.substr(1)]) {
                 Ext.raise('The ' + me.$className +
                     ' sprite has both a config and an attribute with the same name: ' + name + '.');
@@ -747,12 +745,6 @@ Ext.define('Ext.draw.sprite.Sprite', {
         }
         //</debug>
         me.setAttributes(config);
-    },
-
-    updateSurface: function (surface, oldSurface) {
-        if (oldSurface) {
-            oldSurface.remove(this);
-        }
     },
 
     /**
@@ -775,7 +767,6 @@ Ext.define('Ext.draw.sprite.Sprite', {
         // we simply need to change the sprite's state and notify
         // the sprite's parent.
         this.attr.dirty = dirty;
-
         if (dirty) {
             var parent = this.getParent();
             if (parent) {
@@ -785,58 +776,40 @@ Ext.define('Ext.draw.sprite.Sprite', {
     },
 
     addModifier: function (modifier, reinitializeAttributes) {
-        var me = this,
-            mods = me.modifiers,
-            animation = mods.animation,
-            target = mods.target,
-            type;
-
+        var me = this;
         if (!(modifier instanceof Ext.draw.modifier.Modifier)) {
-            type = typeof modifier === 'string' ? modifier : modifier.type;
-            if (type && !mods[type]) {
-                mods[type] = modifier = Ext.factory(modifier, null, null, 'modifier');
-            }
+            modifier = Ext.factory(modifier, null, null, 'modifier');
         }
-
         modifier.setSprite(me);
-
         if (modifier.preFx || modifier.config && modifier.config.preFx) {
-            if (animation._lower) {
-                animation._lower.setUpper(modifier);
+            if (me.fx._lower) {
+                me.fx._lower.setUpper(modifier);
             }
-            modifier.setUpper(animation);
+            modifier.setUpper(me.fx);
         } else {
-            target._lower.setUpper(modifier);
-            modifier.setUpper(target);
+            me.topModifier._lower.setUpper(modifier);
+            modifier.setUpper(me.topModifier);
         }
-
         if (reinitializeAttributes) {
             me.initializeAttributes();
         }
-
         return modifier;
     },
 
-    createModifiers: function (modifiers) {
+    prepareModifiers: function (additionalModifiers) {
+        // Set defaults
         var me = this,
-            Modifier = Ext.draw.modifier,
-            animation = me.getInitialConfig().animation,
-            mods, i, ln;
+            i, ln;
 
-        // Create default modifiers.
-        me.modifiers = mods = {
-            target: new Modifier.Target({sprite: me}),
-            animation: new Modifier.Animation(Ext.apply({sprite: me}, animation))
-        };
+        me.topModifier = new Ext.draw.modifier.Target({sprite: me});
 
-        // Link modifiers.
-        mods.animation.setUpper(mods.target);
+        // Link modifiers
+        me.fx = new Ext.draw.modifier.Animation({sprite: me});
+        me.fx.setUpper(me.topModifier);
 
-        for (i = 0, ln = modifiers.length; i < ln; i++) {
-            me.addModifier(modifiers[i], false);
+        for (i = 0, ln = additionalModifiers.length; i < ln; i++) {
+            me.addModifier(additionalModifiers[i], false);
         }
-
-        return mods;
     },
 
     /**
@@ -845,7 +818,7 @@ Ext.define('Ext.draw.sprite.Sprite', {
      * sprite
      */
     getAnimation: function () {
-        return this.modifiers.animation;
+        return this.fx;
     },
 
     /**
@@ -884,13 +857,11 @@ Ext.define('Ext.draw.sprite.Sprite', {
      * animations.
      */
     setAnimation: function (config) {
-        if (!this.isConfiguring) {
-            this.modifiers.animation.setConfig(config || {duration: 0});
-        }
+        this.fx.setConfig(config);
     },
 
     initializeAttributes: function () {
-        this.modifiers.target.prepareAttributes(this.attr);
+        this.topModifier.prepareAttributes(this.attr);
     },
 
     /**
@@ -1033,32 +1004,39 @@ Ext.define('Ext.draw.sprite.Sprite', {
      */
     setAttributes: function (changes, bypassNormalization, avoidCopy) {
         var me = this,
-            changesToPush;
+            attr = me.attr,
+            normalizedChanges,
+            name, value, obj;
 
         //<debug>
-        if (me.destroyed) {
+        if (me.isDestroyed) {
             Ext.Error.raise("Setting attributes of a destroyed sprite.");
         }
         //</debug>
-
         if (bypassNormalization) {
             if (avoidCopy) {
-                changesToPush = changes;
+                me.topModifier.pushDown(attr, changes);
             } else {
-                changesToPush = Ext.apply({}, changes);
+                obj = {};
+                for (name in changes) {
+                    value = changes[name];
+                    if (value !== attr[name]) {
+                        obj[name] = value;
+                    }
+                }
+                me.topModifier.pushDown(attr, obj);
             }
         } else {
-            changesToPush = me.self.def.normalize(changes);
+            normalizedChanges = me.self.def.normalize(changes);
+            me.topModifier.pushDown(attr, normalizedChanges);
         }
-
-        me.modifiers.target.pushDown(me.attr, changesToPush);
     },
 
     /**
      * Set attributes of the sprite, assuming the names and values have already been
      * normalized.
      *
-     * @deprecated 6.5.0 Use setAttributes directly with bypassNormalization argument being `true`.
+     * @deprecated Use setAttributes directy with bypassNormalization argument being `true`.
      * @param {Object} changes The content of the change.
      * @param {Boolean} [avoidCopy] `true` to avoid copying the `changes` object.
      * The content of object may be destroyed.
@@ -1203,20 +1181,7 @@ Ext.define('Ext.draw.sprite.Sprite', {
      * @param {Array} rect The rect of the context to be affected by gradients.
      */
     useAttributes: function (ctx, rect) {
-        // Always (force) apply transformation to sprite instances,
-        // even if their 'dirtyTransform' flag is false.
-        // The 'dirtyTransform' flag of an instance may never be set to 'true', as the
-        // 'transform' updater won't ever be called for sprite instances that have
-        // the same transform attributes as their template, because there's nothing to update
-        // (an instance is simply a prototype chained template's 'attr' object, that only
-        // has own properties for attributes whose values are different).
-        // Making the modifier recognize transform attributes set on sprite instances
-        // (see Ext.draw.modifier.Modifier's 'pushDown' method, where attributes with
-        // same values are removed from the 'changes' object) and making sure their 'dirtyTransform'
-        // flag is set to 'true' is not a correct solution here, because of the way instances
-        // are rendered (see Ext.draw.sprite.Instancing's 'render' method) - there is no way
-        // an instance wounldn't want its 'applyTransformations' method called.
-        this.applyTransformations(this.isSpriteInstance);
+        this.applyTransformations();
         var attr = this.attr,
             canvasAttributes = attr.canvasAttributes,
             strokeStyle = canvasAttributes.strokeStyle,
@@ -1645,15 +1610,11 @@ Ext.define('Ext.draw.sprite.Sprite', {
 
     /**
      * @method
-     * This is where the actual sprite rendering happens by calling `ctx` methods.
-     * @param {Ext.draw.Surface} surface A draw container surface.
-     * @param {CanvasRenderingContext2D} ctx A context object that is API compatible with the native
-     * [CanvasRenderingContext2D](https://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D).
-     * @param {Number[]} surfaceClipRect The clip rect: [left, top, width, height].
-     * Not to be confused with the `surface.getRect()`, which represents the location
-     * and size of the surface in a draw container, in draw container coordinates.
-     * The clip rect on the other hand represents the portion of the surface that is being
-     * rendered, in surface coordinates.
+     * Render method.
+     * @param {Ext.draw.Surface} surface The surface.
+     * @param {Object} ctx A context object compatible with CanvasRenderingContext2D.
+     * @param {Array} rect The clip rect (or called dirty rect) of the current rendering. Not to be confused
+     * with `surface.getRect()`.
      *
      * @return {*} returns `false` to stop rendering in this frame.
      * All the sprites that haven't been rendered will have their dirty flag untouched.
@@ -1758,7 +1719,7 @@ Ext.define('Ext.draw.sprite.Sprite', {
      */
     destroy: function () {
         var me = this,
-            modifier = me.modifiers.target,
+            modifier = me.topModifier,
             currentModifier;
 
         while (modifier) {

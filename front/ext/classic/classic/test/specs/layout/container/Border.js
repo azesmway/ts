@@ -11,9 +11,7 @@
 // TODO: mini
 // TODO: placeholder vs header collapse
 
-topSuite("Ext.layout.container.Border",
-    ['Ext.container.Viewport', 'Ext.Panel', 'Ext.Button', 'Ext.layout.*'],
-function() {
+describe('Ext.layout.container.Border', function() {
     // Assertions based on placeholders are tricky as the default placeholder size could change without that
     // necessarily counting as a failure. To handle this we capture that size in these 'constants'.
     var HORIZONTAL_PLACEHOLDER_HEIGHT = 28;
@@ -254,30 +252,16 @@ function() {
                 expect(north.nextSibling().isXType('splitter')).toBe(true);
             });  
             
-            describe("collapsible: true && collapseMode: 'mini'", function() {
-                it("should create a splitter", function(){
-                    var west = new Ext.panel.Panel({
-                        region: 'west',
-                        height: 50,
-                        collapsible: true,
-                        collapseMode: 'mini'
-                    });
-                    createWithCenter([west]);
-                    expect(west.nextSibling().isXType('splitter')).toBe(true);
+            it("should create a splitter with collapsible: true & collapseMode: 'mini'", function(){
+                var west = new Ext.panel.Panel({
+                    region: 'west',
+                    height: 50,
+                    collapsible: true,
+                    collapseMode: 'mini'
                 });
-                
-                it("should not hide the splitter if region is collapsed", function() {
-                    var west = new Ext.panel.Panel({
-                        region: 'west',
-                        height: 50,
-                        collapsible: true,
-                        collapsed: true,
-                        collapseMode: 'mini'
-                    });
-                    createWithCenter([west]);
-                    expect(west.nextSibling().isVisible()).toBe(true);
-                });
-            });
+                createWithCenter([west]);
+                expect(west.nextSibling().isXType('splitter')).toBe(true);
+            });  
             
             describe("splitter configuration", function() {
                 var east, splitter;

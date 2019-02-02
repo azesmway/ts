@@ -1,9 +1,15 @@
 /**
  * @class Ext.event.Event
  */
-
 Ext.define('Ext.overrides.event.Event', {
     override: 'Ext.event.Event',
+
+    // map of events that should fire global mousedown even if stopped
+    mousedownEvents: {
+        mousedown: 1,
+        pointerdown: 1,
+        touchstart: 1
+    },
 
     /**
      * @method injectEvent
@@ -236,7 +242,8 @@ Ext.define('Ext.overrides.event.Event', {
         var me = this,
             event = me.browserEvent,
             parentEvent = me.parentEvent,
-            unselectable, target, fn;
+            unselectable, target;
+
 
         // This check is for IE8/9. The event object may have been
         // invalidated, so we can't delve into the details of it. If so,
@@ -270,29 +277,13 @@ Ext.define('Ext.overrides.event.Event', {
                 if (event.type === 'mousedown') {
                     target = event.target;
                     unselectable = target.getAttribute('unselectable');
-                    
                     if (unselectable !== 'on') {
                         target.setAttribute('unselectable', 'on');
-                        
-                        fn = function() {
+                        Ext.defer(function() {
                             target.setAttribute('unselectable', unselectable);
-                        };
-                        
-                        // This function is hard to track, with a potential to be called
-                        // for any HtmlElement in the document. It may be a Fly, it may
-                        // not belong to any Component, and it may even be created by
-                        // 3rd party code that we have no control over and cannot intercept
-                        // the element being destroyed.
-                        // On the other hand, the function is pretty simple, cannot lead
-                        // to memory leaks and is only fired once. So, no harm no foul.
-                        //<debug>
-                        fn.$skipTimerCheck = true;
-                        //</debug>
-                        
-                        Ext.defer(fn, 1);
+                        }, 1);
                     }
                 }
-                
                 // IE9 and earlier do not support preventDefault
                 event.returnValue = false;
                 // Some keys events require setting the keyCode to -1 to be prevented
@@ -306,6 +297,24 @@ Ext.define('Ext.overrides.event.Event', {
         return me;
     },
 
+    stopPropagation: function() {
+        var me = this,
+            event = me.browserEvent;
+
+        // This check is for IE8/9. The event object may have been
+        // invalidated, so we can't delve into the details of it. If so,
+        // just fall out gracefully and don't attempt to do anything.
+        if (typeof event.type !== 'unknown') {
+            if (me.mousedownEvents[me.type]) {
+                // Fire the "unstoppable" global mousedown event
+                // (used for menu hiding, etc)
+                Ext.GlobalEvents.fireMouseDown(me);
+            }
+            me.callParent();
+        }
+        return me;
+    },
+
     deprecated: {
         '5.0': {
             methods: {
@@ -314,7 +323,7 @@ Ext.define('Ext.overrides.event.Event', {
                  * @member Ext.event.Event
                  * Clones this event.
                  * @return {Ext.event.Event} The cloned copy
-                 * @deprecated 5.0.0 This method is deprecated.
+                 * @deprecated 5.0.0
                  */
                 clone: function() {
                     return new this.self(this.browserEvent, this);
@@ -324,7 +333,17 @@ Ext.define('Ext.overrides.event.Event', {
     }
 }, function() {
     var Event = this,
-        btnMap;
+        btnMap,
+        onKeyDown = function(e) {
+            if (e.keyCode === 9) {
+                Event.forwardTab = !e.shiftKey;
+            }
+        },
+        onKeyUp = function(e) {
+            if (e.keyCode === 9) {
+                delete Event.forwardTab;
+            }
+        };
 
 //<feature legacyBrowser>
     if (Ext.isIE9m) {
@@ -379,9 +398,8 @@ Ext.define('Ext.overrides.event.Event', {
             mouseEnterRe: /(mouseover|mouseenter)/,
 
             /**
-             * @method enableIEAsync
              * @member Ext.event.Event
-             * @inheritdoc Ext.event.Event#static-method-enableIEAsync
+             * @inheritdoc Ext.event.Event#static-enableIEAsync
              * @private
              */
             enableIEAsync: function(browserEvent) {
@@ -411,13 +429,18 @@ Ext.define('Ext.overrides.event.Event', {
         // We place these listeners to capture Tab and Shift-Tab key strokes
         // and pass this information in the focus/blur event if it happens
         // between keydown/keyup pair.
-        document.attachEvent('onkeydown', Ext.event.Event.globalTabKeyDown);
-        document.attachEvent('onkeyup',   Ext.event.Event.globalTabKeyUp);
+        document.attachEvent('onkeydown', onKeyDown);
+        document.attachEvent('onkeyup',   onKeyUp);
         
         window.attachEvent('onunload', function() {
-            document.detachEvent('onkeydown', Ext.event.Event.globalTabKeyDown);
-            document.detachEvent('onkeyup',   Ext.event.Event.globalTabKeyUp);
+            document.detachEvent('onkeydown', onKeyDown);
+            document.detachEvent('onkeyup',   onKeyUp);
         });
     }
+    else
 //</feature>
+    if (document.addEventListener) {
+        document.addEventListener('keydown', onKeyDown, true);
+        document.addEventListener('keyup',   onKeyUp,   true);
+    }
 });

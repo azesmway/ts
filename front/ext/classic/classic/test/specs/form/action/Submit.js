@@ -1,4 +1,4 @@
-topSuite("Ext.form.action.Submit", ['Ext.form.Basic', 'Ext.form.field.*'], function() {
+describe("Ext.form.action.Submit", function() {
     var action;
 
     function createAction(config) {

@@ -33,13 +33,6 @@ Ext.define('Ext.slider.Thumb', {
              */
             constrain: false
         });
-        
-        //<debug>
-        if (me.id == null) {
-            Ext.id(me, 'ext-slider-thumb-');
-        }
-        //</debug>
-        
         me.callParent([config]);
     },
 
@@ -264,7 +257,7 @@ Ext.define('Ext.slider.Thumb', {
         trackPoint = slider.getTrackpoint(trackerXY);
 
         // If dragged out of range, value will be undefined
-        if (trackPoint != null) {
+        if (trackPoint !== undefined) {
             return slider.reversePixelValue(trackPoint);
         }
     },

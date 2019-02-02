@@ -1,4 +1,4 @@
-topSuite("Ext.data.operation.Destroy", ['Ext.data.ArrayStore'], function() {
+describe("Ext.data.operation.Destroy", function() {
     
     var op;
     

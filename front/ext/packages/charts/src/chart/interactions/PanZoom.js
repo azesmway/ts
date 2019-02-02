@@ -220,12 +220,6 @@ Ext.define('Ext.chart.interactions.PanZoom', {
          */
         zoomOnPan: false,
 
-        /**
-         * @cfg {Boolean} [doubleTapReset=false]
-         * If `true`, the double tap on a chart will reset the current pan/zoom to show the whole chart.
-         */
-        doubleTapReset: false,
-
         modeToggleButton: {
             xtype: 'segmentedbutton',
             width: 200,
@@ -264,17 +258,22 @@ Ext.define('Ext.chart.interactions.PanZoom', {
     },
 
     applyModeToggleButton: function (button, oldButton) {
-        return Ext.factory(button, 'Ext.button.Segmented', oldButton);
-    },
+        var me = this,
+            result = Ext.factory(button, 'Ext.button.Segmented', oldButton);
 
-    updateModeToggleButton: function (button) {
-        if (button) {
-            button.on('change', 'onModeToggleChange', this);
+        if (!result && oldButton) {
+            oldButton.destroy();
         }
+        if (result && !oldButton) {
+            result.on('toggle', 'onModeToggleChange', me);
+        }
+        return result;
     },
 
-    onModeToggleChange: function (segmentedButton, value) {
-        this.setZoomOnPan(value === 'zoom');
+    onModeToggleChange: function (segmentedButton, button, pressed) {
+        if (pressed) {
+            this.setZoomOnPan(button.getValue() === 'zoom');
+        }
     },
 
     getGestures: function () {
@@ -290,43 +289,36 @@ Ext.define('Ext.chart.interactions.PanZoom', {
         gestures[pan + 'start'] = 'onPanGestureStart';
         gestures[pan + 'end'] = 'onPanGestureEnd';
         gestures.doubletap = 'onDoubleTap';
-
         return gestures;
     },
 
     onDoubleTap: function (e) {
         var me = this,
-            doubleTapReset = me.getDoubleTapReset(),
-            chart, axes, axis, i, ln;
+            chart = me.getChart(),
+            axes = chart.getAxes(),
+            axis, i, ln;
 
-        if (doubleTapReset) {
-            chart = me.getChart();
-            axes = chart.getAxes();
-            for (i = 0, ln = axes.length; i < ln; i++) {
-                axis = axes[i];
-                axis.setVisibleRange([0, 1]);
-            }
-            chart.redraw();
+        for (i = 0, ln = axes.length; i < ln; i++) {
+            axis = axes[i];
+            axis.setVisibleRange([0, 1]);
         }
+        chart.redraw();
     },
 
     onPanGestureStart: function (e) {
         if (!e || !e.touches || e.touches.length < 2) { //Limit drags to single touch
             var me = this,
-                chart = me.getChart(),
-                rect = chart.getInnerRect(),
-                xy = chart.element.getXY();
+                rect = me.getChart().getInnerRect(),
+                xy = me.getChart().element.getXY();
 
             e.claimGesture();
-            chart.suspendAnimation();
 
             me.startX = e.getX() - xy[0] - rect[0];
             me.startY = e.getY() - xy[1] - rect[1];
             me.oldVisibleRanges = null;
             me.hideLabels();
-            chart.suspendThicknessChanged();
+            me.getChart().suspendThicknessChanged();
             me.lockEvents(me.getPanGesture());
-
             return false;
         }
     },
@@ -337,9 +329,8 @@ Ext.define('Ext.chart.interactions.PanZoom', {
             isZoomOnPan = isMouse && me.getZoomOnPan();
 
         if (me.getLocks()[me.getPanGesture()] === me) { // Limit drags to single touch.
-            var chart = me.getChart(),
-                rect = chart.getInnerRect(),
-                xy = chart.element.getXY();
+            var rect = me.getChart().getInnerRect(),
+                xy = me.getChart().element.getXY();
 
             if (isZoomOnPan) {
                 me.transformAxesBy(
@@ -355,24 +346,19 @@ Ext.define('Ext.chart.interactions.PanZoom', {
                     1, 1);
             }
             me.sync();
-
             return false;
         }
     },
 
     onPanGestureEnd: function (e) {
         var me = this,
-            pan = me.getPanGesture(),
-            chart;
+            pan = me.getPanGesture();
 
         if (me.getLocks()[pan] === me) {
-            chart = me.getChart();
-            chart.resumeThicknessChanged();
+            me.getChart().resumeThicknessChanged();
             me.showLabels();
             me.sync();
             me.unlockEvents(pan);
-            chart.resumeAnimation();
-
             return false;
         }
     },
@@ -380,9 +366,8 @@ Ext.define('Ext.chart.interactions.PanZoom', {
     onZoomGestureStart: function (e) {
         if (e.touches && e.touches.length === 2) {
             var me = this,
-                chart = me.getChart(),
-                xy = chart.element.getXY(),
-                rect = chart.getInnerRect(),
+                xy = me.getChart().element.getXY(),
+                rect = me.getChart().getInnerRect(),
                 x = xy[0] + rect[0],
                 y = xy[1] + rect[1],
                 newPoints = [
@@ -393,8 +378,8 @@ Ext.define('Ext.chart.interactions.PanZoom', {
                 yDistance = Math.max(44, Math.abs(newPoints[3] - newPoints[1]));
 
             e.claimGesture();
-            chart.suspendAnimation();
-            chart.suspendThicknessChanged();
+
+            me.getChart().suspendThicknessChanged();
             me.lastZoomDistances = [xDistance, yDistance];
             me.lastPoints = newPoints;
             me.oldVisibleRanges = null;
@@ -408,9 +393,8 @@ Ext.define('Ext.chart.interactions.PanZoom', {
     onZoomGestureMove: function (e) {
         var me = this;
         if (me.getLocks()[me.getZoomGesture()] === me) {
-            var chart = me.getChart(),
-                rect = chart.getInnerRect(),
-                xy = chart.element.getXY(),
+            var rect = me.getChart().getInnerRect(),
+                xy = me.getChart().element.getXY(),
                 x = xy[0] + rect[0],
                 y = xy[1] + rect[1],
                 abs = Math.abs,
@@ -437,17 +421,13 @@ Ext.define('Ext.chart.interactions.PanZoom', {
 
     onZoomGestureEnd: function (e) {
         var me = this,
-            zoom = me.getZoomGesture(),
-            chart;
+            zoom = me.getZoomGesture();
 
         if (me.getLocks()[zoom] === me) {
-            chart = me.getChart();
-            chart.resumeThicknessChanged();
+            me.getChart().resumeThicknessChanged();
             me.showLabels();
             me.sync();
             me.unlockEvents(zoom);
-            chart.resumeAnimation();
-
             return false;
         }
     },
@@ -533,7 +513,6 @@ Ext.define('Ext.chart.interactions.PanZoom', {
         var me = this,
             axisConfigs = me.getAxes(),
             axes = me.getChart().getAxes();
-
         for (var i = 0; i < axes.length; i++) {
             if (axisConfigs[axes[i].getPosition()]) {
                 if (false === fn.call(this, axes[i])) {
@@ -577,7 +556,6 @@ Ext.define('Ext.chart.interactions.PanZoom', {
             actualMaxZoom =  maxZoom || me.getMaxZoom() || axis.config.maxZoom,
             rect = me.getChart().getInnerRect(),
             left, right;
-
         if (!rect) {
             return;
         }
@@ -609,7 +587,6 @@ Ext.define('Ext.chart.interactions.PanZoom', {
             (oldVisibleRange[0] + oldVisibleRange[1] - visibleLength) * 0.5 - pan / length * visibleLength,
             (oldVisibleRange[0] + oldVisibleRange[1] + visibleLength) * 0.5 - pan / length * visibleLength
         ]);
-
         return Math.abs(left - axis.getVisibleRange()[0]) > 1e-10 ||
                Math.abs(right - axis.getVisibleRange()[1]) > 1e-10;
     },

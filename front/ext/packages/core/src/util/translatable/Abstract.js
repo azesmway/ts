@@ -7,18 +7,11 @@
 Ext.define('Ext.util.translatable.Abstract', {
     extend: 'Ext.Evented',
 
-    mixins: [
-        'Ext.mixin.Factoryable'
-    ],
-
-    factoryConfig: {
-        type: 'translatable',
-        defaultType: 'csstransform'
-    },
-
     requires: ['Ext.fx.easing.Linear'],
 
     config: {
+        useWrapper: null,
+
         easing: null,
 
         easingX: {
@@ -77,12 +70,11 @@ Ext.define('Ext.util.translatable.Abstract', {
     isTranslatable: true,
 
     constructor: function(config) {
-        this.callParent([config]);
-        
+        this.mixins.observable.constructor.call(this, config);
         // this.position is simply an internal reusable object for GC purposes and should
         // not be accessed directly as it's values are not kept in sync.  always use
         // getPosition() to get the position
-        this.position = { x: 0, y: 0 };
+        this.position = { x: 0, y: 0};
     },
 
     factoryEasing: function(easing) {
@@ -122,11 +114,11 @@ Ext.define('Ext.util.translatable.Abstract', {
             this.stopAnimation();
         }
 
-        if (!isNaN(x) && typeof x === 'number') {
+        if (!isNaN(x) && typeof x == 'number') {
             this.x = x;
         }
 
-        if (!isNaN(y) && typeof y === 'number') {
+        if (!isNaN(y) && typeof y == 'number') {
             this.y = y;
         }
         this.doTranslate(x, y);
@@ -135,7 +127,7 @@ Ext.define('Ext.util.translatable.Abstract', {
     translateAxis: function(axis, value, animation) {
         var x, y;
 
-        if (axis === 'x') {
+        if (axis == 'x') {
             x = value;
         }
         else {
@@ -160,27 +152,21 @@ Ext.define('Ext.util.translatable.Abstract', {
     },
 
     animate: function(easingX, easingY) {
-        var me = this;
+        this.activeEasingX = easingX;
+        this.activeEasingY = easingY;
 
-        me.activeEasingX = easingX;
-        me.activeEasingY = easingY;
+        this.isAnimating = true;
+        this.lastX = null;
+        this.lastY = null;
 
-        me.isAnimating = true;
-        if (me.ownerCmp) {
-            me.ownerCmp.isTranslating = true;
-        }
-        me.lastX = null;
-        me.lastY = null;
+        Ext.AnimationQueue.start(this.doAnimationFrame, this);
 
-        Ext.AnimationQueue.start(me.doAnimationFrame, me);
-
-        me.fireEvent('animationstart', me, me.x, me.y);
-        return me;
+        this.fireEvent('animationstart', this, this.x, this.y);
+        return this;
     },
 
     translateAnimated: function(x, y, animation) {
-        var me = this,
-            now, easing, easingX, easingY;
+        var me = this;
 
         if (!Ext.isObject(animation)) {
             animation = {};
@@ -194,10 +180,10 @@ Ext.define('Ext.util.translatable.Abstract', {
         me.callback = animation.callback;
         me.callbackScope = animation.scope;
 
-        now = Ext.Date.now();
-        easing = animation.easing;
-        easingX = (typeof x === 'number') ? (animation.easingX || easing || me.getEasingX() || true) : null;
-        easingY = (typeof y === 'number') ? (animation.easingY || easing || me.getEasingY() || true) : null;
+        var now = Ext.Date.now(),
+            easing = animation.easing,
+            easingX = (typeof x == 'number') ? (animation.easingX || easing || me.getEasingX() || true) : null,
+            easingY = (typeof y == 'number') ? (animation.easingY || easing || me.getEasingY() || true) : null;
 
         if (easingX) {
             easingX = me.factoryEasing(easingX);
@@ -287,33 +273,21 @@ Ext.define('Ext.util.translatable.Abstract', {
         me.activeEasingY = null;
 
         me.isAnimating = false;
-        if (me.ownerCmp) {
-            me.ownerCmp.isTranslating = false;
-        }
 
         Ext.AnimationQueue.stop(me.doAnimationFrame, me);
         
-        me.fireEvent('animationend', me, me.x, me.y);
-
-        if (me.callback) {
-            me.callback.call(me.callbackScope);
-            me.callback = null;
+        if (!me.destroying) {
+            me.fireEvent('animationend', me, me.x, me.y);
+            
+            if (me.callback) {
+                me.callback.call(me.callbackScope);
+                me.callback = null;
+            }
         }
     },
 
     refresh: function() {
         this.translate(this.x, this.y);
-    },
-
-    resolveListenerScope: function () {
-        var ownerCmp = this.ownerCmp,
-            a = arguments;
-
-        if (ownerCmp) {
-            return ownerCmp.resolveListenerScope.apply(ownerCmp, a);
-        }
-
-        return this.callParent(a);
     },
 
     destroy: function() {

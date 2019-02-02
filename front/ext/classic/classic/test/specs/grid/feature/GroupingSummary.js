@@ -1,4 +1,4 @@
-topSuite("Ext.grid.feature.GroupingSummary", ['Ext.grid.Panel'], function() {
+describe('Ext.grid.feature.GroupingSummary', function () {
     var data, grid, store, groupingSummary, columns, params, selector,
         synchronousLoad = true,
         proxyStoreLoad = Ext.data.ProxyStore.prototype.load,
@@ -247,11 +247,11 @@ topSuite("Ext.grid.feature.GroupingSummary", ['Ext.grid.Panel'], function() {
             store.first().set('mark', 0);
             toggle();
 
-            var row = grid.getView().getEl().dom.querySelector(selector),
-                cell = row.querySelector(grid.down('#markColumn').getCellSelector());
+            var row = grid.getView().getEl().select(selector).first(),
+                cell = row.down(grid.down('#markColumn').getCellSelector());
 
 
-            var content = cell.querySelector(grid.getView().innerSelector).innerHTML;
+            var content = cell.down(grid.getView().innerSelector).dom.innerHTML;
             expect(content).toBe('48');
         });
     });
@@ -555,3 +555,4 @@ topSuite("Ext.grid.feature.GroupingSummary", ['Ext.grid.Panel'], function() {
         });
     });
 });
+

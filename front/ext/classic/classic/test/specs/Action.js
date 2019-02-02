@@ -1,6 +1,6 @@
 /* global Ext, jasmine, expect */
 
-topSuite('Ext.Action', ['Ext.Panel', 'Ext.Button', 'Ext.app.ViewController'], function() {
+describe('Ext.Action', function() {
     var panel, action, cmp1, cmp2;
 
     function makeAction (cfg) {

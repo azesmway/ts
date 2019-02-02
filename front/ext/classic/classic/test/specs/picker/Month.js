@@ -1,4 +1,4 @@
-topSuite("Ext.picker.Month", function() {
+describe("Ext.picker.Month", function() {
     var component, makeComponent;
     
     function getByElementsByClassName(dom, className) {

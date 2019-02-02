@@ -1,9 +1,9 @@
-topSuite("Ext.event.gesture.LongPress", function() {
+describe("Ext.event.gesture.LongPress", function() {
     var helper = Ext.testHelper,
         recognizer = Ext.event.gesture.LongPress.instance,
         originalMinDuration = recognizer.getMinDuration(),
         moveDistance = recognizer.getMoveDistance(),
-        minDuration = 100,
+        minDuration = 60,
         targetEl, longpressHandler, tapholdHandler, longpressEvent, tapholdEvent;
 
     function start(cfg) {
@@ -62,7 +62,7 @@ topSuite("Ext.event.gesture.LongPress", function() {
         runs(function() {
             start({ id: 1, x: 10, y: 10 });
         });
-        waits(minDuration / 2);
+        waits(minDuration - 30);
         runs(function() {
             end({ id: 1, x: 10, y: 10 });
             expect(longpressHandler).not.toHaveBeenCalled();
@@ -99,11 +99,11 @@ topSuite("Ext.event.gesture.LongPress", function() {
         waitsForAnimation();
     });
 
-    if (jasmine.supportsTouch) {
+    if (Ext.supports.Touch) {
         it("should not fire longpress and taphold if a second touch is initiated", function() {
             runs(function() {
                 start({ id: 1, x: 10, y: 10 });
-                start({ id: 2, x: 30, y: 30 });
+                start({ id: 2, x: 20, y: 20 });
             });
             waits(minDuration + 30);
             runs(function() {

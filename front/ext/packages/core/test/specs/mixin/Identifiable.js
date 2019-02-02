@@ -1,4 +1,4 @@
-topSuite("Ext.mixin.Identifiable", function() {
+describe("Ext.mixin.Identifiable", function() {
     var TestClass;
 
     beforeEach(function() {

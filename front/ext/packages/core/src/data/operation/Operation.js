@@ -250,22 +250,12 @@ Ext.define('Ext.data.operation.Operation', {
      */
     abort: function() {
         var me = this,
-            request = me.request,
-            proxy;
-        
-        me.aborted = true;
+            request = me.request;
             
         if (me.running && request) {
-            proxy = me.getProxy();
-            
-            if (proxy && !proxy.destroyed) {
-                proxy.abort(request);
-            }
-            
+            me.getProxy().abort(request);
             me.request = null;
-        }
-        
-        me.running = false;
+        }    
     },
     
     process: function(resultSet, request, response, autoComplete) {
@@ -371,24 +361,14 @@ Ext.define('Ext.data.operation.Operation', {
      */
     setCompleted: function() {
         var me = this,
-            proxy;
+            proxy = me.getProxy();
         
         me.complete = true;
         me.running  = false;
         
-        if (!me.destroying) {
-            me.triggerCallbacks();
-        }
+        me.triggerCallbacks();
         
-        // Operation can be destroyed in callback
-        if (me.destroyed) {
-            return;
-        }
-        
-        proxy = me.getProxy();
-        
-        // Store and proxy could be destroyed in callbacks
-        if (proxy && !proxy.destroyed) {
+        if (proxy) {
             proxy.completeOperation(me);
         }
     },
@@ -426,12 +406,6 @@ Ext.define('Ext.data.operation.Operation', {
         // Call internal callback first (usually the Store's onProxyLoad method)
         if (callback) {
             callback.call(me.getInternalScope() || me, me);
-            
-            // Operation callback can cause it to be destroyed
-            if (me.destroyed) {
-                return;
-            }
-            
             me.setInternalCallback(null);
             me.setInternalScope(null);
         }
@@ -440,11 +414,6 @@ Ext.define('Ext.data.operation.Operation', {
         if (callback = me.getCallback()) {
             // Maintain the public API for callback
             callback.call(me.getScope() || me, me.getRecords(), me, me.wasSuccessful());
-            
-            if (me.destroyed) {
-                return;
-            }
-            
             me.setCallback(null);
             me.setScope(null);
         }
@@ -522,22 +491,5 @@ Ext.define('Ext.data.operation.Operation', {
      */
     allowWrite: function() {
         return true;
-    },
-    
-    destroy: function() {
-        var me = this;
-        
-        me.destroying = true;
-        
-        if (me.running) {
-            me.abort();
-        }
-        
-        // Cleanup upon destruction can be turned off
-        me._params = me._callback = me._scope = me._resultSet = me._response = null;
-        me.request = me._request = me._records = me._proxy = me._batch = null;
-        me._recordCreator = me._internalCallback = me._internalScope = null;
-        
-        me.callParent();
     }
 });

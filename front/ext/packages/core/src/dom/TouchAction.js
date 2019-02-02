@@ -38,7 +38,7 @@ Ext.define('Ext.dom.TouchAction', {
         'pinch-zoom',
         'pan-x pinch-zoom',
         'pan-y pinch-zoom',
-        'pan-x pan-y pinch-zoom',
+        'manipulation',
         'double-tap-zoom',
         'pan-x double-tap-zoom',
         'pan-y double-tap-zoom',
@@ -74,19 +74,16 @@ Ext.define('Ext.dom.TouchAction', {
         var me = this,
             supports = Ext.supports;
 
-        if (supports.TouchAction) {
+        if (supports.PointerEvents) {
             me.cssProp = 'touch-action';
         } else if (supports.MSPointerEvents) {
             me.cssProp = '-ms-touch-action';
-        }
-
-        if (supports.TouchEvents) {
+        } else if (supports.TouchEvents) {
             Ext.getWin().on({
                 touchstart: 'onTouchStart',
                 touchmove: 'onTouchMove',
                 touchend: 'onTouchEnd',
                 scope: me,
-                delegated: false,
                 translate: false,
                 capture: true,
                 priority: 5000
@@ -119,8 +116,7 @@ Ext.define('Ext.dom.TouchAction', {
      */
     containsTargets: function(dom, e) {
         var contains = true,
-            event = e.browserEvent,
-            touches = e.type === 'touchend' ? event.changedTouches : event.touches,
+            touches = e.type === 'touchend' ? e.changedTouches : e.touches,
             i, ln;
 
         for (i = 0, ln = touches.length; i < ln; i++) {
@@ -207,7 +203,7 @@ Ext.define('Ext.dom.TouchAction', {
     },
 
     /**
-     * Accepts a touch action in the object form accepted by
+     * @private Accepts a touch action in the object form accepted by
      * {@link Ext.Component}, and converts it to a number representing the desired touch action(s).
      *
      * All touchActions absent from the passed object are defaulted to true.
@@ -251,27 +247,8 @@ Ext.define('Ext.dom.TouchAction', {
         return flags;
     },
 
-    isScrollable: function(el, vertical, forward) {
-        var overflowStyle = Ext.fly(el).getStyle(vertical ? 'overflow-y': 'overflow-x'),
-            isScrollable = (overflowStyle === 'auto' || overflowStyle === 'scroll');
-
-        if (isScrollable) {
-            if (vertical) {
-                isScrollable = forward ?
-                    (el.scrollTop + el.clientHeight) < el.scrollHeight :
-                    el.scrollTop > 0;
-            } else {
-                 isScrollable = forward ?
-                    (el.scrollLeft + el.clientWidth) < el.scrollWidth :
-                    el.scrollLeft > 0;
-            }
-        }
-
-        return isScrollable;
-    },
-
     lookupFlags: function(dom) {
-        return parseInt((dom.getAttribute && dom.getAttribute(this.attributeName)) || 15, 10);
+        return dom.getAttribute && dom.getAttribute(this.attributeName);
     },
 
     onScroll: function() {
@@ -288,7 +265,7 @@ Ext.define('Ext.dom.TouchAction', {
             dom = e.target,
             touchCount, flags, doubleTapZoom;
 
-        touchCount = e.browserEvent.touches.length;
+        touchCount = e.touches.length;
 
         if (touchCount === 0) {
             if (me.isDoubleTap) {
@@ -318,13 +295,13 @@ Ext.define('Ext.dom.TouchAction', {
         var me = this,
             prevent = null,
             dom = e.target,
-            flags, touchCount, panX, panY, point, startPoint, isVertical,
+            flags, touchCount, panX, panY, point, startPoint,
             scale, distance, deltaX, deltaY, preventSingle, preventMulti;
 
         preventSingle = me.preventSingle;
         preventMulti = me.preventMulti;
 
-        touchCount = e.browserEvent.touches.length;
+        touchCount = e.touches.length;
 
         // Don't check for touchCount here when checking for preventMulti.
         // This ensures that if we determined not to cancel the multi-touch gesture
@@ -340,48 +317,43 @@ Ext.define('Ext.dom.TouchAction', {
         {
             prevent = true;
         } else {
-            if (touchCount === 1) {
-                point = e.getPoint();
-                startPoint = me.startPoint;
-                scale = Ext.Element.getViewportScale();
-                // account for scale so that move distance is actual screen pixels, not page pixels
-                distance = point.getDistanceTo(me.startPoint) * scale;
-                deltaX = point.x - startPoint.x;
-                deltaY = point.y - startPoint.y;
-                isVertical = Math.abs(deltaY) >= Math.abs(deltaX);
-            }
-
-            while (dom && (dom.nodeType === 1)) {
+            while (dom) {
                 flags = me.lookupFlags(dom);
 
-                if (flags & 0) { // touch-action: none
-                    prevent = true;
-                } else if (touchCount === 1) {
-                    panX = !!(flags & 1);
-                    panY = !!(flags & 2);
-
-                    if (panX && panY) {
-                        prevent = false;
-                    } else if (!panX && !panY) {
+                if (flags != null) {
+                    if (!flags) { // 0/none
                         prevent = true;
-                    } else  if (distance >= me.minMoveDistance) {
-                        prevent = !!((panX && isVertical) || (panY && !isVertical));
+                    } else if (touchCount === 1) {
+                        panX = !!(flags & 1);
+                        panY = !!(flags & 2);
+
+                        if (panX && panY) {
+                            prevent = false;
+                        } else if (!panX && !panY) {
+                            prevent = true;
+                        } else {
+                            point = e.getPoint();
+                            startPoint = me.startPoint;
+                            scale = Ext.Element.getViewportScale();
+                            // account for scale so that move distance is actual screen pixels, not page pixels
+                            distance = Math.abs(point.getDistanceTo(me.startPoint) * scale);
+
+                            if (distance >= me.minMoveDistance) {
+                                deltaX = Math.abs(point.x - startPoint.x);
+                                deltaY = Math.abs(point.y - startPoint.y);
+
+                                prevent = !!((panX && (deltaY > deltaX)) || (panY && (deltaX > deltaY)));
+                            }
+                        }
+                    } else if (me.containsTargets(dom, e)) { // multi-touch, all targets contained
+                        prevent = !(flags & 4);
+                    } else { // multi-touch and not all targets contained within element
+                        prevent = false;
                     }
 
-                    // if the element itself is scrollable, and has no touch action
-                    // preventing it from scrolling, allow it to scroll - do
-                    // not allow an ancestor's touchAction to prevent scrolling
-                    if (!prevent && me.isScrollable(dom, isVertical, (isVertical ? deltaY : deltaX) < 0)) {
+                    if (prevent) {
                         break;
                     }
-                } else if (me.containsTargets(dom, e)) { // multi-touch, all targets contained
-                    prevent = !(flags & 4);
-                } else { // multi-touch and not all targets contained within element
-                    prevent = false;
-                }
-
-                if (prevent) {
-                    break;
                 }
 
                 dom = dom.parentNode;
@@ -410,7 +382,7 @@ Ext.define('Ext.dom.TouchAction', {
         var me = this,
             time, flags, dom, panX, panY;
 
-        if (e.browserEvent.touches.length === 1) {
+        if (e.touches.length === 1) {
             time = e.time;
 
             // Use a time of 500ms between touchstart events to detecting a double tap that
@@ -492,13 +464,10 @@ Ext.define('Ext.dom.TouchAction', {
         var me = this,
             cssProp = me.cssProp,
             flags = me.getFlags(value),
-            // We can only set values for CSS touch-action in the dom if they are supported
-            // by the browser, otherwise the entire touch-action property is ignored.
-            supportedFlags = (flags & Ext.supports.TouchAction),
             attributeName = me.attributeName;
 
         if (cssProp) {
-            Ext.fly(dom).setStyle(cssProp, me.cssValues[supportedFlags]);
+            Ext.fly(dom).setStyle(cssProp, me.cssValues[flags]);
         }
 
         if (flags === 15) {

@@ -204,13 +204,11 @@
 }
 
 .#{$prefix}splitter-focus {
-    .#{$prefix}keyboard-mode & {
-        @include css-outline(
-            $width: $splitter-focus-outline-width,
-            $style: $splitter-focus-outline-style,
-            $color: $splitter-focus-outline-color,
-            $offset: $splitter-focus-outline-offset,
-            $pseudo: true
-        );
-    }
+    @include css-outline(
+        $width: $splitter-focus-outline-width,
+        $style: $splitter-focus-outline-style,
+        $color: $splitter-focus-outline-color,
+        $offset: $splitter-focus-outline-offset,
+        $pseudo: true
+    );
 }

@@ -11,6 +11,8 @@ Ext.define('Ext.chart.legend.Legend', {
     isDomLegend: true,
 
     config: {
+        baseCls: Ext.baseCSSPrefix + 'legend',
+
         /**
          * @cfg {Array}
          * The rect of the legend relative to its container.
@@ -23,15 +25,7 @@ Ext.define('Ext.chart.legend.Legend', {
          * toggled by interaction with the legend items.
          */
         toggleable: true
-
-        /**
-         * @cfg {Ext.chart.legend.store.Store} store
-         * The {@link Ext.chart.legend.store.Store} to bind this legend to.
-         * @private
-         */
     },
-
-    baseCls: Ext.baseCSSPrefix + 'legend',
 
     horizontalCls: Ext.baseCSSPrefix + 'legend-horizontal',
     verticalCls: Ext.baseCSSPrefix + 'legend-vertical',
@@ -59,20 +53,9 @@ Ext.define('Ext.chart.legend.Legend', {
             if (record) {
                 disabled = record.get('disabled');
                 if (disabled || canToggle) {
-                    // This will trigger AbstractChart.onLegendStoreUpdate.
+                    // This will trigger AbstractChart.onUpdateLegendStore.
                     record.set('disabled', !disabled);
                 }
-            }
-        }
-    },
-
-    onResize: function (width, height, oldWidth, oldHeight) {
-        var me = this,
-            chart = me.chart;
-
-        if (!me.isConfiguring) {
-            if (chart) {
-                chart.scheduleLayout();
             }
         }
     }

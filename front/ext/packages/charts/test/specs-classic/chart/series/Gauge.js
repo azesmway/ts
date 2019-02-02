@@ -1,19 +1,10 @@
-topSuite("Ext.chart.series.Gauge", ['Ext.chart.*', 'Ext.data.ArrayStore'], function() {
-    beforeEach(function() {
-        // Silence warnings regarding Sencha download server
-        spyOn(Ext.log, 'warn');
-    });
+describe('Ext.chart.series.Gauge', function () {
 
     describe('series renderer', function () {
-        var chart;
-
-        afterEach(function() {
-            Ext.destroy(chart);
-        });
-
         it('should be called with the right index', function () {
-            var indexes = [],
-                layoutDone;
+            var chart,
+                redrawCount = 0,
+                indexes = [];
 
             runs(function () {
                 chart = Ext.create({
@@ -54,21 +45,23 @@ topSuite("Ext.chart.series.Gauge", ['Ext.chart.*', 'Ext.data.ArrayStore'], funct
                         }
                     },
                     listeners: {
-                        layout: function () {
-                            layoutDone = true;
+                        redraw: function () {
+                            redrawCount++;
                         }
                     }
                 });
             });
 
             waitsFor(function () {
-                return layoutDone;
+                return redrawCount >= 3;
             });
 
             runs(function () {
                 expect(indexes[0]).toEqual(1);
                 expect(indexes[1]).toEqual(2);
                 expect(indexes[2]).toEqual(3);
+
+                Ext.destroy(chart);
             });
         });
     });

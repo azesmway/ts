@@ -1,56 +1,42 @@
 .#{$prefix}segmentedbutton {
     .#{$prefix}horizontal .#{$prefix}button {
         &:not(.#{$prefix}first) {
-            .#{$prefix}inner-el {
-                border-left: 0;
-            }
+            border-left: 0;
         }
 
         @if $enable-border-radius {
             &:not(.#{$prefix}first):not(.#{$prefix}last) {
-                &, &:after, .#{$prefix}inner-el {
-                    border-radius: 0;
-                }
+                border-radius: 0;
             }
 
             &.#{$prefix}first {
-                &, &:after, .#{$prefix}inner-el {
-                    @include border-right-radius(0);
-                }
+                @include border-right-radius(0);
             }
 
             &.#{$prefix}last {
-                &, &:after, .#{$prefix}inner-el {
-                    @include border-left-radius(0);
-                }
+                @include border-left-radius(0);
             }
         }
     }
 
     &.#{$prefix}vertical .#{$prefix}button {
+        margin: 0;
+        
         &:not(.#{$prefix}first) {
-            .#{$prefix}inner-el {
-                border-top: 0;
-            }
+            border-top: 0;
         }
 
         @if $enable-border-radius {
             &:not(.#{$prefix}first):not(.#{$prefix}last) {
-                &, &:after, .#{$prefix}inner-el {
-                    border-radius: 0;
-                }
+                border-radius: 0;
             }
 
             &.#{$prefix}first {
-                &, &:after, .#{$prefix}inner-el {
-                    @include border-bottom-radius(0);
-                }
+                @include border-bottom-radius(0);
             }
 
             &.#{$prefix}last {
-                &, &:after, .#{$prefix}inner-el {
-                    @include border-top-radius(0);
-                }
+                @include border-top-radius(0);
             }
         }
     }

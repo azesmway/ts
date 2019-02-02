@@ -1,37 +1,37 @@
-topSuite("Ext.field.Slider", function() {
-    var field;
+describe('Ext.field.Slider', function() {
+    var field,
+        createField = function(config) {
+            if (field) {
+                field.destroy();
+            }
 
-    function createField(cfg) {
-        field = new Ext.field.Slider(Ext.apply({
-            renderTo: Ext.getBody(),
-            width: 400
-        }, cfg));
-    }
+            field = Ext.create('Ext.field.Slider', config || {});
+        };
 
     afterEach(function() {
-        field = Ext.destroy(field);
+        if (field) {
+            field.destroy();
+        }
     });
 
     describe('readOnly', function() {
         beforeEach(function() {
             createField({
-                readOnly: true,
-                value: 50,
-                minValue: 0,
-                maxValue: 100
+                readOnly : true,
+                value    : 50,
+                minValue : 0,
+                maxValue : 100
             });
         });
 
         it('should not move thumb on tap', function() {
-            var slider = field.getSlider();
+            var component = field.getComponent();
 
-            waitsFor(function() {
-                return slider.getThumb().element.getX() > 0;
-            });
-            runs(function() {
-                jasmine.fireMouseEvent(field.getSlider().element, 'click', 10, 10);
-                expect(slider.getValue()).toBe(50);
-            });
+            spyOn(component, 'fireAction');
+
+            component.onTap();
+
+            expect(component.fireAction).not.toHaveBeenCalled();
         });
     });
 });

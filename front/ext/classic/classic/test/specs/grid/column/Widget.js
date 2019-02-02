@@ -1,9 +1,6 @@
 /* global expect, Ext, jasmine */
 
-topSuite("Ext.grid.column.Widget",
-    ['Ext.grid.Panel', 'Ext.Button', 'Ext.app.ViewController', 'Ext.form.RadioGroup',
-     'Ext.form.field.ComboBox', 'Ext.tab.Panel', 'Ext.ProgressBarWidget'],
-function() {
+describe("Ext.grid.column.Widget", function() {
     var webkitIt = Ext.isWebKit ? it : xit,
         synchronousLoad = true,
         proxyStoreLoad = Ext.data.ProxyStore.prototype.load,
@@ -56,9 +53,7 @@ function() {
             xtype: 'button'
         })];
 
-        if (typeof data == 'number' || data == null) {
-            data = generateData(data || 4);
-        }
+        data = data || generateData(4);
 
         store = new Ext.data.Store({
             model: Model,
@@ -126,7 +121,6 @@ function() {
             }]);
 
             var widget0 = getWidget(0),
-                widget1 = getWidget(1),
                 rec0 = store.getAt(0),
                 rec1 = store.getAt(1),
                 toDelete = widget0.getWidgetRecord(),
@@ -136,30 +130,24 @@ function() {
             expect(toDelete).toBe(rec0);
             expect(newTop).toBe(rec1);
 
-            // Focus the button, and enter actionable mode
-            grid.setActionableMode(true, new Ext.grid.CellContext(view).setPosition(0, 0));
+            // Focus the button, and enter actionable mode, then click the button.
+            jasmine.fireMouseEvent(widget0.focusEl, 'mousedown');
+            widget0.focusEl.focus();
+            jasmine.fireKeyEvent(widget0.focusEl, 'keydown', Ext.event.Event.SPACE);
 
-            // Wait for the widget to be focused
-            waitsForFocus(widget0);
-            
-            runs(function() {
-                jasmine.fireKeyEvent(widget0.focusEl, 'keydown', Ext.event.Event.SPACE);
+            // That should have deleted a record
+            expect(store.getCount()).toBe(storeCount - 1);
 
-                // That should have deleted a record
-                expect(store.getCount()).toBe(storeCount - 1);
+            // The widget's record must have gone
+            expect(store.contains(toDelete)).toBe(false);
 
-                // The widget's record must have gone
-                expect(store.contains(toDelete)).toBe(false);
+            // Widget 0 must receive focus when any async focus events have run their course
+            waitsFor(function() {
+                widget0 = getWidget(0);
+                return widget0.hasFocus;
             });
 
-            // The new widget 0 must receive focus when any async focus events have run their course
-            waitsForFocus(widget1);
-
             runs(function() {
-                widget0 = getWidget(0);
-
-                expect(widget0.el.contains(document.activeElement)).toBe(true);
-
                 // Widget 0 record must be what we got from widget 1 initially
                 expect(widget0.getWidgetRecord()).toBe(newTop);
             });
@@ -244,10 +232,7 @@ function() {
 
             // And focus should have jumped from the mousedowned button (which has gone)
             // to the button above it.
-            // NavigationModel does not enter actionable mode for touches.
-            if (!jasmine.supportsTouch) {
-                expect(colRef[0].getWidget(store.last()).hasFocus).toBe(true);
-            }
+            expect(colRef[0].getWidget(store.last()).hasFocus).toBe(true);
         });
     });
 
@@ -263,9 +248,11 @@ function() {
 
         it("should select the row on click of the widget with stopSelection: false", function() {
             colRef[0].stopSelection = false;
-            navModel.setPosition(new Ext.grid.CellContext(view).setPosition(0, 0));
+            navModel.setPosition(new Ext.grid.CellContext(grid.view).setPosition(0, 0));
             
-            waitsForFocus(view);
+            waitsFor(function() {
+                return view.containsFocus;
+            });
 
             // Wait for focus to be in the view.
             // Because IE has async focusing.
@@ -336,11 +323,11 @@ function() {
 
                 if (col && view.viewReady) {
                     selector = col.getCellInnerSelector();
-                    cells = view.getEl().dom.querySelectorAll(selector);
-                    len = cells.lengtj;
+                    cells = view.getEl().select(selector, true);
+                    len = cells.getCount();
 
                     for (i = start; i < len; ++i) {
-                        expect(getWidget(i, col).getEl().dom.parentNode).toBe(cells[i]);
+                        expect(getWidget(i, col).getEl().dom.parentNode).toBe(cells.item(i).dom);
                     }
                 }
             }
@@ -453,10 +440,10 @@ function() {
                             return 'foo';
                         }
                     })]);
-                    expect(view.getCellByPosition({row: 0, column: 0}, true)).toHaveCls('foo');
-                    expect(view.getCellByPosition({row: 1, column: 0}, true)).toHaveCls('foo');
-                    expect(view.getCellByPosition({row: 2, column: 0}, true)).toHaveCls('foo');
-                    expect(view.getCellByPosition({row: 3, column: 0}, true)).toHaveCls('foo');
+                    expect(view.getCellByPosition({row: 0, column: 0})).toHaveCls('foo');
+                    expect(view.getCellByPosition({row: 1, column: 0})).toHaveCls('foo');
+                    expect(view.getCellByPosition({row: 2, column: 0})).toHaveCls('foo');
+                    expect(view.getCellByPosition({row: 3, column: 0})).toHaveCls('foo');
                 });
 
                 it("should combine a tdCls on the column with the tdCls on the widget", function() {
@@ -468,14 +455,14 @@ function() {
                     });
                     cfg.tdCls = 'bar';
                     makeGrid([cfg]);
-                    expect(view.getCellByPosition({row: 0, column: 0}, true)).toHaveCls('foo');
-                    expect(view.getCellByPosition({row: 0, column: 0}, true)).toHaveCls('bar');
-                    expect(view.getCellByPosition({row: 1, column: 0}, true)).toHaveCls('foo');
-                    expect(view.getCellByPosition({row: 1, column: 0}, true)).toHaveCls('bar');
-                    expect(view.getCellByPosition({row: 2, column: 0}, true)).toHaveCls('foo');
-                    expect(view.getCellByPosition({row: 2, column: 0}, true)).toHaveCls('bar');
-                    expect(view.getCellByPosition({row: 3, column: 0}, true)).toHaveCls('foo');
-                    expect(view.getCellByPosition({row: 3, column: 0}, true)).toHaveCls('bar');
+                    expect(view.getCellByPosition({row: 0, column: 0})).toHaveCls('foo');
+                    expect(view.getCellByPosition({row: 0, column: 0})).toHaveCls('bar');
+                    expect(view.getCellByPosition({row: 1, column: 0})).toHaveCls('foo');
+                    expect(view.getCellByPosition({row: 1, column: 0})).toHaveCls('bar');
+                    expect(view.getCellByPosition({row: 2, column: 0})).toHaveCls('foo');
+                    expect(view.getCellByPosition({row: 2, column: 0})).toHaveCls('bar');
+                    expect(view.getCellByPosition({row: 3, column: 0})).toHaveCls('foo');
+                    expect(view.getCellByPosition({row: 3, column: 0})).toHaveCls('bar');
                 });
             });
 
@@ -932,7 +919,7 @@ function() {
                         expect(view.getCellByPosition({
                             row: 0,
                             column: 0
-                        }, true)).toHaveCls(view.dirtyCls);
+                        }).hasCls(view.dirtyCls)).toBe(true);
 
                         store.first().set('a', oldValue);
 
@@ -940,7 +927,7 @@ function() {
                         expect(view.getCellByPosition({
                             row: 0,
                             column: 0
-                        }, true)).not.toHaveCls(view.dirtyCls);
+                        }).hasCls(view.dirtyCls)).toBe(false);
                     });
 
                     it("should render with a cell dirty class set if the record is already modified", function() {
@@ -957,7 +944,7 @@ function() {
                         expect(view.getCellByPosition({
                             row: 0,
                             column: 0
-                        }, true)).toHaveCls(view.dirtyCls);
+                        }).hasCls(view.dirtyCls)).toBe(true);
                     });
 
                     it("should remove all widgets when calling removeAll", function() {
@@ -1114,16 +1101,6 @@ function() {
                         grid.store.loadData(data);
                         expect(childNodes.length).toBe(1);
                     });
-                });
-
-                it("should be rendered after calling view refreshNode", function() {
-                    makeGrid(null, 1, {
-                        height: 200
-                    });
-
-                    grid.getView().refreshNode(0);
-
-                    expect(Ext.fly(grid.getView().getRow(0)).down('.x-btn')).not.toBeNull();
                 });
             });
 
@@ -1327,11 +1304,7 @@ function() {
 
                     jasmine.fireMouseEvent(getWidget(0).focusEl, 'click');
                     expect(getWidget(0).menu.isVisible()).toBe(true);
-
-                    // NavigationModel does not enter actionable mode for touches.
-                    if (!jasmine.supportsTouch) {
-                        expect(grid.actionableMode).toBe(true);
-                    }
+                    expect(grid.actionableMode).toBe(true);
 
                     jasmine.fireMouseEvent(getWidget(0).focusEl, 'click');
                     expect(getWidget(0).menu.isVisible()).toBe(false);
@@ -1339,49 +1312,12 @@ function() {
                     jasmine.fireMouseEvent(view.getCellByPosition({
                         row: 0,
                         column: 0
-                    }, true), 'click');
+                    }), 'click');
 
                     // Should focus the cell and exit actionable mode.
                     // Some browsers fire async focus events, so wait for it.
-                    // NavigationModel does not enter actionable mode for touches.
-                    if (!jasmine.supportsTouch) {
-                        waitsFor(function() {
-                            return grid.actionableMode === false;
-                        });
-                    }
-                });
-
-                describe("in a locked grid", function() {
-                    var normalGrid, lockedGrid, firstNormalRow, firstLockedRow;
-
-                    afterEach(function() {
-                        normalGrid = lockedGrid = firstNormalRow, firstLockedRow = null;
-                    });
-
-                    it("should keep line heights synced after sorting", function() {
-                        
-
-                        createGrid(null, null, {
-                            columns: [Ext.apply(getColCfg({
-                                xtype: 'button',
-                                height: 40
-                            }), {
-                                locked: true
-                            }), {
-                                dataIndex: 'a'
-                            }]
-                        });
-
-                        normalGrid = grid.normalGrid;
-                        lockedGrid = grid.lockedGrid;
-
-                        normalGrid.getColumnManager().getColumns()[0].sort();
-
-                        firstNormalRow = normalGrid.getView().getRow(0);
-                        firstLockedRow = lockedGrid.getView().getRow(0);
-
-                        expect(Ext.fly(firstNormalRow).getHeight()).toBe(Ext.fly(firstLockedRow).getHeight());
-
+                    waitsFor(function() {
+                        return grid.actionableMode === false;
                     });
                 });
             });
@@ -1427,36 +1363,6 @@ function() {
                     panel.setActiveTab(0);
 
                     expect(getWidget(4, 0).textEl.dom.innerHTML).toBe('50%');
-                });
-            });
-
-            describe("with locking", function() {
-                it("should be able to add a widget as part of a header group on the locked side", function() {
-                    createGrid([{
-                        text: 'Foo',
-                        locked: true,
-                        columns: [getColCfg({
-                            xtype: 'button'
-                        })]
-                    }, {
-                        text: 'Bar',
-                        dataIndex: 'b'
-                    }]);
-                    expect(getWidget(0).getText()).toBe('1a');
-                });
-
-                it("should be able to add a widget as part of a header group on the unlocked side", function() {
-                    createGrid([{
-                        text: 'Foo',
-                        locked: true,
-                        dataIndex: 'b'
-                    }, {
-                        text: 'Bar',
-                        columns: [getColCfg({
-                            xtype: 'button'
-                        })]
-                    }]);
-                    expect(getWidget(0, colRef[1]).getText()).toBe('1a');
                 });
             });
         });

@@ -302,12 +302,13 @@ Ext.define('Ext.form.Basic', {
      * See {@link Ext.direct.Manager} for more information.
      */
 
+    //<locale>
     /**
      * @cfg {String} waitTitle
      * The default title to show for the waiting message box
-     * @locale
      */
     waitTitle: 'Please Wait...',
+    //</locale>
 
     /**
      * @cfg {Boolean} trackResetOnLoad
@@ -348,8 +349,7 @@ Ext.define('Ext.form.Basic', {
     destroy: function() {
         var me = this,
             mon = me.monitor;
-
-        Ext.undefer(me.actionTimer);
+        
         if (mon) {
             mon.unbind();
             me.monitor = null;
@@ -648,16 +648,14 @@ Ext.define('Ext.form.Basic', {
      * @return {Ext.form.Basic} this
      */
     doAction: function(action, options) {
-        var me = this;
-
         if (Ext.isString(action)) {
-            action = Ext.ClassManager.instantiateByAlias('formaction.' + action, Ext.apply({}, options, {form: me}));
+            action = Ext.ClassManager.instantiateByAlias('formaction.' + action, Ext.apply({}, options, {form: this}));
         }
-        if (me.fireEvent('beforeaction', me, action) !== false) {
-            me.beforeAction(action);
-            me.actionTimer = Ext.defer(action.run, 100, action);
+        if (this.fireEvent('beforeaction', this, action) !== false) {
+            this.beforeAction(action);
+            Ext.defer(action.run, 100, action);
         }
-        return me;
+        return this;
     },
 
     /**
@@ -877,7 +875,7 @@ Ext.define('Ext.form.Basic', {
     /**
      * Find a specific {@link Ext.form.field.Field} in this form by id or name.
      * @param {String} id The value to search for (specify either a {@link Ext.Component#id id} or
-     * {@link Ext.form.field.Field#method!getName name} or hiddenName).
+     * {@link Ext.form.field.Field#getName name or hiddenName}).
      * @return {Ext.form.field.Field} The first matching field, or `null` if none was found.
      */
     findField: function (id) {
@@ -1063,7 +1061,6 @@ Ext.define('Ext.form.Basic', {
      * @param {Boolean} [useDataValues=false] If true, the {@link Ext.form.field.Field#getModelData getModelData}
      * method is used to retrieve values from fields, otherwise the {@link Ext.form.field.Field#getSubmitData getSubmitData}
      * method is used.
-     * @param {Boolean} isSubmitting
      * @return {String/Object}
      */
     getValues: function(asString, dirtyOnly, includeEmptyText, useDataValues, isSubmitting) {
@@ -1071,13 +1068,12 @@ Ext.define('Ext.form.Basic', {
             fields  = this.getFields().items,
             fLen    = fields.length,
             isArray = Ext.isArray,
-            dataMethod = useDataValues ? 'getModelData' : 'getSubmitData',
             field, data, val, bucket, name, f;
 
         for (f = 0; f < fLen; f++) {
             field = fields[f];
             if (!dirtyOnly || field.isDirty()) {
-                data = field[dataMethod](includeEmptyText, isSubmitting);
+                data = field[useDataValues ? 'getModelData' : 'getSubmitData'](includeEmptyText, isSubmitting);
 
                 if (Ext.isObject(data)) {
                     for (name in data) {
@@ -1089,6 +1085,10 @@ Ext.define('Ext.form.Basic', {
                             }
 
                             if (!field.isRadio) {
+                                // skipping checkbox null values since they have no contextual value
+                                if(field.isCheckbox && val===null) {
+                                    continue;
+                                }
                                 if (values.hasOwnProperty(name)) {
                                     bucket = values[name];
 

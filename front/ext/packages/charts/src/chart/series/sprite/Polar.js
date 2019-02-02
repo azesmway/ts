@@ -1,4 +1,7 @@
 /**
+ * @class Ext.chart.series.sprite.Polar
+ * @extends Ext.draw.sprite.Sprite
+ * 
  * Polar sprite.
  */
 Ext.define('Ext.chart.series.sprite.Polar', {
@@ -40,7 +43,17 @@ Ext.define('Ext.chart.series.sprite.Polar', {
                 /**
                  * @cfg {Number} [baseRotation=0] The starting rotation of the polar series.
                  */
-                baseRotation: 'number'
+                baseRotation: 'number',
+
+                /**
+                 * @cfg {Object} [labels=null] Labels used in the series.
+                 */
+                labels: 'default',
+
+                /**
+                 * @cfg {Number} [labelOverflowPadding=10] Padding around labels to determine overlap.
+                 */
+                labelOverflowPadding: 'number'
             },
             defaults: {
                 centerX: 0,
@@ -49,7 +62,9 @@ Ext.define('Ext.chart.series.sprite.Polar', {
                 endAngle: Math.PI,
                 startRho: 0,
                 endRho: 150,
-                baseRotation: 0
+                baseRotation: 0,
+                labels: null,
+                labelOverflowPadding: 10
             },
             triggers: {
                 centerX: 'bbox',
@@ -65,7 +80,6 @@ Ext.define('Ext.chart.series.sprite.Polar', {
 
     updatePlainBBox: function (plain) {
         var attr = this.attr;
-
         plain.x = attr.centerX - attr.endRho;
         plain.y = attr.centerY + attr.endRho;
         plain.width = attr.endRho * 2;

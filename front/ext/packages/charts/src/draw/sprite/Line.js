@@ -3,7 +3,7 @@
  *
  *     @example
  *     Ext.create({
- *        xtype: 'draw',
+ *        xtype: 'draw', 
  *        renderTo: document.body,
  *        width: 600,
  *        height: 400,
@@ -29,8 +29,7 @@ Ext.define('Ext.draw.sprite.Line', {
                 fromX: 'number',
                 fromY: 'number',
                 toX: 'number',
-                toY: 'number',
-                crisp: 'bool'
+                toY: 'number'
             },
 
             defaults: {
@@ -38,7 +37,6 @@ Ext.define('Ext.draw.sprite.Line', {
                 fromY: 0,
                 toX: 1,
                 toY: 1,
-                crisp: false,
                 strokeStyle: 'black'
             },
 
@@ -47,10 +45,6 @@ Ext.define('Ext.draw.sprite.Line', {
                 y1: 'fromY',
                 x2: 'toX',
                 y2: 'toY'
-            },
-
-            triggers: {
-                crisp: 'bbox'
             }
         }
     },
@@ -60,14 +54,8 @@ Ext.define('Ext.draw.sprite.Line', {
             matrix = attr.matrix,
             halfLineWidth = attr.lineWidth / 2,
             fromX, fromY, toX, toY,
+            dx, dy,
             p;
-
-        if (attr.crisp) {
-            x1 = this.align(x1);
-            x2 = this.align(x2);
-            y1 = this.align(y1);
-            y2 = this.align(y2);
-        }
 
         if (isTransform) {
             p = matrix.transformPoint([x1, y1]);
@@ -116,27 +104,15 @@ Ext.define('Ext.draw.sprite.Line', {
         this.updateLineBBox(transform, true, attr.fromX, attr.fromY, attr.toX, attr.toY);
     },
 
-    align: function (x) {
-        return Math.round(x) - 0.5;
-    },
-
     render: function (surface, ctx) {
-        var me = this,
-            attr = me.attr,
-            matrix = attr.matrix;
+        var attr = this.attr,
+            matrix = this.attr.matrix;
 
         matrix.toContext(ctx);
 
         ctx.beginPath();
-
-        if (attr.crisp) {
-            ctx.moveTo(me.align(attr.fromX), me.align(attr.fromY));
-            ctx.lineTo(me.align(attr.toX),   me.align(attr.toY));
-        } else {
-            ctx.moveTo(attr.fromX, attr.fromY);
-            ctx.lineTo(attr.toX, attr.toY);
-        }
-
+        ctx.moveTo(attr.fromX, attr.fromY);
+        ctx.lineTo(attr.toX, attr.toY);
         ctx.stroke();
 
         //<debug>

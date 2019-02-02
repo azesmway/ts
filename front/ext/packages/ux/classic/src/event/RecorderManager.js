@@ -2,7 +2,7 @@
  * Recorder manager.
  * Used as a bookmarklet:
  *
- *     javascript:void(window.open("../ux/event/RecorderManager.html","recmgr"))
+ *    javascript:void(window.open("../ux/event/RecorderManager.html","recmgr"))
  */
 Ext.define('Ext.ux.event.RecorderManager', {
     extend: 'Ext.panel.Panel',
@@ -149,7 +149,7 @@ Ext.define('Ext.ux.event.RecorderManager', {
 
             if (ignoredEvents[name]) {
                 sub[sub.length - 1].checked = false;
-                Ext.defer(function () {
+                Ext.Function.defer(function () {
                     delete eventsToRec[name];
                 }, 1);
             }

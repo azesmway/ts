@@ -23,43 +23,6 @@ Ext.define('Ext.dd.ScrollManager', {
         'Ext.dd.DragDropManager'
     ],
 
-    /**
-     * The number of pixels from the top or bottom edge of a container the pointer needs to be to trigger scrolling
-     */
-    vthresh: 25 * (window.devicePixelRatio || 1),
-
-    /**
-     * The number of pixels from the right or left edge of a container the pointer needs to be to trigger scrolling
-     */
-    hthresh: 25 * (window.devicePixelRatio || 1),
-
-    /**
-     * The number of pixels to scroll in each scroll increment
-     */
-    increment: 100,
-
-    /**
-     * The frequency of scrolls in milliseconds
-     */
-    frequency: 500,
-
-    /**
-     * True to animate the scroll
-     */
-    animate: true,
-
-    /**
-     * The animation duration in seconds - MUST BE less than Ext.dd.ScrollManager.frequency!
-     */
-    animDuration: 0.4,
-
-    /**
-     * @property {String} ddGroup
-     * The named drag drop {@link Ext.dd.DragSource#ddGroup group} to which this container belongs. If a ddGroup is
-     * specified, then container scrolling will only occur when a dragged object is in the same ddGroup.
-     */
-    ddGroup: undefined,
-
     dirTrans: {
         up: -1,
         left: -1,
@@ -69,7 +32,6 @@ Ext.define('Ext.dd.ScrollManager', {
 
     constructor: function() {
         var ddm = Ext.dd.DragDropManager;
-
         ddm.fireEvents = Ext.Function.createSequence(ddm.fireEvents, this.onFire, this);
         ddm.stopDrag = Ext.Function.createSequence(ddm.stopDrag, this.onStop, this);
         this.doScroll = this.doScroll.bind(this);
@@ -81,7 +43,6 @@ Ext.define('Ext.dd.ScrollManager', {
 
     onStop: function(e){
         var sm = Ext.dd.ScrollManager;
-
         sm.dragEl = null;
         sm.clearProc();
     },
@@ -144,11 +105,9 @@ Ext.define('Ext.dd.ScrollManager', {
 
     clearProc: function() {
         var proc = this.proc;
-
         if (proc.id) {
-            Ext.uninterval(proc.id);
+            clearInterval(proc.id);
         }
-
         proc.id = 0;
         proc.el = null;
         proc.dir = "";
@@ -174,7 +133,13 @@ Ext.define('Ext.dd.ScrollManager', {
 
     onFire: function(e, isDrop) {
         var me = this,
-            pt, proc, els, id, el, elementRegion, configSource, ownerCt, scrollerOwner;
+            pt,
+            proc,
+            els,
+            id,
+            el,
+            elementRegion,
+            configSource;
 
         if (isDrop || !me.ddmInstance.dragCurrent) {
             return;
@@ -191,20 +156,9 @@ Ext.define('Ext.dd.ScrollManager', {
 
         for (id in els) {
             el = els[id];
-            elementRegion = el.getRegion();
+            elementRegion = el._region;
             configSource = el.ddScrollConfig || me;
-            if (elementRegion && elementRegion.contains(pt)) {
-                if (!el.isScrollable()) {
-                    ownerCt = el.component && el.component.ownerCt;
-                    scrollerOwner = ownerCt && ownerCt.getScrollerOwner && ownerCt.getScrollerOwner();
-                    if (scrollerOwner) {
-                        el = scrollerOwner.getScrollable().getElement();
-                        elementRegion = el.getRegion();
-                    } else {
-                        continue;
-                    }
-                }
-                
+            if (elementRegion && elementRegion.contains(pt) && el.isScrollable()) {
                 if (elementRegion.bottom - pt.y <= configSource.vthresh) {
                     if(proc.el !== el){
                         me.startProc(el, "down");
@@ -236,7 +190,7 @@ Ext.define('Ext.dd.ScrollManager', {
      * @param {String/HTMLElement/Ext.dom.Element/String[]/HTMLElement[]/Ext.dom.Element[]} el
      * The id of or the element to be scrolled or an array of either
      */
-    register: function(el) {
+    register : function(el){
         if (Ext.isArray(el)) {
             for(var i = 0, len = el.length; i < len; i++) {
                     this.register(el[i]);
@@ -252,24 +206,60 @@ Ext.define('Ext.dd.ScrollManager', {
      * @param {String/HTMLElement/Ext.dom.Element/String[]/HTMLElement[]/Ext.dom.Element[]} el
      * The id of or the element to be removed or an array of either
      */
-    unregister: function(el) {
-        if (Ext.isArray(el)){
+    unregister : function(el){
+        if(Ext.isArray(el)){
             for (var i = 0, len = el.length; i < len; i++) {
                 this.unregister(el[i]);
             }
-        } else {
+        }else{
             el = Ext.get(el);
             delete this.els[el.id];
         }
     },
 
     /**
+     * The number of pixels from the top or bottom edge of a container the pointer needs to be to trigger scrolling
+     */
+    vthresh : 25 * (window.devicePixelRatio || 1),
+
+    /**
+     * The number of pixels from the right or left edge of a container the pointer needs to be to trigger scrolling
+     */
+    hthresh : 25 * (window.devicePixelRatio || 1),
+
+    /**
+     * The number of pixels to scroll in each scroll increment
+     */
+    increment : 100,
+
+    /**
+     * The frequency of scrolls in milliseconds
+     */
+    frequency : 500,
+
+    /**
+     * True to animate the scroll
+     */
+    animate: true,
+
+    /**
+     * The animation duration in seconds - MUST BE less than Ext.dd.ScrollManager.frequency!
+     */
+    animDuration: 0.4,
+
+    /**
+     * @property {String} ddGroup
+     * The named drag drop {@link Ext.dd.DragSource#ddGroup group} to which this container belongs. If a ddGroup is
+     * specified, then container scrolling will only occur when a dragged object is in the same ddGroup.
+     */
+    ddGroup: undefined,
+
+    /**
      * Manually trigger a cache refresh.
      */
-    refreshCache: function() {
+    refreshCache : function(){
         var els = this.els,
             id;
-
         for (id in els) {
             if (typeof els[id] === 'object') { // for people extending the object prototype
                 els[id]._region = els[id].getRegion();

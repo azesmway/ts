@@ -2,6 +2,7 @@
  * @private
  */
 Ext.define('Ext.Evented', {
+
     alternateClassName: 'Ext.EventedBase',
 
     mixins: [
@@ -11,11 +12,6 @@ Ext.define('Ext.Evented', {
     initialized: false,
 
     constructor: function(config) {
-        // Base constructor is overriden for testing
-        //<debug>
-        this.callParent();
-        //</debug>
-        
         this.mixins.observable.constructor.call(this, config);
         this.initialized = true;
     },

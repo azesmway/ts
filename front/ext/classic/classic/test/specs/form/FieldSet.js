@@ -1,6 +1,4 @@
-topSuite("Ext.form.FieldSet",
-    ['Ext.window.Window', 'Ext.form.Panel', 'Ext.form.field.Text', 'Ext.data.Session'],
-function() {
+describe("Ext.form.FieldSet", function() {
     var component;
     
     function makeComponent(config, preventRender) {
@@ -167,8 +165,8 @@ function() {
 
             var w = 180 + legend.getEl().getPadding('lr');
 
-            expect(legend.getWidth()).toBeApprox(w, 1);
-            expect(fs.getWidth()).toBeApprox(w + fs.getEl().getPadding('lr') + fs.getEl().getBorderWidth('lr'), 1);
+            expect(legend.getWidth()).toBe(w);
+            expect(fs.getWidth()).toBe(w + fs.getEl().getPadding('lr') + fs.getEl().getBorderWidth('lr'));
             ct.destroy();
         });
     });

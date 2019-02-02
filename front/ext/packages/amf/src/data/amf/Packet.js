@@ -19,7 +19,7 @@
  *     console.log(packet.version, packet.headers, packet.messages);
  *
  * For more information on working with AMF data please refer to the
- * [AMF Guide](../guides/backend_connectors/amf.html).
+ * [AMF Guide](#/guide/amf).
  */
 Ext.define('Ext.data.amf.Packet', function() {
     var twoPowN52 = Math.pow(2, -52),

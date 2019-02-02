@@ -1,14 +1,10 @@
 /**
  * @class Ext.Widget
  */
-
 Ext.define('Ext.overrides.Widget', {
     override: 'Ext.Widget',
 
-    uses: [
-        'Ext.Component',
-        'Ext.layout.component.Auto'
-    ],
+    uses: ['Ext.Component'],
 
     $configStrict: false,
 
@@ -68,7 +64,6 @@ Ext.define('Ext.overrides.Widget', {
     finishRender: function () {
         this.rendering = false;
         this.initBindable();
-        this.initKeyMap();
     },
 
     getAnimationProps: function() {
@@ -129,15 +124,18 @@ Ext.define('Ext.overrides.Widget', {
         me.ownerCt = container;
 
         me.onInheritedAdd(me, instanced);
-
-        // this component is no longer detached from the body
-        me.isDetached = false;
     },
 
     onRemoved: function(destroying) {
-        this.onInheritedRemove(destroying);
+        var me = this;
 
-        this.ownerCt = this.ownerLayout = null;
+        if (!destroying) {
+            me.removeBindings();
+        }
+
+        me.onInheritedRemove(destroying);
+
+        me.ownerCt = me.ownerLayout = null;
     },
 
     parseBox: function(box) {
@@ -170,7 +168,6 @@ Ext.define('Ext.overrides.Widget', {
         }
 
         Ext.fly(container).appendChild(element);
-        me.finishRender();
     },
 
     setPosition: function(x, y) {

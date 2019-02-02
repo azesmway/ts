@@ -53,7 +53,7 @@ Ext.define('Ext.grid.CellContext', {
     
     generation: 0,
 
-    /**
+     /**
       * Creates a new CellContext which references a {@link Ext.view.Table GridView}
       * @param {Ext.view.Table} view The {@link Ext.view.Table GridView} for which the cell context is needed.
       *
@@ -123,7 +123,7 @@ Ext.define('Ext.grid.CellContext', {
             oldRecord = me.record,
             count;
         
-        if (row != undefined) {
+        if (row !== undefined) {
             // Row index passed, < 0 meaning count from the tail (-1 is the last, etc)
             if (typeof row === 'number') {
                 count = dataSource.getCount();
@@ -140,9 +140,7 @@ Ext.define('Ext.grid.CellContext', {
             // row is a grid row, or Element wrapping row
             else if (row.tagName || row.isElement) {
                 me.record = me.view.getRecord(row);
-
-                // If it's a placeholder record for a collapsed group, index it correctly
-                me.rowIdx = me.record ? (me.record.isCollapsedPlaceholder ? dataSource.indexOfPlaceholder(me.record) : dataSource.indexOf(me.record)) : -1;
+                me.rowIdx = dataSource.indexOf(me.record);
             }
         }
         if (me.record !== oldRecord) {
@@ -160,7 +158,7 @@ Ext.define('Ext.grid.CellContext', {
         // We MUST NOT update the context view with the column's view because this context
         // may be for an Ext.locking.View which spans two grid views, and a column references
         // its local grid view.
-        if (col != undefined) {
+        if (col !== undefined) {
             if (typeof col === 'number') {
                 me.colIdx = col;
                 me.column = colMgr.getHeaderAtIndex(col);
@@ -177,16 +175,11 @@ Ext.define('Ext.grid.CellContext', {
         return me;
     },
 
-    setView: function(view) {
-        this.view = view;
-        this.refresh();
-    },
-
     /**
      * Returns the cell object referenced *at the time of calling*. Note that grid DOM is transient, and 
      * the cell referenced may be removed from the DOM due to paging or buffered rendering or column or record removal.
      *
-     * @param {Boolean} returnDom Pass `true` to return a DOM object instead of an {@link Ext.dom.Element Element}.
+     * @param {Boolean} returnDom Pass `true` to return a DOM object instead of an {@link Ext.dom.Element Element).
      * @return {HTMLElement/Ext.dom.Element} The cell referenced by this context.
      */
     getCell: function(returnDom) {
@@ -197,7 +190,7 @@ Ext.define('Ext.grid.CellContext', {
      * Returns the row object referenced *at the time of calling*. Note that grid DOM is transient, and 
      * the row referenced may be removed from the DOM due to paging or buffered rendering or column or record removal.
      *
-     * @param {Boolean} returnDom Pass `true` to return a DOM object instead of an {@link Ext.dom.Element Element}.
+     * @param {Boolean} returnDom Pass `true` to return a DOM object instead of an {@link Ext.dom.Element Element).
      * @return {HTMLElement/Ext.dom.Element} The grid row referenced by this context.
      */
     getRow: function(returnDom) {
@@ -210,7 +203,7 @@ Ext.define('Ext.grid.CellContext', {
      * calling*. Note that grid DOM is transient, and the node referenced may be removed from the DOM due
      * to paging or buffered rendering or column or record removal.
      *
-     * @param {Boolean} returnDom Pass `true` to return a DOM object instead of an {@link Ext.dom.Element Element}.
+     * @param {Boolean} returnDom Pass `true` to return a DOM object instead of an {@link Ext.dom.Element Element).
      * @return {HTMLElement/Ext.dom.Element} The grid item referenced by this context.
      */
     getNode: function(returnDom) {

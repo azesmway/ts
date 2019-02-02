@@ -9,7 +9,7 @@
  *
  * ## Examples
  *
- *     @example
+ *     @example miniphone preview
  *     Ext.create('Ext.Container', {
  *         fullscreen: true,
  *         layout: {
@@ -88,7 +88,7 @@ Ext.define('Ext.Toolbar', {
         'Ext.Button',
         'Ext.Title',
         'Ext.Spacer',
-        'Ext.layout.Box'
+        'Ext.layout.HBox'
     ],
 
     /**
@@ -126,7 +126,7 @@ Ext.define('Ext.Toolbar', {
          */
 
         /**
-         * @cfg {Number/String} minHeight
+         * @cfg {String} minHeight
          * The minimum height height of the Toolbar.
          * @accessor
          */
@@ -160,32 +160,25 @@ Ext.define('Ext.Toolbar', {
          * @accessor
          */
         layout: {
-            type: 'box',
+            type: 'hbox',
             align: 'center'
         }
     },
-
-    statics: {
-        shortcuts: {
-            '->': true
-        }
-    },
-
-    autoSize: null,
 
     border: false,
 
     classCls: Ext.baseCSSPrefix + 'toolbar',
 
+    hasCSSMinHeight: true,
+
     constructor: function(config) {
         config = config || {};
 
-        if (config.docked == 'left' || config.docked == 'right') {
-            config.layout = Ext.apply({
-                type: 'box',
-                align: 'stretch',
-                vertical: true
-            }, config.layout);
+        if (config.docked == "left" || config.docked == "right") {
+            config.layout = {
+                type: 'vbox',
+                align: 'stretch'
+            };
         }
 
         this.callParent([config]);
@@ -277,7 +270,8 @@ Ext.define('Ext.Toolbar', {
                 flex: 1
             };
         }
-        return this.callParent([config]);
+
+        return this.callParent([ config ]);
     }
 });
 

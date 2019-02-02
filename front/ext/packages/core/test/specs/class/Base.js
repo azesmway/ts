@@ -1,4 +1,4 @@
-topSuite("Ext.Base", function() {
+describe("Ext.Base", function() {
     var cls;
     
     afterEach(function() {
@@ -551,14 +551,11 @@ topSuite("Ext.Base", function() {
         });
         
         describe("cleanup", function() {
-            var oldClearProps, oldClearProto;
+            var oldFlag;
             
             beforeEach(function() {
-                oldClearProps = Ext.Base.prototype.clearPropertiesOnDestroy;
-                oldClearProto = Ext.Base.prototype.clearPrototypeOnDestroy;
-                
+                oldFlag = Ext.Base.prototype.clearPropertiesOnDestroy;
                 Ext.Base.prototype.clearPropertiesOnDestroy = true;
-                Ext.Base.prototype.clearPrototypeOnDestroy = false;
                 
                 Class.prototype.$noClearOnDestroy = {
                     bar: true
@@ -569,8 +566,7 @@ topSuite("Ext.Base", function() {
             });
             
             afterEach(function() {
-                Ext.Base.prototype.clearPropertiesOnDestroy = oldClearProps;
-                Ext.Base.prototype.clearPrototypeOnDestroy = oldClearProto;
+                Ext.Base.prototype.clearPropertiesOnDestroy = oldFlag;
             });
             
             describe("reaping", function() {

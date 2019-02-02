@@ -1,4 +1,5 @@
-topSuite("Ext.layout.container.Center", ['Ext.Panel'], function() {
+describe("Ext.layout.container.Center", function() {
+
     var ct, item;
 
     afterEach(function() {

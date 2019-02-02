@@ -1,4 +1,4 @@
-topSuite("Ext.data.field.Integer", function() {
+describe("Ext.data.field.Integer", function() {
 
     var field;
     

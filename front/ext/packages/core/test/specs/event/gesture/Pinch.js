@@ -1,10 +1,10 @@
 // describe("Ext.event.gesture.Pinch", function () {});
 // The above appeases Cmd's parser to associate spec run results with files.
 
-(jasmine.supportsTouch ? topSuite : xtopSuite)("Ext.event.gesture.Pinch", function() {
+(Ext.supports.Touch ? describe : xdescribe)("Ext.event.gesture.Pinch", function() {
     var helper = Ext.testHelper,
         targetEl, pinchstartHandler, pinchHandler, pinchendHandler, pinchcancelHandler,
-        pinchstartEvent, pinchEvent, pinchendEvent;
+        pinchstartEvent, pinchEvent, pinchendEvent, pinchcancelEvent;
 
     function start(cfg) {
         helper.touchStart(targetEl, cfg);
@@ -115,79 +115,81 @@
         });
     });
 
-    it("should fire pinchcancel and not pinchend if the first touch is canceled", function() {
-        var distance, startDistance;
-        runs(function() {
-            start({ id: 1, x: 100, y: 102 });
-            start({ id: 2, x: 200, y: 198 });
-            move({ id: 1, x: 105, y: 103 });
+    if (Ext.supports.Touch) {
+        it("should fire pinchcancel and not pinchend if the first touch is canceled", function() {
+            var distance, startDistance;
+            runs(function() {
+                start({ id: 1, x: 100, y: 102 });
+                start({ id: 2, x: 200, y: 198 });
+                move({ id: 1, x: 105, y: 103 });
+            });
+
+            waitsForAnimation();
+
+            runs(function() {
+                expect(pinchstartHandler).toHaveBeenCalled();
+                startDistance = distance = getDistance(105, 103, 200, 198);
+                expect(pinchstartEvent.distance).toBe(distance);
+                expect(pinchstartEvent.scale).toBe(1);
+                move({ id: 2, x: 195, y: 190 });
+            });
+
+            waitsForAnimation();
+
+            runs(function() {
+                distance = getDistance(105, 103, 195, 190);
+                expect(pinchHandler.callCount).toBe(1);
+                expect(pinchEvent.distance).toBe(distance);
+                expect(pinchEvent.scale).toBe(distance / startDistance);
+
+                cancel({ id: 1, x: 125, y: 133 });
+                end({ id: 2, x: 195, y: 190 });
+            });
+
+            waitsForAnimation();
+
+            runs(function() {
+                expect(pinchcancelHandler).toHaveBeenCalled();
+                expect(pinchendHandler).not.toHaveBeenCalled();
+            });
         });
 
-        waitsForAnimation();
+        it("should fire pinchcancel if the second touch is canceled", function() {
+            var distance, startDistance;
+            runs(function() {
+                start({ id: 1, x: 100, y: 102 });
+                start({ id: 2, x: 200, y: 198 });
+                move({ id: 1, x: 105, y: 103 });
+            });
 
-        runs(function() {
-            expect(pinchstartHandler).toHaveBeenCalled();
-            startDistance = distance = getDistance(105, 103, 200, 198);
-            expect(pinchstartEvent.distance).toBe(distance);
-            expect(pinchstartEvent.scale).toBe(1);
-            move({ id: 2, x: 195, y: 190 });
+            waitsForAnimation();
+
+            runs(function() {
+                expect(pinchstartHandler).toHaveBeenCalled();
+                startDistance = distance = getDistance(105, 103, 200, 198);
+                expect(pinchstartEvent.distance).toBe(distance);
+                expect(pinchstartEvent.scale).toBe(1);
+                move({ id: 2, x: 195, y: 190 });
+            });
+
+            waitsForAnimation();
+
+            runs(function() {
+                distance = getDistance(105, 103, 195, 190);
+                expect(pinchHandler.callCount).toBe(1);
+                expect(pinchEvent.distance).toBe(distance);
+                expect(pinchEvent.scale).toBe(distance / startDistance);
+
+                cancel({ id: 2, x: 195, y: 190 });
+                end({ id: 1, x: 125, y: 133 });
+            });
+
+            waitsForAnimation();
+
+            runs(function() {
+                expect(pinchcancelHandler).toHaveBeenCalled();
+                expect(pinchendHandler).not.toHaveBeenCalled();
+            });
         });
-
-        waitsForAnimation();
-
-        runs(function() {
-            distance = getDistance(105, 103, 195, 190);
-            expect(pinchHandler.callCount).toBe(1);
-            expect(pinchEvent.distance).toBe(distance);
-            expect(pinchEvent.scale).toBe(distance / startDistance);
-
-            cancel({ id: 1, x: 125, y: 133 });
-            end({ id: 2, x: 195, y: 190 });
-        });
-
-        waitsForAnimation();
-
-        runs(function() {
-            expect(pinchcancelHandler).toHaveBeenCalled();
-            expect(pinchendHandler).not.toHaveBeenCalled();
-        });
-    });
-
-    it("should fire pinchcancel if the second touch is canceled", function() {
-        var distance, startDistance;
-        runs(function() {
-            start({ id: 1, x: 100, y: 102 });
-            start({ id: 2, x: 200, y: 198 });
-            move({ id: 1, x: 105, y: 103 });
-        });
-
-        waitsForAnimation();
-
-        runs(function() {
-            expect(pinchstartHandler).toHaveBeenCalled();
-            startDistance = distance = getDistance(105, 103, 200, 198);
-            expect(pinchstartEvent.distance).toBe(distance);
-            expect(pinchstartEvent.scale).toBe(1);
-            move({ id: 2, x: 195, y: 190 });
-        });
-
-        waitsForAnimation();
-
-        runs(function() {
-            distance = getDistance(105, 103, 195, 190);
-            expect(pinchHandler.callCount).toBe(1);
-            expect(pinchEvent.distance).toBe(distance);
-            expect(pinchEvent.scale).toBe(distance / startDistance);
-
-            cancel({ id: 2, x: 195, y: 190 });
-            end({ id: 1, x: 125, y: 133 });
-        });
-
-        waitsForAnimation();
-
-        runs(function() {
-            expect(pinchcancelHandler).toHaveBeenCalled();
-            expect(pinchendHandler).not.toHaveBeenCalled();
-        });
-    });
+    }
 });

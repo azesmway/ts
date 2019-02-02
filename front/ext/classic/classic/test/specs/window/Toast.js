@@ -1,7 +1,8 @@
-/* global jasmine, Ext, expect */
-
-topSuite("Ext.window.Toast", ['Ext.form.field.Text'], function() {
+describe("Ext.window.Toast", function() {
     var fireMouseEvent = jasmine.fireMouseEvent,
+        waitForFocus = jasmine.waitForFocus,
+        focusAndWait = jasmine.focusAndWait,
+        expectFocused = jasmine.expectFocused,
         win, win2, toast, field1, field2, field3,
         showSpy, destroySpy;
     
@@ -38,9 +39,6 @@ topSuite("Ext.window.Toast", ['Ext.form.field.Text'], function() {
                     makeToast({
                         autoClose: true
                     });
-                });
-                afterEach(function() {
-                    Ext.destroy(toast);
                 });
                 
                 it("should force closable to false", function() {
@@ -201,18 +199,17 @@ topSuite("Ext.window.Toast", ['Ext.form.field.Text'], function() {
                     xtype: 'textfield',
                     id: 'field3'
                 }]
-            });
-
+            }).show();
+        
             field3 = win2.down('#field3');
-            win2.show();
-
-            waitForFocus(field3, 'field3 to focus for the first time');
+        
+            waitForFocus(field3);
         
             runs(function() {
                 makeToast();
             });
         
-            waitForSpy(showSpy, 'show toast', 1000, 'toast to show');
+            waitForSpy(showSpy, 'show toast', 1000);
         
             expectFocused(field3, true);
         
@@ -220,7 +217,7 @@ topSuite("Ext.window.Toast", ['Ext.form.field.Text'], function() {
                 toast.close();
             });
         
-            waitForSpy(destroySpy, 'close toast', 1000, 'toast to close');
+            waitForSpy(destroySpy, 'close toast', 1000);
         
             expectFocused(field3, true);
         });

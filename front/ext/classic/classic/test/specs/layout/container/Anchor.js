@@ -1,6 +1,4 @@
-topSuite("Ext.layout.container.Anchor",
-    ['Ext.form.Panel', 'Ext.form.field.*'],
-function() {
+describe("Ext.layout.container.Anchor", function() {
     function createSuite(shrinkWrap) {
         var suiteName = 'Ext.layout.container.Anchor';
 
@@ -971,9 +969,7 @@ function() {
                     html: '&nbsp;'
                 }]
             }, {
-                // We must use a Component. Some old IEs insist on using
-                // content-sizing box model resulting in the extra border height.
-                xtype: 'component',
+                xtype: 'textareafield',
                 height: 100,
                 margin: '0',
                 allowBlank: false

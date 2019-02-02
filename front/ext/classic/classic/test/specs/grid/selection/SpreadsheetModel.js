@@ -1,13 +1,11 @@
-/* global expect, Ext, jasmine, xdescribe, MockAjaxManager, topSuite */
-/* eslint indent: off */
+/* global expect, Ext, jasmine, xdescribe, MockAjaxManager */
 
-topSuite("Ext.grid.selection.SpreadsheetModel",
-    ['Ext.grid.Panel', 'Ext.app.ViewModel', 'Ext.grid.plugin.Clipboard',
-     'Ext.grid.plugin.CellEditing', 'Ext.grid.selection.Replicator',
-     'Ext.toolbar.Paging', 'Ext.button.Button', 'Ext.data.BufferedStore'],
-function() {
-    var itNotTouch = jasmine.supportsTouch ? xit : it,
-        grid, view, store, selModel, colRef,
+describe("Ext.grid.selection.SpreadsheetModel", function() {
+    
+    var grid, view, store, selModel, colRef,
+        // Unreliable synthetic events on IE.
+        // SelModel tests are not broiwser-dependent though
+        smDescribe = Ext.isIE ? xdescribe : describe,
         synchronousLoad = true,
         proxyStoreLoad = Ext.data.ProxyStore.prototype.load,
         loadStore = function() {
@@ -17,30 +15,6 @@ function() {
             }
             return this;
         };
-
-    function dragStart(el) {
-        var box = el.getBox(),
-            startX = box.left + 1,
-            startY = box.top + 1;
-        jasmine.fireMouseEvent(el, 'mouseover', startX, startY);
-        jasmine.fireMouseEvent(el, 'mousedown', startX, startY);
-    }
-
-    function dragMove(toEl) {
-        var box = toEl.getBox(),
-            toX = box.left + 1,
-            toY = box.top + 1;
-
-        jasmine.fireMouseEvent(toEl, 'mousemove', toX, toY);
-    }
-
-    function dragEnd(toEl) {
-        var box = toEl.getBox(),
-            toX = box.left + 1,
-            toY = box.top + 1;
-
-        jasmine.fireMouseEvent(toEl, 'mouseup', toX, toY);
-    }
     
     function triggerCellMouseEvent(type, rowIdx, cellIdx, button, x, y) {
         var target = findCell(rowIdx, cellIdx);
@@ -182,16 +156,10 @@ function() {
         selModel = grid = store = view = null;
         Ext.undefine('spec.SpreadsheetModel');
         Ext.data.Model.schema.clear();
-        
-        try {
-            delete Ext.global.spec;
-        } catch (e) {
-            Ext.global.spec = undefined;
-        }
     });
 
-    describe("refresh", function() {
-        itNotTouch("should retain selection", function() {
+    smDescribe("refresh", function() {
+        it("should retain selection", function() {
             var target,
                 cell,
                 selected;
@@ -217,7 +185,7 @@ function() {
 
     });
 
-    describe('remove records', function() {
+    smDescribe('remove records', function() {
         it("should allow removal of last record", function() {
             expect(function() {
                 makeGrid();
@@ -234,7 +202,7 @@ function() {
         });
     });
 
-    describe("with a bound store", function() {
+    smDescribe("with a bound store", function() {
         it("should not throw an exception", function() {
             expect(function() {
                 makeGrid(null, {
@@ -254,7 +222,7 @@ function() {
         });
     });
 
-    describe("Non-rendered operation", function() {
+    smDescribe("Non-rendered operation", function() {
         it("should allow reconfiguration before render", function() {
             makeGrid(null, {
                 renderTo: null
@@ -323,15 +291,15 @@ function() {
         });
     });
 
-    describe("Select all", function() {
-        itNotTouch("should select all on click of header zero", function() {
+    smDescribe("Select all", function() {
+        it("should select all on click of header zero", function() {
             makeGrid();
             var r2c0 = findCell(2, 0);
 
             jasmine.fireMouseEvent(colRef[0].el.dom, 'click');
 
             // Should have selected all rows
-            expect(view.el.dom.querySelectorAll('.'+view.selectedItemCls).length).toBe(store.getCount());
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(store.getCount());
 
             jasmine.fireMouseEvent(colRef[0].el.dom, 'click');
 
@@ -360,9 +328,9 @@ function() {
             expect(selModel.getSelected().allSelected).toBe(true);
             expect(view.el.query('.'+view.selectedItemCls).length).toBe(store.getCount());
         });
-    });
+    });    
 
-    describe("Column selection", function() {
+    smDescribe("Column selection", function() {
         it("should select a column on click of a header", function() {
             makeGrid();
             var spy = spyOnEvent(store, "sort").andCallThrough();
@@ -373,8 +341,9 @@ function() {
             expect(view.el.query('.'+view.selectedCellCls).length).toBe(view.el.query(colRef[1].getCellSelector()).length);
             expect(isColumnSelected(1)).toBe(true);
 
-            // Ctrl click should deselect the column
-            jasmine.fireMouseEvent(colRef[1].el.dom, 'click', null, null, null, null, true);
+            jasmine.fireMouseEvent(colRef[1].el.dom, 'click');
+
+            // Should have deselected all cells
             expect(view.el.query('.'+view.selectedCellCls).length).toBe(0);
 
             // Activating the header as a column select should NOT sort
@@ -405,7 +374,7 @@ function() {
             // Activating the header as a column select should NOT sort
             expect(spy).not.toHaveBeenCalled();
         });
-        itNotTouch("should select a column on CTRL/click of a header and not deselect previous columns", function() {
+        it("should select a column on CTRL/click of a header and not deselect previous columns", function() {
             makeGrid();
             var spy = spyOnEvent(store, "sort").andCallThrough();
             jasmine.fireMouseEvent(colRef[1].el.dom, 'click');
@@ -434,7 +403,7 @@ function() {
             // Activating the header as a column select should NOT sort
             expect(spy).not.toHaveBeenCalled();
         });
-        itNotTouch("should allow click/drag selection of columns when cell and row selection is disabled", function() {
+        it("should allow click/drag selection of columns when cell and row selection is disabled", function() {
             makeGrid(null, null, {
                 cellSelect: false,
                 rowSelect: false,
@@ -464,7 +433,7 @@ function() {
             // Should have selected all cells under column 2, 3 and 4
             expect(view.el.query('.'+view.selectedCellCls).length).toBe(view.el.query(colRef[2].getCellSelector()).length + view.el.query(colRef[3].getCellSelector()).length + view.el.query(colRef[4].getCellSelector()).length);
         });
-        itNotTouch("should allow click/SHIFT click selection of columns when cell and row selection is disabled", function() {
+        it("should allow click/SHIFT click selection of columns when cell and row selection is disabled", function() {
             makeGrid(null, null, {
                 cellSelect: false,
                 rowSelect: false,
@@ -490,7 +459,7 @@ function() {
             // Should have selected all cells under column 2, 3 and 4
             expect(view.el.query('.'+view.selectedCellCls).length).toBe(view.el.query(colRef[2].getCellSelector()).length + view.el.query(colRef[3].getCellSelector()).length + view.el.query(colRef[4].getCellSelector()).length);
         });
-        itNotTouch("should allow click/CTRL click selection of columns when cell and row selection is disabled", function() {
+        it("should allow click/CTRL click selection of columns when cell and row selection is disabled", function() {
             makeGrid(null, null, {
                 cellSelect: false,
                 rowSelect: false,
@@ -518,7 +487,7 @@ function() {
     });
 
     describe("advanced selection", function() {
-        itNotTouch("should allow SHIFT select once you already have items selected", function() {
+        it("should allow SHIFT select once you already have items selected", function() {
             makeGrid();
 
             var c1 = findCell(0, 1),
@@ -540,222 +509,8 @@ function() {
         });
     });
 
-    describe("resuming selection with SHIFT", function () {
-        describe("expanding selection", function() {
-            describe("cellSelect", function() {
-                beforeEach(function() {
-                    makeGrid(null, null, {
-                        cellSelect: true,
-                        rowSelect: false,
-                        columnSelect: false
-                    });
-                });
-
-                itNotTouch("should allow SHIFT select once you already have items selected", function() {
-                    var c1 = findCell(0, 1),
-                        c2 = findCell(1, 3),
-                        c3 = findCell(4, 3),
-                        sel;
-
-                    jasmine.fireMouseEvent(c1, 'mousedown');
-                    jasmine.fireMouseEvent(c1, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mouseup', null, null, null, true); // SHIFT
-
-                    // Restarting selection pressing shift
-                    jasmine.fireMouseEvent(c2, 'mousedown', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mouseup', null, null, null, true); // SHIFT
-                    
-                    sel = selModel.getSelected();
-
-                    expect(sel.isCells).toBe(true);
-                    expect(sel.startCell.rowIdx).toBe(0);
-                    expect(sel.startCell.colIdx).toBe(1);
-                    expect(sel.endCell.rowIdx).toBe(4);
-                    expect(sel.endCell.colIdx).toBe(3);
-                });
-            });
-
-            describe("rowSelect", function() {
-                beforeEach(function() {
-                    makeGrid(null, null, {
-                        cellSelect: false,
-                        rowSelect: true,
-                        columnSelect: false
-                    });
-                });
-
-                itNotTouch("should allow SHIFT select once you already have items selected", function() {
-                    var c1 = findCell(2, 1),
-                        c2 = findCell(4, 1),
-                        c3 = findCell(6, 1),
-                        sel;
-
-                    jasmine.fireMouseEvent(c1, 'mousedown');
-                    jasmine.fireMouseEvent(c1, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mouseup', null, null, null, true); // SHIFT
-
-                    // Restarting selection pressing shift
-                    jasmine.fireMouseEvent(c2, 'mousedown', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mouseup', null, null, null, true); // SHIFT
-                    
-                    sel = selModel.getSelected();
-
-                    expect(sel.isRows).toBe(true);
-
-                    expect(sel.rangeStart).toBe(2);
-                    expect(sel.rangeEnd).toBe(6);
-                    expect(sel.selectedRecords.length).toBe(5);
-                });
-            });
-
-            describe("columnSelect", function() {
-                beforeEach(function() {
-                    makeGrid(null, null, {
-                        cellSelect: false,
-                        rowSelect: false,
-                        columnSelect: true
-                    });
-                });
-
-                itNotTouch("should allow SHIFT select once you already have items selected", function() {
-                    var c1 = findCell(1, 1),
-                        c2 = findCell(1, 2),
-                        c3 = findCell(1, 4),
-                        sel;
-
-                    jasmine.fireMouseEvent(c1, 'mousedown');
-                    jasmine.fireMouseEvent(c1, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mouseup', null, null, null, true); // SHIFT
-
-                    // Restarting selection pressing shift
-                    jasmine.fireMouseEvent(c2, 'mousedown', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mouseup', null, null, null, true); // SHIFT
-                    
-                    sel = selModel.getSelected();
-
-                    expect(sel.isColumns).toBe(true);
-
-                    expect(sel.startColumn).toBe(colRef[1]);
-                    expect(sel.selectedColumns.length).toBe(4);
-                });
-            });
-        });
-
-        describe("reducing selection", function() {
-            describe("cellSelect", function() {
-                beforeEach(function() {
-                    makeGrid(null, null, {
-                        cellSelect: true,
-                        rowSelect: false,
-                        columnSelect: false
-                    });
-                });
-
-                itNotTouch("should allow SHIFT select once you already have items selected", function() {
-                    var c1 = findCell(0, 1),
-                        c2 = findCell(1, 3),
-                        c3 = findCell(4, 3),
-                        sel;
-
-                    jasmine.fireMouseEvent(c1, 'mousedown');
-                    jasmine.fireMouseEvent(c1, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mouseup', null, null, null, true); // SHIFT
-
-                    // Restarting selection pressing shift
-                    jasmine.fireMouseEvent(c3, 'mousedown', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mouseup', null, null, null, true); // SHIFT
-                    
-                    sel = selModel.getSelected();
-
-                    expect(sel.isCells).toBe(true);
-                    expect(sel.startCell.rowIdx).toBe(0);
-                    expect(sel.startCell.colIdx).toBe(1);
-                    expect(sel.endCell.rowIdx).toBe(1);
-                    expect(sel.endCell.colIdx).toBe(3);
-                });
-            });
-
-            describe("rowSelect", function() {
-                beforeEach(function() {
-                    makeGrid(null, null, {
-                        cellSelect: false,
-                        rowSelect: true,
-                        columnSelect: false
-                    });
-                });
-
-                itNotTouch("should allow SHIFT select once you already have items selected", function() {
-                    var c1 = findCell(2, 1),
-                        c2 = findCell(4, 1),
-                        c3 = findCell(6, 1),
-                        sel;
-
-                    jasmine.fireMouseEvent(c1, 'mousedown');
-                    jasmine.fireMouseEvent(c1, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mouseup', null, null, null, true); // SHIFT
-
-                    // Restarting selection pressing shift
-                    jasmine.fireMouseEvent(c3, 'mousedown', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mouseup', null, null, null, true); // SHIFT
-                    
-                    sel = selModel.getSelected();
-
-                    expect(sel.isRows).toBe(true);
-
-                    expect(sel.rangeStart).toBe(2);
-                    expect(sel.rangeEnd).toBe(4);
-                    expect(sel.selectedRecords.length).toBe(3);
-                });
-            });
-
-            describe("columnSelect", function() {
-                beforeEach(function() {
-                    makeGrid(null, null, {
-                        cellSelect: false,
-                        rowSelect: false,
-                        columnSelect: true
-                    });
-                });
-
-                itNotTouch("should allow SHIFT select once you already have items selected", function() {
-                    var c1 = findCell(1, 1),
-                        c2 = findCell(1, 2),
-                        c3 = findCell(1, 4),
-                        sel;
-
-                    jasmine.fireMouseEvent(c1, 'mousedown');
-                    jasmine.fireMouseEvent(c1, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c3, 'mouseup', null, null, null, true); // SHIFT
-
-                    // Restarting selection pressing shift
-                    jasmine.fireMouseEvent(c3, 'mousedown', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mousemove', null, null, null, true); // SHIFT
-                    jasmine.fireMouseEvent(c2, 'mouseup', null, null, null, true); // SHIFT
-                    
-                    sel = selModel.getSelected();
-
-                    expect(sel.isColumns).toBe(true);
-
-                    expect(sel.startColumn).toBe(colRef[1]);
-                    expect(sel.selectedColumns.length).toBe(2);
-                });
-            });
-        });
-    });
-
-    describe("Row selection", function() {
-        itNotTouch("should set allSelected if all rows manually selected", function() {
+    smDescribe("Row selection", function() {
+        it("should set allSelected if all rows manually selected", function() {
             makeGrid();
             clickRowNumberer(0, true);
             expect(selModel.selected.allSelected).toBe(false);
@@ -816,7 +571,7 @@ function() {
             expect(view.el.query('.'+view.selectedItemCls).length).toBe(1);
             expect(isRowSelected(3)).toBe(true);
         });
-        itNotTouch("should select a row on CTRL/click of a rownumberer and not deselect previous rows", function() {
+        it("should select a rown on CTRL/click of a rownumberer and not deselect previous rows", function() {
             makeGrid();
             clickRowNumberer(1);
 
@@ -865,14 +620,13 @@ function() {
             makeGrid(null, {
                 plugins: 'clipboard'
             });
-
             var clipboard = grid.findPlugin('clipboard'),
                 data;
 
             clickRowNumberer(1);
 
             // Should have selected row 1
-            expect(view.el.query('.' + view.selectedItemCls).length).toBe(1);
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(1);
             expect(isRowSelected(1)).toBe(true);
 
             data = clipboard.getData(false, {
@@ -905,11 +659,10 @@ function() {
                     }
                 });
 
-                checkbox = findCell(0,1).querySelector('.x-grid-checkcolumn');
+                checkbox = findCell(0,1).down('.x-grid-checkcolumn').dom;
                 jasmine.fireMouseEvent(checkbox, 'mousedown');
                 jasmine.fireMouseEvent(checkbox, 'mousemove');
                 expect(isRowSelected(0)).toBe(false);
-                jasmine.fireMouseEvent(checkbox, 'mouseup');
             });
             it("should select all records when checkbox is clicked", function() {
                 var checkbox, count;
@@ -1051,8 +804,8 @@ function() {
         });
     });
     
-    describe("Range selection", function() {
-        itNotTouch("should select a range on drag", function() {
+    smDescribe("Range selection", function() {
+        it("should select a range on drag", function() {
             makeGrid();
             var c2 = findCell(2, 2),
                 c4 = findCell(4, 4);
@@ -1075,7 +828,7 @@ function() {
                     isCellSelected(3, 4) &&
                     isCellSelected(4, 4)).toBe(true);
         });
-        itNotTouch("should select a range in a single row on drag", function() {
+        it("should select a range in a single row on drag", function() {
             makeGrid();
             var c2 = findCell(2, 2),
                 c4 = findCell(2, 4);
@@ -1092,7 +845,7 @@ function() {
                     isCellSelected(2, 3) &&
                     isCellSelected(2, 4)).toBe(true);
         });
-        itNotTouch("should work when the mouseup is outside the grid", function() {
+        it("should work when the mouseup is outside the grid", function() {
             makeGrid();
             var c2 = findCell(2, 2),
                 c4 = findCell(2, 4);
@@ -1137,20 +890,19 @@ function() {
                         isCellSelected(4, 2)).toBe(true);
             });
         });
-        
         it('should not wrap when SHIFT+RIGHT on last cell', function() {
             makeGrid();
-            
             var c5 = findCell(2, 5),
                 c4Position;
 
             jasmine.fireMouseEvent(c5, 'click');
 
+            // Wait for the NavigationModel to focus the last cell
             waitsFor(function() {
                 c4Position = view.getNavigationModel().getPosition();
 
-                return c4Position && c4Position.getCell(true) === c5;
-            }, 'NavigationModel to focus the last cell', 2000);
+                return c4Position && c4Position.getCell(true) === c5.dom;
+            });
 
             runs(function() {
                 jasmine.fireKeyEvent(c5, 'keydown', Ext.event.Event.RIGHT, true);
@@ -1161,12 +913,12 @@ function() {
 
             // Should not have moved
             runs(function() {
-                expect(view.getNavigationModel().getCell().dom).toBe(c5);
+                expect(view.getNavigationModel().getCell().dom).toBe(c5.dom);
             });
         });
     });
 
-    describe("Single cell selection", function() {
+    smDescribe("Single cell selection", function() {
         it("should select a single cell on click", function() {
             makeGrid();
 
@@ -1180,7 +932,7 @@ function() {
         });
     });
 
-    describe("With editor", function() {
+    smDescribe("With editor", function() {
         it("should be able to select the text inside of an editor", function() {
             var c1, plugin, editor, field;
             makeGrid([{
@@ -1205,12 +957,10 @@ function() {
             editor = plugin.getActiveEditor();
             field = editor.field;
 
-            jasmine.fireMouseEvent(field.inputEl, 'mousedown');
-            jasmine.fireMouseEvent(field.inputEl, 'mousemove');
+            jasmine.fireMouseEvent(field.el, 'mousedown');
+            jasmine.fireMouseEvent(field.el, 'mousemove');
 
             expect(editor.editing).toBe(true);
-            
-            jasmine.fireMouseEvent(field.inputEl, 'mouseup');
         });
     });
 
@@ -1502,7 +1252,7 @@ function() {
 
     describe("Locked grids", function() {
         describe("mouse cell selection", function(){
-            itNotTouch("should track across from locked to normal", function() {
+            it("should track across from locked to normal", function() {
                 makeGrid(null, null, null, null, true);
                 var c1 = findCell(1, 1),
                     c3 = findCell(3, 3);
@@ -1528,13 +1278,11 @@ function() {
                     isCellSelected(3, 1) &&
                     isCellSelected(3, 2) &&
                     isCellSelected(3, 2)).toBe(true);
-
-                jasmine.fireMouseEvent(c3, 'mouseup');
             });
         });
 
         describe("mouse row selection", function(){
-            itNotTouch("should track across from locked to normal", function() {
+            it("should track across from locked to normal", function() {
                 makeGrid(null, null, null, null, true);
                 var c0 = findCell(0, 0),
                     c2 = findCell(2, 2);
@@ -1542,7 +1290,6 @@ function() {
                 jasmine.fireMouseEvent(c0, 'mousedown');
                 jasmine.fireMouseEvent(c0, 'mousemove');
                 jasmine.fireMouseEvent(c2, 'mousemove');
-                jasmine.fireMouseEvent(c2, 'mouseup');
 
                 expect(selModel.getSelected().isRows).toBe(true);
 
@@ -1560,11 +1307,9 @@ function() {
                 expect(selModel.getSelected().contains(store.getAt(0))).toBe(true);
                 expect(selModel.getSelected().contains(store.getAt(1))).toBe(true);
                 expect(selModel.getSelected().contains(store.getAt(2))).toBe(true);
-
-                jasmine.fireMouseEvent(c2, 'mouseup');
             });
             
-            itNotTouch('should select a range of rows using click followed by shift+click', function() {
+            it('should select a range of rows using click followed by shift+click', function() {
                 makeGrid(null, null, null, null, true);
                 var c0 = findCell(0, 0),
                     c2 = findCell(2, 0);
@@ -1639,7 +1384,7 @@ function() {
     });
 
     describe("mouse column selection", function() {
-        itNotTouch("should select in both locked and normal sides", function() {
+        it("should select in both locked and normal sides", function() {
             makeGrid(null, null, null, null, true);
 
             jasmine.fireMouseEvent(colRef[1].el.dom, 'click');
@@ -1664,7 +1409,7 @@ function() {
             expect(isColumnSelected(2)).toBe(true);
         });
 
-        itNotTouch('should select columns rage using click then shift+click', function() {
+        it('should select columns rage using click then shift+click', function() {
             makeGrid(null, null, null, null, true);
 
             jasmine.fireMouseEvent(colRef[1].el.dom, 'click');
@@ -1704,11 +1449,8 @@ function() {
 
             for (i = start; i < end; ++i) {
                 recs.push({
-                    field1: i*10 + 1,
-                    field2: i*10 + 2,
-                    field3: i*10 + 3,
-                    field4: i*10 + 4,
-                    field5: i*10 + 5
+                    id: i,
+                    title: 'Title' + i
                 });
             }
             return recs;
@@ -1736,24 +1478,6 @@ function() {
             }
         }
         
-        function spyOnStoreLoad (processRequests, pageNum) {
-            var spy = jasmine.createSpy();
-    
-            store.on('load', spy, null, {single: true});
-            store.loadPage(pageNum || 1);
-            
-            waitsFor(function () {
-                return store.isLoading();
-            }, 'store to begin loading');
-            runs(function () {
-                if (processRequests) {
-                    satisfyRequests();
-                }
-            });
-            
-            return spy;
-        }
-        
         beforeEach(function() {
             MockAjaxManager.addMethods();
         });
@@ -1779,53 +1503,8 @@ function() {
             store.loadPage(1);
             satisfyRequests();
         });
-
-        it("should reconfigure without column in selection", function() {
-            var i,
-                newCols = [],
-                target,
-                spy;
-
-            // new column configuration without the original last column
-            for (i = 1; i <= 4; ++i) {
-                newCols.push({
-                    name: 'F' + i,
-                    dataIndex: 'field' + i,
-                    locked: false
-                });
-            }
-
-            makeGrid(null, null, null, {
-                buffered: true,
-                pageSize: 100,
-                proxy: {
-                    type: 'ajax',
-                    url: 'fakeUrl',
-                    reader: {
-                        type: 'json',
-                        rootProperty: 'data'
-                    }
-                },
-                data: null
-            });
-            
-            waitsForSpy(spyOnStoreLoad(true));
-            runs(function () {
-                target = findCell(1, 5);
-                jasmine.fireMouseEvent(target, 'click', null, null, null, null, null);
-                target = findCell(8, 5);
-                jasmine.fireMouseEvent(target, 'click', null, null, null, true, null);  // shift key down
-                spy = spyOnEvent(grid, 'reconfigure');
-                grid.reconfigure(newCols);
-                expect(spy).toHaveBeenCalled();
-            });
-        });
-
-
-
+        
         it("should select all, and add all subsequently paged-in records to the selection", function() {
-            var selCount;
-            
             makeGrid(null, null, {
                 checkboxSelect: true
             }, {
@@ -1841,28 +1520,27 @@ function() {
                 },
                 data: null
             });
-    
-    
-            waitsForSpy(spyOnStoreLoad(true));
-            runs(function () {
-                // Should select "all", even if the whole dataset is not present
-                // because of the BufferedStore
-                jasmine.fireMouseEvent(selModel.checkColumn.el, 'click');
-    
-                selCount = selModel.getSelection().length;
-    
-                // Selecting "all" when using a BufferedStore is conceptual.
-                // It cannot load the whole dataset into the selection Collection.
-                // It must load just what is present in the page cache.
-                // As more data arrives, it will also be selected.
-                expect(selCount).toBe(store.getData().getCount());
-    
-                view.scrollBy(null, 10000);
-            });
+            store.loadPage(1);
+            satisfyRequests();
+
+            // Should select "all", even if the whole dataset is not present
+            // because of the BufferedStore
+            jasmine.fireMouseEvent(selModel.checkColumn.el, 'click');
+            satisfyRequests();
             
+            var selCount = selModel.getSelection().length;
+
+            // Selecting "all" when using a BufferedStore is conceptual.
+            // It cannot load the whole dataset into the selection Collection.
+            // It must load just what is present in the page cache.
+            // As more data arrives, it will also be selected.
+            expect(selCount).toBe(store.getData().getCount());
+            
+            view.scrollBy(null, 10000);
             waitsFor(function() {
                 return !!Ext.Ajax.mockGetAllRequests().length;
             });
+            
             runs(function() {
                 satisfyRequests();
 
@@ -1888,25 +1566,8 @@ function() {
             
             jasmine.fireMouseEvent(findCell(1, 0), 'click');
 
-            expect(document.body.querySelectorAll(Ext.baseCSSPrefix + 'ssm-extender-drag-handle').length).toBe(0);
+            expect(Ext.DomQuery.select(Ext.baseCSSPrefix + 'ssm-extender-drag-handle').length).toBe(0);
             expect(selModel.getExtensible()).toBeUndefined();
-        });
-    });
-
-    describe("reducible", function() {
-        it("should allow to disable reducible", function() {
-            makeGrid(null, {
-                plugins: 'selectionreplicator'
-            }, {
-                extensible: true
-            }, {
-                numeric: true
-            });
-
-            jasmine.fireMouseEvent(findCell(1, 0), 'click');
-            expect(selModel.getExtensible().allowReduceSelection).toBe(true);
-            selModel.setReducible(false);
-            expect(selModel.getExtensible().allowReduceSelection).toBe(false);
         });
     });
 
@@ -1942,151 +1603,27 @@ function() {
             // Select cell 1, 1
             jasmine.fireMouseEvent(findCell(1, 1), 'click');
 
-            waitsForFocus(view);
+            // Get extender handle position
+            var handleX = selModel.extensible.handle.getX();
+
+            // Widen the selected column by 100px
+            colRef[1].setWidth(colRef[1].getWidth() + 100);
+
+            // Handle should have moved with it.
+            var have = selModel.extensible.handle.getX();
             
-            runs(function() {
-                // Get extender handle position
-                var handleX = selModel.extensible.handle.getX();
-
-                // Widen the selected column by 100px
-                colRef[1].setWidth(colRef[1].getWidth() + 100);
-
-                // Handle should have moved with it.
-                var have = selModel.extensible.handle.getX();
-
-                // Need a bit of fuzziness for IE8, Firefox, Safari...
+            // Need a bit of fuzziness for IE8
+            if (Ext.isIE8) {
                 expect(have).toBeWithin(2, handleX + 100);
-            });
-        });
-
-        it("should extend the selection when moving the handle", function() {
-            var initialCell = Ext.get(findCell(1, 1));
-            jasmine.fireMouseEvent(initialCell, 'click');
-
-            waitsForFocus(view);
-
-            runs(function() {
-                var handle = selModel.extensible.handle,
-                    toCell = Ext.get(findCell(3, 1));
-
-                dragStart(handle);
-                dragMove(toCell);
-                dragEnd(toCell);
-
-                expect(selModel.getSelected().getCount()).toBe(3);
-
-                initialCell.destroy();
-                toCell.destroy();
-            });
-        });
-
-        it("should reduce the selection when moving the handle", function() {
-            jasmine.fireMouseEvent(findCell(1, 1), 'click');
-
-            waitsForFocus(view);
-
-            runs(function() {
-                var handle = selModel.extensible.handle,
-                    initialCell = Ext.get(findCell(1, 1)),
-                    endCell = Ext.get(findCell(3, 1));
-
-                dragStart(handle);
-                dragMove(endCell);
-                dragEnd(endCell);
-
-                dragStart(handle);
-                dragMove(initialCell);
-                dragEnd(initialCell);
-
-                expect(selModel.getSelected().getCount()).toBe(1);
-
-                initialCell.destroy();
-                endCell.destroy();
-            });
-        });
-
-        it("should not reduce the selection if when moving the handle if reducible is false", function() {
-            jasmine.fireMouseEvent(findCell(1, 1), 'click');
-
-            waitsForFocus(view);
-
-            runs(function(){
-                var handle = selModel.extensible.handle,
-                    initialCell = Ext.get(findCell(1, 1)),
-                    endCell = Ext.get(findCell(3, 1));
-
-                selModel.setReducible(false);
-
-                dragStart(handle);
-                dragMove(endCell);
-                dragEnd(endCell);
-
-                dragStart(handle);
-                dragMove(initialCell);
-                dragEnd(initialCell);
-
-                expect(selModel.getSelected().getCount()).toBe(3);
-
-                initialCell.destroy();
-                endCell.destroy();
-            });
-        });
-        
-        it('should hide the replicator when cell has been deselected', function () {
-           jasmine.fireMouseEvent(findCell(1, 1), 'click');
-           
-           waitsForFocus(view);
-           runs(function () {
-               selModel.deselectAll();
-               expect(selModel.extensible.handle.isVisible()).toBe(false);
-           });
-           
-        });
-    
-        it('should remove the replicator when a column has been hidden', function () {
-            var columns = grid.getVisibleColumnManager().getColumns(),
-                spy = spyOnEvent(grid, 'columnschanged').andCallThrough(),
-                idleSpy = jasmine.createSpy('idle'),
-                i;
-            
-            // First iteration will hide the column 'field 2' that is to the right of the selection.
-            // Second iteration will hide the column 'field 1' with the selection. Both cases should
-            // remove the replicator handle.
-            for (i = 2; i > 0; i--) {
-                (function (idx) {
-                    runs(function () {
-                        jasmine.fireMouseEvent(findCell(1, 1), 'click');
-                    });
-                    
-                    waitsForFocus(view);
-                    runs(function () {
-                        columns[idx].hide();
-                
-                        // hiding the column eventually creates an 'idle' listener in
-                        // SpreadsheetModel#onColumnsChanged to wait for the UI to update
-                        // before updating the selection replicator. By creating this
-                        // listener, we know that by the time it fires, the other listener
-                        // has also fired. Triggering the 'click' event causes 'idle' to fire.
-                        Ext.on('idle', idleSpy, this, {single: true});
-                        jasmine.fireMouseEvent(Ext.getBody().dom, 'click', -100, -100);
-                    });
-            
-                    // 'columnschanged' and 'idle' must fire before continuing
-                    waitsFor(function () {
-                        return spy.callCount === 1 && idleSpy.callCount === 1;
-                    });
-                    runs(function () {
-                        expect(selModel.extensible.handle.isVisible()).toBe(false);
-                        spy.reset();
-                        idleSpy.reset();
-                    });
-                }(i));
+            }
+            else {
+                expect(have).toBe(handleX + 100);
             }
         });
 
         describe("multiple selection", function() {
             describe("upwards", function() {
-                itNotTouch("should replicate the selection by incrementing the values", function() {
+                it("should replicate the selection by incrementing the values", function() {
 
                     selStart = findCell(3, 2);
                     selEnd = findCell(4, 4);
@@ -2121,7 +1658,7 @@ function() {
                 });
             });
             describe("downwards", function() {
-                itNotTouch("should replicate the selection by incrementing the values", function() {
+                it("should replicate the selection by incrementing the values", function() {
 
                     selStart = findCell(3, 2);
                     selEnd = findCell(4, 4);
@@ -2181,7 +1718,7 @@ function() {
                     // So force the IDs here.
                     store.getAt(0).data.id = store.getAt(1).data.id = store.getAt(2).data.id = store.getAt(3).data.id;
 
-                    // The values selected in record 3 should be repeated in the extension area
+                    // The values sselected in record 3 should be repeated in the extension area
                     expect(store.getAt(0).data).toEqual(r3Data);
                     expect(store.getAt(1).data).toEqual(r3Data);
                     expect(store.getAt(2).data).toEqual(r3Data);
@@ -2210,7 +1747,7 @@ function() {
                     // So force the IDs here.
                     store.getAt(5).data.id = store.getAt(6).data.id = store.getAt(7).data.id = store.getAt(4).data.id;
 
-                    // The values selected in record 4 should be repeated in the extension area
+                    // The values sselected in record 4 should be repeated in the extension area
                     expect(store.getAt(5).data).toEqual(r4Data);
                     expect(store.getAt(6).data).toEqual(r4Data);
                     expect(store.getAt(7).data).toEqual(r4Data);

@@ -6,7 +6,6 @@ Ext.define('Ext.field.trigger.Expand', {
     xtype: 'expandtrigger',
     alias: 'trigger.expand',
     classCls: Ext.baseCSSPrefix + 'expandtrigger',
-    isExpandTrigger: true,
     handler: 'onExpandTap',
     scope: 'this'
 });

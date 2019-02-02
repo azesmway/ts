@@ -13,8 +13,12 @@
  *         }
  *     });
  *     
- * For a detailed tutorial on using AMF data see the
- * [AMF Guide](../guides/backend_connectors/amf.html).
+ * For a detailed tutorial on using AMF data see the [AMF Guide](#/guide/amf).
+ *
+ * **Note: **  _This functionality is only available with the purchase of 
+ * Sencha Complete.  For more information about using this class, please visit 
+ * our [Sencha Complete](https://www.sencha.com/products/complete/) product page._
+ *
  */
 Ext.define('Ext.data.amf.Proxy', {
     extend: 'Ext.data.proxy.Ajax',
@@ -26,13 +30,13 @@ Ext.define('Ext.data.amf.Proxy', {
     ],
 
     /**
-     * @cfg binary
+     * @cfg
      * @inheritdoc
      */
     binary: true,
 
     /**
-     * @cfg reader
+     * @cfg
      * @inheritdoc
      */
     reader: 'amf'

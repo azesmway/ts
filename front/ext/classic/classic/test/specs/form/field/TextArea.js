@@ -1,20 +1,26 @@
-topSuite("Ext.form.field.TextArea", ['Ext.Container', 'Ext.layout.container.Fit'], function() {
-    var component;
-
-    function makeComponent(config) {
-        config = Ext.apply({
-            name: 'test'
-        }, config);
-
+describe("Ext.form.field.TextArea", function() {
+    var component, makeComponent;
+    
+    beforeEach(function() {
+        makeComponent = function(config) {
+            config = config || {};
+            Ext.applyIf(config, {
+                name: 'test'
+            });
+            
+            if (component) {
+                component.destroy();
+            }
+            
+            component = new Ext.form.field.TextArea(config);
+        };
+    });
+    
+    afterEach(function() {
         if (component) {
             component.destroy();
         }
-
-        component = new Ext.form.field.TextArea(config);
-    }
-
-    afterEach(function() {
-        component = Ext.destroy(component);
+        component = makeComponent = null;
     });
 
     it("should encode the input value in the template", function(){
@@ -186,7 +192,7 @@ topSuite("Ext.form.field.TextArea", ['Ext.Container', 'Ext.layout.container.Fit'
             for (i = 0; i < n; ++i) {
                 out.push('a');
             }
-            return out.join('\n');
+            return out.join('\n')
         }
 
         describe("with an auto height", function() {
@@ -214,22 +220,6 @@ topSuite("Ext.form.field.TextArea", ['Ext.Container', 'Ext.layout.container.Fit'
             
             it("should set the initial textarea height to growMin", function() {
                 expect(component.getHeight()).toBe(40);
-            });
-
-            it("should autogrow and hide scrollbars when preventScrollbars is true", function() {
-                component.destroy();
-
-                makeComponent({
-                    grow: true,
-                    growMin: 40,
-                    growMax: 500,
-                    renderTo: Ext.getBody(),
-                    preventScrollbars: true,
-                    value: makeLines(10)
-                });
-
-                expect(component.inputEl.getHeight()).toBeGreaterThan(150);
-                expect(component.inputEl.getStyle('overflow-y')).toBe('hidden');
             });
 
             it("should increase the height of the input as the value becomes taller", function() {
@@ -1316,79 +1306,24 @@ topSuite("Ext.form.field.TextArea", ['Ext.Container', 'Ext.layout.container.Fit'
         makeLayoutSuite(2, true); // shrinkWrap height, autoFitErrors
         makeLayoutSuite(3, false); // shrinkWrap both
         makeLayoutSuite(3, true); // shrinkWrap both, autoFitErrors
-
-        (Ext.isIE8 ? xdescribe : describe)("constraints", function() {
-            function expectInputHeight(h, offset) {
-                var inputPadding = component.inputEl.getPadding('tb');
-                offset = offset || 0;
-                h -= component.inputWrap.getBorderWidth('tb') + offset;
-
-                expect(component.inputEl.getHeight()).toBeApprox(h, inputPadding);
-            }
-
-            it("should stretch the input element with minHeight", function() {
-                makeComponent({
-                    renderTo: Ext.getBody(),
-                    minHeight: 200
-                });
-                expectInputHeight(200);
-            });
-
-            describe("in a layout", function() {
-                var ct;
-
-                function makeCt(cfg) {
-                    ct = new Ext.container.Container({
-                        width: 400,
-                        height: 400,
-                        renderTo: Ext.getBody(),
-                        layout: {
-                            type: 'vbox',
-                            align: 'stretch'
-                        },
-                        items: [Ext.apply({
-                            xtype: 'textarea',
-                            flex: 1
-                        }, cfg)]
-                    });
-                    component = ct.items.first();
-                }
-
-                afterEach(function() {
-                    ct = Ext.destroy(ct);
-                });
-
-                describe("minHeight", function() {
-                    it("should favor a minHeight", function() {
-                        makeCt({
-                            minHeight: 600
-                        });
-                        expectInputHeight(600);
-                    });
-
-                    it("should stretch past a minHeight", function() {
-                        makeCt({
-                            minHeight: 200
-                        });
-                        expectInputHeight(400, 5);
-                    });
-                });
-
-                describe("maxHeight", function() {
-                    it("should favor a maxHeight", function() {
-                        makeCt({
-                            maxHeight: 200
-                        });
-                        expectInputHeight(200);
-                    });
-
-                    it("should narrow under a maxHeight", function() {
-                        makeCt({
-                            maxHeight: 600
-                        });
-                        expectInputHeight(400, 5);
-                    });
-                });
+    });
+    
+    describe("keyboard interaction", function() {
+        it("should stop event propagation on Enter key", function() {
+            makeComponent();
+            
+            var spy = spyOn(component, 'fireKey').andCallThrough();
+            
+            component.render(Ext.getBody());
+            
+            pressKey(component, 'enter');
+            
+            waitForSpy(spy);
+            
+            runs(function() {
+                var args = spy.mostRecentCall.args;
+                
+                expect(args[0].stopped).toBe(true);
             });
         });
     });

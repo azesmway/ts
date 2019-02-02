@@ -29,7 +29,7 @@ Ext.define('Ext.slider.Multi', {
         'Ext.util.Format',
         'Ext.Template'
     ],
-
+    
     /**
      * @cfg {Number} value
      * A value with which to initialize the slider. Setting this will only result in the creation
@@ -63,8 +63,7 @@ Ext.define('Ext.slider.Multi', {
     maxValue: 100,
 
     /**
-     * @cfg {Number/Boolean} decimalPrecision
-     * The number of decimal places to which to round the Slider's value.
+     * @cfg {Number/Boolean} decimalPrecision The number of decimal places to which to round the Slider's value.
      *
      * To disable rounding, configure as **false**.
      */
@@ -78,7 +77,7 @@ Ext.define('Ext.slider.Multi', {
     keyIncrement: 1,
     
     /**
-     * @cfg {Number} pageSize
+     * @cfg {Number} [pageSize=10]
      * How many units to change the Slider when using PageUp and PageDown keys.
      */
     pageSize: 10,
@@ -143,7 +142,7 @@ Ext.define('Ext.slider.Multi', {
     useTips : true,
 
     /**
-     * @cfg {Function/String} tipText
+     * @cfg {Function/String} [tipText]
      * A function used to display custom text for the slider tip or the name of the
      * method on the corresponding `{@link Ext.app.ViewController controller}`.
      *
@@ -151,53 +150,29 @@ Ext.define('Ext.slider.Multi', {
      *
      * @cfg {Ext.slider.Thumb} tipText.thumb The Thumb that the Tip is attached to
      * @cfg {String} tipText.return The text to display in the tip
-     *
-     * @controllable
      */
     tipText: null,
     
     /**
-     * @property defaultBindProperty
      * @inheritdoc
      */
-    defaultBindProperty: 'value',
-
-    /**
-     * @cfg publishes
-     * @inheritdoc
-     */
-     publishes: ['value'],
-
-    /**
-     * @cfg {Boolean} thumbPerValue
-     * Configure as true to allow thumbs to be added and removed dynamically from the slider 
-     * when calling {@link #method-setValue} with an an array of values differing from the 
-     * current number of thumbs.  
-     * 
-     * You will need to set {@link #cfg-values} explicitly when configuring the slider if 
-     * 1) thumbPerValue is false and 2) the slider has multiple thumbs (values).
-     * @since 6.5.0
-     */
-    thumbPerValue: false,
+    defaultBindProperty: 'values',
 
     /**
      * @event beforechange
      * Fires before the slider value is changed. By returning false from an event handler, you can cancel the
      * event and prevent the slider from changing.
      * @param {Ext.slider.Multi} slider The slider
-     * @param {Number/null} newValue The new value which the slider is being changed to, null if the change is a removal of a thumb.
-     * @param {Number/null} oldValue The old value which the slider was previously, null if the change is an addition of a thumb.
-     * @param {Ext.slider.Thumb/null} thumb The thumb that was will be changed, null if the change is an addition of a thumb.
-     * @param {String} type The type of change that is going to occur (add/update/remove)
+     * @param {Number} newValue The new value which the slider is being changed to.
+     * @param {Number} oldValue The old value which the slider was previously.
      */
 
     /**
      * @event change
      * Fires when the slider value is changed.
      * @param {Ext.slider.Multi} slider The slider
-     * @param {Number/null} newValue The new value which the slider has been changed to, null if the change is the removal of a thumb.
-     * @param {Ext.slider.Thumb/null} thumb The thumb that was changed, null if the change is the removal of a thumb.
-     * @param {String} type The type of change that occurred (add/update/remove)
+     * @param {Number} newValue The new value which the slider has been changed to.
+     * @param {Ext.slider.Thumb} thumb The thumb that was changed
      */
 
     /**
@@ -229,45 +204,20 @@ Ext.define('Ext.slider.Multi', {
      * @param {Ext.event.Event} e The event fired from Ext.dd.DragTracker
      */
 
-    /**
-     * @property ariaRole
-     * @inheritdoc
-     */
     ariaRole: 'slider',
 
-    /**
-     * @property focusable
-     * @inheritdoc
-     */
     focusable: true,
     needArrowKeys: true,
-    
-    /**
-     * @cfg tabIndex
-     * @inheritdoc
-     */
     tabIndex: 0,
     skipLabelForAttribute: true,
     
-    /**
-     * @cfg focusCls
-     * @inheritdoc
-     */
     focusCls: 'slider-focus',
 
-    /**
-     * @cfg childEls
-     * @inheritdoc
-     */
     childEls: [
         'endEl', 'innerEl'
     ],
 
     // note: {id} here is really {inputId}, but {cmpId} is available
-    /**
-     * @cfg fieldSubTpl
-     * @inheritdoc
-     */
     fieldSubTpl: [
         '<div id="{id}" data-ref="inputEl" {inputAttrTpl}',
             ' class="', Ext.baseCSSPrefix, 'slider {fieldCls} {vertical}',
@@ -309,17 +259,16 @@ Ext.define('Ext.slider.Multi', {
             extValueFrom = Ext.valueFrom,
             // Fallback for initial values: values config -> value config -> minValue config -> 0
             values = extValueFrom(me.values, [extValueFrom(me.value, extValueFrom(me.minValue, 0))]),
-            thumbPerValue = me.thumbPerValue;
+            i = 0,
+            len = values.length;
 
         // Store for use in dirty check
         me.originalValue = values;
 
-        // ensure that thumbPerValue is set to add initial thumbs
-        me.initializingValues = true;
-        me.updateValues(values);
-        me.initializingValues = false;
-        // restore config
-        me.thumbPerValue = thumbPerValue;
+        // Add a thumb for each value, enforcing configured constraints
+        for (; i < len; i++) {
+            me.addThumb(me.normalizeValue(values[i]));
+        }
     },
 
     initComponent: function() {
@@ -669,7 +618,7 @@ Ext.define('Ext.slider.Multi', {
                 val = me.getValue(0) - me.pageSize;
                 break;
         }
-
+        
         if (val !== undefined) {
             e.stopEvent();
             
@@ -689,14 +638,14 @@ Ext.define('Ext.slider.Multi', {
      * @param {Number} value Raw number value
      * @return {Number} The raw value rounded to the correct d.p. and constrained within the set max and min values
      */
-    normalizeValue : function(value) {
+    normalizeValue : function(v) {
         var me = this,
             snapFn = me.zeroBasedSnapping ? 'snap' : 'snapInRange';
 
-        value = Ext.Number[snapFn](value, me.increment, me.minValue, me.maxValue);
-        value = Ext.util.Format.round(value, me.decimalPrecision);
-        value = Ext.Number.constrain(value, me.minValue, me.maxValue);
-        return value;
+        v = Ext.Number[snapFn](v, me.increment, me.minValue, me.maxValue);
+        v = Ext.util.Format.round(v, me.decimalPrecision);
+        v = Ext.Number.constrain(v, me.minValue, me.maxValue);
+        return v;
     },
 
     /**
@@ -723,7 +672,7 @@ Ext.define('Ext.slider.Multi', {
         if (ariaDom) {
             ariaDom.setAttribute('aria-valuemin', val);
         }
-
+        
         me.syncThumbs();
     },
 
@@ -773,16 +722,24 @@ Ext.define('Ext.slider.Multi', {
      * @param {Object/Boolean} [animate] `false` to not animate. `true` to use the default animation. This may also be an
      * animate configuration object, see {@link #cfg-animate}. If this configuration is omitted, the {@link #cfg-animate} configuration
      * will be used.
-     * @param {Boolean} changeComplete
      * @return {Ext.slider.Multi} this
      */
     setValue : function(index, value, animate, changeComplete) {
         var me = this,
+            thumbs = me.thumbs,
             ariaDom = me.ariaEl.dom,
-            thumb;
+            thumb, len, i, values;
 
         if (Ext.isArray(index)) {
-            me.updateValues(index, value);
+            values = index;
+            animate = value;
+
+            for (i = 0, len = values.length; i < len; ++i) {
+                thumb = thumbs[i];
+                if (thumb) {
+                    me.setValue(i, values[i], animate);
+                }
+            }
             return me;
         }
 
@@ -790,7 +747,7 @@ Ext.define('Ext.slider.Multi', {
         // ensures value is contstrained and snapped
         value = me.normalizeValue(value);
 
-        if (value !== thumb.value && me.fireEvent('beforechange', me, value, thumb.value, thumb, 'update') !== false) {
+        if (value !== thumb.value && me.fireEvent('beforechange', me, value, thumb.value, thumb) !== false) {
             thumb.value = value;
             if (me.rendered) {
                 if (Ext.isDefined(animate)) {
@@ -805,7 +762,7 @@ Ext.define('Ext.slider.Multi', {
                     ariaDom.setAttribute('aria-valuenow', value);
                 }
 
-                me.fireEvent('change', me, value, thumb, 'update');
+                me.fireEvent('change', me, value, thumb);
                 me.checkDirty();
 
                 if (changeComplete) {
@@ -892,7 +849,7 @@ Ext.define('Ext.slider.Multi', {
 
             thumb.disable();
 
-            if (Ext.isIE) {
+            if(Ext.isIE) {
                 //IE breaks when using overflow visible and opacity other than 1.
                 //Create a place holder for the thumb and display it.
                 xy = el.getXY();
@@ -992,127 +949,20 @@ Ext.define('Ext.slider.Multi', {
 
     reset: function() {
         var me = this,
-            arr = [].concat(me.originalValue);
+            arr = [].concat(me.originalValue),
+            a     = 0,
+            aLen  = arr.length,
+            val;
 
-        me.updateValues(arr);
+        for (; a < aLen; a++) {
+            val = arr[a];
+
+            me.setValue(a, val);
+        }
+
         me.clearInvalid();
         // delete here so we reset back to the original state
         delete me.wasValid;
-    },
-
-    /**
-     * Programmatically sets the values of the slider while ensuring that the value is constrained 
-     * within the minValue and maxValue.
-     * @private
-     *
-     * @param {Number[]} values Array of values that will be used to set the sliders
-     * @param {Object/Boolean} [animate] `false` to not animate. `true` to use the default animation. This may also be an
-     * animate configuration object, see {@link #cfg-animate}. If this configuration is omitted, the {@link #cfg-animate} configuration
-     * will be used.
-     * @param {Boolean} supressEvents
-     * @return {Ext.slider.Multi} this
-     */
-    updateValues: function (values, animate, supressEvents) {
-        var me = this,
-            len = values.length,
-            thumbs = me.thumbs,
-            thumbLen = thumbs.length,
-            newValues = [],
-            skipEvents = me.initializingValues || supressEvents,
-            i, thumb, value, addLen, removeLen;
-        
-        for (i=0; i<len; i++) {
-            thumb = thumbs[i];
-            value = values[i];
-
-            if (thumb) {
-                me.setValue(i, value, animate);
-            } else {
-                newValues.push(value);
-            }
-        }
-
-        if (me.thumbPerValue || me.initializingValues) {
-            addLen = newValues.length;
-            removeLen = thumbLen - len;
-
-
-            for (i=0; i<addLen; i++) {
-                value = newValues[i];
-
-                if (skipEvents || me.fireEvent('beforechange', me, value, null, null, 'add') !== false) {
-                    thumb = me.addThumb(me.normalizeValue(value));
-                    
-                    if (!skipEvents) {
-                        me.fireEvent('change', me, value, thumb, 'add');
-                    }
-                    me.checkDirty();
-                }
-            }
-
-            for (i=0; i<removeLen; i++) {
-                thumb = thumbs[thumbs.length-1];
-
-                if (skipEvents || me.fireEvent('beforechange', me, null, thumb.value, thumb, 'remove') !== false) {
-                    me.removeThumb(thumb);
-
-                    if (!skipEvents) {
-                        me.fireEvent('change', me, null, null, 'remove');
-                    }
-                    me.checkDirty();
-                }
-            }
-        }
-
-        return me;
-    },
-
-    /**
-     * Removes a thumb from the slider
-     * @param {Number/Ext.slider.Thumb} thumb The index of the thumb within the slider to remove, or the thumb itself
-     */
-    removeThumb: function (thumb) {
-        var me = this,
-            thumbs = me.thumbs,
-            index;
-
-        if (Ext.isNumber(thumb)) {
-            index = thumb;
-            thumb = thumbs[index];
-        } else {
-            index = me.findThumbIndex(thumb);
-        }
-
-        if (thumb && Ext.isNumber(index)) {
-            // remove from tracking array
-            thumbs.splice(index, 1);
-            // reset the thumb stack
-            me.thumbStack = Ext.Array.slice(me.thumbs);
-            // now destroy the thumb
-            Ext.destroy(thumb);
-        }        
-    },
-
-    /**
-     * Returns the index of thumb within the thumbs array
-     * @private
-     * @param {Ext.slider.Thumb} thumb The instance of the thumb to find
-     * @return {Number/null} Returns the index of the thumb, or null if thumb is not found
-     */
-    findThumbIndex: function (thumb) {
-        var thumbs = this.thumbs,
-            len = thumbs.length,
-            index = null,
-            i;
-
-        for (i=0; i<len; i++) {
-            if (thumbs[i] === thumb) {
-                index = i;
-                break;
-            }
-        }
-
-        return index;
     },
 
     setReadOnly: function(readOnly){
@@ -1130,21 +980,16 @@ Ext.define('Ext.slider.Multi', {
             } else {
                 thumbs[i].enable();
             }
+
         }
+
     },
 
     doDestroy: function() {
-        var me = this;
-        
-        if (me.rendered) {
-            Ext.destroy(me.thumbs);
+        if (this.rendered) {
+            Ext.destroy(this.thumbs);
         }
-        
-        if (me.thumbHolder) {
-            me.thumbHolder.destroy();
-            me.thumbHolder = null;
-        }
-        
-        me.callParent();
+
+        this.callParent();
     }
 });

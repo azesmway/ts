@@ -1,4 +1,5 @@
-topSuite("Ext.view.NodeCache", ['Ext.grid.Panel'], function() {
+describe("Ext.view.NodeCache", function () {
+
     var grid, store, view, rows,
         synchronousLoad = true,
         proxyStoreLoad = Ext.data.ProxyStore.prototype.load,

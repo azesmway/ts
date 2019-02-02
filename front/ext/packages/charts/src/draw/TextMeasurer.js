@@ -21,7 +21,6 @@ Ext.define('Ext.draw.TextMeasurer', {
     precise: Ext.isIE8,
 
     measureDivTpl: {
-        id: 'ext-draw-text-measurer',
         tag: 'div',
         style: {
             overflow: 'hidden',

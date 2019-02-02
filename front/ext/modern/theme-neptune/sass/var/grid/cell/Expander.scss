@@ -1,6 +1,5 @@
 /**
  * @class Ext.grid.cell.Expander
- */
 
 /**
  * @var {number/list}
@@ -18,25 +17,25 @@ $expandercell-padding-big: dynamic(0);
  * @var {number}
  * Expander cell icon size
  */
-$expandercell-icon-size: dynamic(14px);
+$expandercell-icon-size: dynamic(1.077em);
 
 /**
  * @var {number}
  * Expander cell icon size in the {@link Global_CSS#$enable-big big} sizing scheme
  */
-$expandercell-icon-size-big: dynamic(18px);
+$expandercell-icon-size-big: dynamic(1.2em);
 
 /**
  * @var {number}
  * Expander cell icon font-size
  */
-$expandercell-icon-font-size: dynamic(null);
+$expandercell-icon-font-size: dynamic($expandercell-icon-size);
 
 /**
  * @var {number}
  * Expander cell icon font-size in the {@link Global_CSS#$enable-big big} sizing scheme
  */
-$expandercell-icon-font-size-big: dynamic(null);
+$expandercell-icon-font-size-big: dynamic($expandercell-icon-size-big);
 
 /**
  * @var {string/list}
@@ -57,45 +56,41 @@ $expandercell-collapse-icon: dynamic($fa-var-minus-square);
 $expandercell-icon-color: dynamic($neutral-dark-color);
 
 /**
- * Creates a visual theme for an expander cell.
+ * Creates a visual theme for a check cell.
  *
  * @param {string} $ui
  * The name of the UI being created. Can not included spaces or special punctuation
  * (used in CSS class names).
  *
- * @param {String} [$xtype=expandercell] (protected) The {@link Ext.Class#xtype} to use
- * in CSS selectors.  For use by UI mixins of derived classes.
- *
- * @param {number/list} $padding
+ * @var {number/list} $padding
  * Expander cell padding
  *
- * @param {number/list} $padding-big
+ * @var {number/list} $padding-big
  * Expander cell padding in the {@link Global_CSS#$enable-big big} sizing scheme
  *
- * @param {number} $icon-size
+ * @var {number} $icon-size
  * Expander cell icon size
  *
- * @param {number} $icon-size-big
+ * @var {number} $icon-size-big
  * Expander cell icon size in the {@link Global_CSS#$enable-big big} sizing scheme
  *
- * @param {number} $icon-font-size
+ * @var {number} $icon-font-size
  * Expander cell icon font-size
  *
- * @param {number} $icon-font-size-big
+ * @var {number} $icon-font-size-big
  * Expander cell icon font-size in the {@link Global_CSS#$enable-big big} sizing scheme
  *
- * @param {string/list} $expand-icon
+ * @var {string/list} $expand-icon
  * Expander cell expand icon
  *
- * @param {string/list} $collapse-icon
+ * @var {string/list} $collapse-icon
  * Expander cell collapse icon
  *
- * @param {color} $icon-color
+ * @var {color} $icon-color
  * Expander cell icon color
  */
 @mixin expandercell-ui(
     $ui: null,
-    $xtype: 'expandercell',
     $padding: null,
     $padding-big: null,
     $icon-size: null,
@@ -108,17 +103,29 @@ $expandercell-icon-color: dynamic($neutral-dark-color);
 ) {
     $ui-suffix: ui-suffix($ui);
 
-    $arguments: intersect-arguments(expandercell-ui, gridcell-ui);
+    .#{$prefix}expandercell#{$ui-suffix} {
+        padding: $padding;
 
-    @include gridcell-ui($arguments...);
+        @if $enable-big {
+            .#{$prefix}big & {
+                padding: $padding-big;
+            }
+        }
 
-    .#{$prefix}#{$xtype}#{$ui-suffix} {
         .#{$prefix}icon-el {
+            height: $icon-size;
+            width: $icon-size;
+            color: $icon-color;
+
+            @if $enable-big {
+                .#{$prefix}big & {
+                    height: $icon-size-big;
+                    width: $icon-size-big;
+                }
+            }
+
             @include icon(
                 $icon: $expand-icon,
-                $color: $icon-color,
-                $size: $icon-size,
-                $size-big: $icon-size-big,
                 $font-size: $icon-font-size,
                 $font-size-big: $icon-font-size-big
             );

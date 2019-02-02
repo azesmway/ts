@@ -83,9 +83,10 @@ Ext.define('Ext.util.ComponentDragger', {
         if (comp.beginDrag) {
             comp.beginDrag();
         }
-
-        // We should cover all iframes to avoid them stealing our current drag event
-        Ext.dom.Element.maskIframes();
+        // Logic to drag components on top of iframes
+        if (comp.el.shim) {
+            Ext.dom.Element.maskIframes();
+        }
     },
 
     calculateConstrainRegion: function() {
@@ -160,8 +161,9 @@ Ext.define('Ext.util.ComponentDragger', {
         if (comp.endDrag) {
             comp.endDrag();
         }
-
-        // We should uncover all iframes
-        Ext.dom.Element.unmaskIframes();
+        // Logic to drag components on top of iframes
+        if (comp.el.shim) {
+            Ext.dom.Element.unmaskIframes();
+        }
     }
 });

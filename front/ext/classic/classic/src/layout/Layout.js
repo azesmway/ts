@@ -15,9 +15,7 @@ Ext.define('Ext.layout.Layout', {
     uses: [ 'Ext.layout.Context' ],
 
     factoryConfig: {
-        type: 'layout',
-        defaultType: 'autocontainer',
-        instanceProp: 'isLayout'
+        type: 'layout'
     },
 
     /**
@@ -60,7 +58,7 @@ Ext.define('Ext.layout.Layout', {
     $configPrefixed: false,
     $configStrict: false,
 
-    constructor: function(config) {
+    constructor : function(config) {
         var me = this;
 
         me.id = Ext.id(null, me.type + '-');
@@ -373,7 +371,7 @@ Ext.define('Ext.layout.Layout', {
      * also determines if the items are in the proper place in the dom.
      * @protected
      */
-    renderItems: function(items, target) {
+    renderItems : function(items, target) {
         var me = this,
             ln = items.length,
             i = 0,
@@ -403,7 +401,7 @@ Ext.define('Ext.layout.Layout', {
      * Validates item is in the proper place in the dom.
      * @protected
      */
-    isValidParent: function(item, target, position) {
+    isValidParent : function(item, target, position) {
         var targetDom = (target && target.dom) || target,
             itemDom = this.getItemLayoutEl(item);
 
@@ -462,7 +460,7 @@ Ext.define('Ext.layout.Layout', {
      * @param {Number} position The position within the target to render the item to
      * @private
      */
-    renderItem: function(item, target, position) {
+    renderItem : function(item, target, position) {
         var me = this;
 
         if (!item.rendered) {
@@ -476,8 +474,8 @@ Ext.define('Ext.layout.Layout', {
      * Moves Component to the provided target instead.
      * @private
      */
-    moveItem: function(item, target, position) {
-        var activeEl = Ext.fly(document.activeElement);
+    moveItem : function(item, target, position) {
+        var activeEl = Ext.Element.getActiveElement(true);
 
         target = target.dom || target;
         if (typeof position === 'number') {
@@ -511,7 +509,7 @@ Ext.define('Ext.layout.Layout', {
 
     /**
      * This method is called when a child item changes in some way. By default this calls
-     * {@link Ext.Component#method!updateLayout} on this layout's owner.
+     * {@link Ext.Component#updateLayout} on this layout's owner.
      * 
      * @param {Ext.Component} child The child item that has changed.
      * @return {Boolean} True if this layout has handled the content change.
@@ -525,7 +523,7 @@ Ext.define('Ext.layout.Layout', {
      * A one-time initialization method called just before rendering.
      * @protected
      */
-    initLayout: function() {
+    initLayout : function() {
         this.initialized = true;
     },
 
@@ -533,7 +531,7 @@ Ext.define('Ext.layout.Layout', {
      * @private
      * Sets the layout owner
      */
-    setOwner: function(owner) {
+    setOwner : function(owner) {
         this.owner = owner;
     },
 
@@ -541,7 +539,7 @@ Ext.define('Ext.layout.Layout', {
      * Returns the set of items to layout (empty by default).
      * @protected
      */
-    getLayoutItems: function() {
+    getLayoutItems : function() {
         return [];
     },
 

@@ -8,7 +8,7 @@
 
     @if ($mask-page-opacity != $mask-opacity) or
             ($mask-page-background-color != $mask-background-color) {
-        #ext-viewport > &,
+        #ext-viewport > .#{$prefix}body > &,
         .#{$prefix}float-wrap > & {
             opacity: $mask-page-opacity;
             background-color: $mask-page-background-color;

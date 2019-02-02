@@ -1,4 +1,4 @@
-topSuite("Ext.data.operation.Create", ['Ext.data.ArrayStore'], function() {
+describe("Ext.data.operation.Create", function() {
     var op, clientAlien1, serverAlien1, clientAlien2, serverAlien2;
     
     function makeOperation(cfg) {

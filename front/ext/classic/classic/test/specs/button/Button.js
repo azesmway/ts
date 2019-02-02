@@ -1,9 +1,6 @@
 /* global expect, Ext, jasmine, spyOn */
 
-topSuite("Ext.button.Button",
-    ['Ext.Panel', 'Ext.button.Split', 'Ext.form.Label', 'Ext.app.ViewController',
-     'Ext.app.ViewModel'],
-function() {
+describe("Ext.button.Button", function() {
     var proto = Ext.button.Button.prototype,
         button;
     
@@ -1004,7 +1001,7 @@ function() {
     });
 
     describe("menu", function() {
-        it("should not include menu descendant items in its CQ children if the &gt; combinator is used", function() {
+        it("should not include menu descendant items in its CQ children if the ">" operator is used", function() {
             var queryResult;
 
             makeButton({
@@ -1087,7 +1084,6 @@ function() {
                 // Mousedown outside the menu hides it
                 clickIt("mousedown");
                 expect(menu.isVisible()).toBe(false);
-                clickIt('mouseup');
             });
             
             // Wait for 1ms hide timer set above to expire
@@ -5686,7 +5682,6 @@ function() {
             toolbar.destroy();
         });
 
-        TODO(Ext.isIE8).
         it("should layout with overflowing text", function() {
             button = Ext.create({
                 xtype: 'button',

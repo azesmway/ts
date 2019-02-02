@@ -1,6 +1,4 @@
-topSuite("Ext.grid.filters.filter.String",
-    ['Ext.grid.Panel', 'Ext.grid.filters.Filters'],
-function() {
+describe("Ext.grid.filters.filter.String", function () {
     var grid, store, plugin, columnFilter, menu,
         synchronousLoad = true,
         proxyStoreLoad = Ext.data.ProxyStore.prototype.load,

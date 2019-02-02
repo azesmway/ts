@@ -1,6 +1,5 @@
-/* global jasmine, Ext, expect, xit, xdescribe */
-
-topSuite("Ext.Function", function() {
+describe("Ext.Function", function() {
+    
     var _setTimeout,
         _clearTimeout,
         timeouts,
@@ -36,9 +35,6 @@ topSuite("Ext.Function", function() {
             clearedTimeoutIds = undefined;
             window.setTimeout = _setTimeout;
             window.clearTimeout = _clearTimeout;
-        },
-        fakeScope = {
-            foo: 'baz'
         };
 
     
@@ -88,12 +84,6 @@ topSuite("Ext.Function", function() {
                 bind('c', 'd');
 
                 expect(fn).toHaveBeenCalledWith('c', 'd');
-            });
-
-            it("should not append args passed to the bound function by default", function() {
-                bind = Ext.Function.bind(fn, this, ['a', 'b']);
-                bind('c');
-                expect(fn).toHaveBeenCalledWith('a', 'b');
             });
 
             it("should append args", function() {
@@ -183,17 +173,6 @@ topSuite("Ext.Function", function() {
                 result = clonedFn('foo');
             expect(result).toBe('bar');
             expect(fn).toHaveBeenCalledWith('foo');
-        });
-        
-        it("should clone own properies on the given function", function() {
-            var fn = function() {},
-                clone;
-            
-            fn.$prop = 'foo';
-            
-            clone = Ext.Function.clone(fn);
-            
-            expect(clone.$prop).toEqual('foo');
         });
     });
 
@@ -288,7 +267,7 @@ topSuite("Ext.Function", function() {
                 };
                  interceptor = Ext.Function.createInterceptor(interceptedFn, interceptorFn);
                 expect(interceptor()).toBe('Original');
-            });
+            })
         });
     });
     
@@ -310,7 +289,7 @@ topSuite("Ext.Function", function() {
        });
        it("should use the specified scope as 'this'", function() {
            var scope = { x: 'foo' },
-               fn = jasmine.createSpy().andCallFake(function() { this.x = 'bar'; }),
+               fn = jasmine.createSpy().andCallFake(function() { this.x = 'bar' }),
                delayedFn = Ext.Function.createDelayed(fn, 2, scope);
            delayedFn();
            expect(fn).not.toHaveBeenCalled();
@@ -405,9 +384,7 @@ topSuite("Ext.Function", function() {
         });
 
         it("should return a timeout number", function() {
-            var timer = Ext.defer(function() {}, 10);
-            expect(typeof timer === 'number').toBe(true);
-            Ext.undefer(timer);
+            expect(typeof Ext.defer(function() {}, 10) === 'number').toBe(true);
         });
     });
 
@@ -555,7 +532,7 @@ topSuite("Ext.Function", function() {
             var monologue = {
                     phrases: [],
                     addPhrase: function(phrase) {
-                        this.phrases.push(phrase);
+                        this.phrases.push(phrase)
                     }
                 },
                 addMeToo = jasmine.createSpy().andCallFake(function(phrase) {
@@ -574,7 +551,7 @@ topSuite("Ext.Function", function() {
             var monologue = {
                     phrases: [],
                     addPhrase: function(phrase) {
-                        this.phrases.push(phrase);
+                        this.phrases.push(phrase)
                     }
                 },
                 transcription = {
@@ -608,14 +585,14 @@ topSuite("Ext.Function", function() {
                 return called;
             }, 'the asap function to call the passed function');
         });
-        it('should not call the passed function if unasap called', function() {
+        it('should not call the passed function if asapCancel called', function() {
             var called = false,
                 timer;
 
             timer = Ext.asap(function(){
                 called = true;
             });
-            Ext.unasap(timer);
+            Ext.asapCancel(timer);
 
             // We expect nothing to happen, so there's nothing to wait for.
             // Wait for the most pessmistic time to allow aany erroneous call to occur.
@@ -626,25 +603,4 @@ topSuite("Ext.Function", function() {
             });
         });
     });
-
-    describe('interval', function() {
-        it('should call the function in the passed scope', function() {
-            var scope = {},
-                foundScope,
-                timerId;
-
-            timerId = Ext.interval(function() {
-                foundScope = this;
-            }, 1, scope);
-
-            waitsFor(function() {
-                return foundScope;
-            });
-
-            runs(function() {
-                Ext.uninterval(timerId);
-                expect(foundScope).toBe(scope);
-            });
-        });
-    })
 });

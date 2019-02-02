@@ -1,4 +1,4 @@
-topSuite("Ext.util.MixedCollection", function() {
+describe("Ext.util.MixedCollection", function() {
     var mc;
 
     it("should get the correct count", function() {

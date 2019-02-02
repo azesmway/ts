@@ -6,8 +6,8 @@ Ext.define('Ext.util.sizemonitor.OverflowChange', {
     extend: 'Ext.util.sizemonitor.Abstract',
 
     constructor: function(config) {
-        this.onExpand = this.onExpand.bind(this);
-        this.onShrink = this.onShrink.bind(this);
+        this.onExpand = Ext.Function.bind(this.onExpand, this);
+        this.onShrink = Ext.Function.bind(this.onShrink, this);
 
         this.callParent(arguments);
     },
@@ -43,15 +43,19 @@ Ext.define('Ext.util.sizemonitor.OverflowChange', {
     },
 
     onExpand: function(e) {
-        if (!(this.destroyed || (Ext.browser.is.Webkit && e.horizontalOverflow && e.verticalOverflow))) {
-            Ext.TaskQueue.requestRead('refresh', this);
+        if (Ext.browser.is.Webkit && e.horizontalOverflow && e.verticalOverflow) {
+            return;
         }
+
+        Ext.TaskQueue.requestRead('refresh', this);
     },
 
     onShrink: function(e) {
-        if (!(this.destroyed || (Ext.browser.is.Webkit && !e.horizontalOverflow && !e.verticalOverflow))) {
-            Ext.TaskQueue.requestRead('refresh', this);
+        if (Ext.browser.is.Webkit && !e.horizontalOverflow && !e.verticalOverflow) {
+            return;
         }
+
+        Ext.TaskQueue.requestRead('refresh', this);
     },
 
     refreshMonitors: function() {

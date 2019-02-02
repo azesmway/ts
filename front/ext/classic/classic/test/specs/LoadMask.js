@@ -1,6 +1,4 @@
-/* global MockAjaxManager, Ext, expect, spyOn, jasmine */
-
-topSuite("Ext.LoadMask", ['Ext.grid.Panel', 'Ext.button.Button'], function() {
+describe("Ext.LoadMask", function(){
     var mask, target, mockComplete;
     
     beforeEach(function(){
@@ -423,7 +421,7 @@ topSuite("Ext.LoadMask", ['Ext.grid.Panel', 'Ext.button.Button'], function() {
                 });
 
                 it('should not cause onFocusLeave consequences on show', function() {
-                    var menu, menuItem, panelMask, panelStore, col0;
+                    var menu, menuItem, panelMask, panelStore;
                     panel = new Ext.grid.Panel({
                         renderTo: document.body,
                         title: 'Test focus',
@@ -446,17 +444,15 @@ topSuite("Ext.LoadMask", ['Ext.grid.Panel', 'Ext.button.Button'], function() {
                         }]
                     });
                     panelStore = panel.store;
-                    col0 = panel.getVisibleColumnManager().getColumns()[0];
 
-                    Ext.testHelper.showHeaderMenu(col0);
+                    jasmine.fireMouseEvent(panel.getVisibleColumnManager().getColumns()[0].el, 'mouseover');
+                    jasmine.fireMouseEvent(panel.getVisibleColumnManager().getColumns()[0].triggerEl, 'click');
+                    menu = panel.down('menu');
+                    menuItem = menu.child(':first');
+                    menuItem.focus();
 
-                    runs(function() {
-                        menu = col0.activeMenu;
-                        menuItem = menu.child(':first');
-                        menuItem.focus(false, true);
-                        waitsForFocus(menuItem);
-                    });
-                    
+                    // Menu must start focused
+                    waitForFocus(menuItem, 'menuItemOne to recieve focus');
 
                     runs(function() {
                         // Show the mask and it should focus
@@ -465,7 +461,7 @@ topSuite("Ext.LoadMask", ['Ext.grid.Panel', 'Ext.button.Button'], function() {
                     waitsFor(function() {
                         panelMask = panel.view.loadMask;
                         return panelMask && panelMask.isVisible();
-                    }, 'LoadMask to show');
+                    }, 'LoadMask to receive show');
 
                     // That should NOT have disturbed the floating Menu which hides onFocusLeave
                     runs(function() {
@@ -485,7 +481,9 @@ topSuite("Ext.LoadMask", ['Ext.grid.Panel', 'Ext.button.Button'], function() {
                 });
                 
                 it("should steal focus from within target on show", function() {
-                    mask.show();
+                    runs(function() {
+                        mask.show();
+                    });
                     
                     waitForFocus(mask);
                     
@@ -494,13 +492,17 @@ topSuite("Ext.LoadMask", ['Ext.grid.Panel', 'Ext.button.Button'], function() {
                 
                 describe("restoring focus on hide", function() {
                     beforeEach(function() {
-                        mask.show();
+                        runs(function() {
+                            mask.show();
+                        });
                     
                         waitForFocus(mask);
                     });
                     
                     it("should go to previously focused element", function() {
-                        mask.hide();
+                        runs(function() {
+                            mask.hide();
+                        });
                     
                         waitForFocus(fooBtn);
                     
@@ -512,8 +514,10 @@ topSuite("Ext.LoadMask", ['Ext.grid.Panel', 'Ext.button.Button'], function() {
                             renderTo: Ext.getBody(),
                             text: 'bar'
                         });
-
-                        barBtn.focus();
+                        
+                        runs(function() {
+                            barBtn.focus();
+                        });
                         
                         waitForFocus(barBtn);
                         

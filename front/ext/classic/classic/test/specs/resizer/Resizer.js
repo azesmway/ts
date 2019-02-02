@@ -1,6 +1,4 @@
-/* global Ext, xit, it, expect, jasmine */
-
-topSuite("Ext.resizer.Resizer", ['Ext.window.Window'], function () {
+describe('Ext.resizer.Resizer', function () {
     var resizer, target,
     testIt = Ext.isWebKit ? it : xit;
 
@@ -63,7 +61,7 @@ topSuite("Ext.resizer.Resizer", ['Ext.window.Window'], function () {
             
             window.show();
             jasmine.fireMouseEvent(window.resizer.east, 'mousedown');
-            jasmine.fireMouseEvent(document.body, 'mousemove', '+200', 150);
+            jasmine.fireMouseEvent(document.body, 'mousemove', 200, 150);
             jasmine.fireMouseEvent(document.body, 'mouseup');
             
             // Window must be allowed to resize outside its owning Panel's bounds
@@ -86,7 +84,7 @@ topSuite("Ext.resizer.Resizer", ['Ext.window.Window'], function () {
             
             window.show();
             jasmine.fireMouseEvent(window.resizer.east, 'mousedown');
-            jasmine.fireMouseEvent(document.body, 'mousemove', '+200', 150);
+            jasmine.fireMouseEvent(document.body, 'mousemove', 200, 150);
             jasmine.fireMouseEvent(document.body, 'mouseup');
 
             // Window must NOT be allowed to resize outside its owning Panel's bounds
@@ -132,7 +130,7 @@ topSuite("Ext.resizer.Resizer", ['Ext.window.Window'], function () {
             var panel1Top = panels[1].getY();
             
             jasmine.fireMouseEvent(panels[1].resizer.north, 'mousedown');
-            jasmine.fireMouseEvent(document.body, 'mousemove', 0, '-50');
+            jasmine.fireMouseEvent(document.body, 'mousemove', 0, -50);
             jasmine.fireMouseEvent(document.body, 'mouseup');
             
             // Layout should have correctred the top

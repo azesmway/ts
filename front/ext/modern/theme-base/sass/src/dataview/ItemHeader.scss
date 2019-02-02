@@ -1,19 +1,12 @@
 .#{$prefix}itemheader {
-    width: 100%;
-    z-index: 5;
-
-    &.#{$prefix}focused:not(.#{$prefix}pinned) {
-        .#{$prefix}keyboard-mode & {
-            z-index: 10;
-        }
-    }
+    position: relative;
 
     &.#{$prefix}pinned {
-        z-index: 20;
-    }
-
-    > .#{$prefix}body-el,
-    > .#{$prefix}tool-dock {
-        min-width: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2;
     }
 }
+

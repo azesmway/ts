@@ -327,27 +327,27 @@ Ext.define('Ext.ProgressBar', {
      * duration and fn are both passed).
      * @return {Ext.ProgressBar} this
      */
-    wait: function(config) {
+    wait: function(o) {
         var me = this, scope;
             
         if (!me.waitTimer) {
             scope = me;
-            config = config || {};
-            if (config.text != null) {
+            o = o || {};
+            if (o.text != null) {
                 me.autoText = false;
             }
-            me.updateText(config.text);
+            me.updateText(o.text);
             me.waitTimer = Ext.TaskManager.start({
                 run: function(i){
-                    var inc = config.increment || 10;
+                    var inc = o.increment || 10;
                     i -= 1;
-                    me.updateProgress(((((i+inc)%inc)+1)*(100/inc))*0.01, null, config.animate);
+                    me.updateProgress(((((i+inc)%inc)+1)*(100/inc))*0.01, null, o.animate);
                 },
-                interval: config.interval || 1000,
-                duration: config.duration,
+                interval: o.interval || 1000,
+                duration: o.duration,
                 onStop: function(){
-                    if (config.fn) {
-                        config.fn.apply(config.scope || me);
+                    if (o.fn) {
+                        o.fn.apply(o.scope || me);
                     }
                     me.reset();
                 },
@@ -403,20 +403,13 @@ Ext.define('Ext.ProgressBar', {
 
     doDestroy: function() {
         var me = this,
-            bar = me.bar,
-            nodes, el, i, len;
+            bar = me.bar;
         
         me.clearTimer();
         
         if (me.rendered) {
             if (me.textEl.isComposite) {
-                // Clean up Element references created by the layout
-                nodes = me.textEl.slice();
-                
-                for (i = 0, len = nodes.length; i < len; i++) {
-                    el = Ext.get(nodes[i]);
-                    el.destroy();
-                }
+                me.textEl.clear();
             }
             
             Ext.destroyMembers(me, 'textEl', 'progressBar');

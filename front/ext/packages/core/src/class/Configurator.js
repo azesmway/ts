@@ -455,8 +455,6 @@ Ext.Configurator.prototype = {
         // Now that the cachedConfigs have been processed we can apply the instanceConfig
         // and hide the "configs" on the prototype. This will serve as the source for any
         // configs that need to initialize from their initial getter call.
-        // IMPORTANT: "this.hasOwnProperty('config')" is how a config applier/updater can
-        // tell it is processing the cached config value vs an instance config value.
         instance.config = values;
         
         // There are 2 possibilities here:
@@ -644,7 +642,6 @@ Ext.Configurator.prototype = {
         for (name in config) {
             value = config[name];
             cfg = configs[name];
-
             if (cfg) {
                 if (cfg.merge) {
                     value = cfg.merge(value, baseConfig[name], instance);
@@ -657,7 +654,6 @@ Ext.Configurator.prototype = {
                     }
                 }
             }
-
             baseConfig[name] = value;
         }
 
@@ -676,16 +672,12 @@ Ext.Configurator.prototype = {
             cfg, getter, i, len, name, names, prop;
 
         for (name in instanceConfig) {
-            cfg = configs[name];
-
-            if (
-                defaults &&
-                instance.hasOwnProperty(cfg && instance.$configPrefixed ? cfg.names.internal : name)
-            ) {
+            if (defaults && instance.hasOwnProperty(name)) {
                 continue;
             }
 
             currentConfig[name] = instanceConfig[name];
+            cfg = configs[name];
 
             //<debug>
             if (this.deprecations[name]) {
@@ -716,15 +708,14 @@ Ext.Configurator.prototype = {
                         Ext.Error.raise("Cannot override method " + name + " on " + instance.$className + " instance.");
                         //</debug>
                         continue;
-                    }
-                    //<debug>
-                    else {
+                        //<debug>
+                    } else {
                         if (name !== 'type') {
                             Ext.log.warn('No such config "' + name + '" for class ' +
                                 instance.$className);
                         }
+                        //</debug>
                     }
-                    //</debug>
                 }
             }
 
@@ -768,7 +759,6 @@ Ext.Configurator.prototype = {
      * `{@link #configure}` when it receives an `instanceConfig` containing a
      * `platformConfig` property.
      *
-     * @param {Ext.Base} instance
      * @param {Object} instanceConfig The instance config parameter.
      * @return {Object} The new instance config object with platformConfig results applied.
      * @private

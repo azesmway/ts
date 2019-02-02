@@ -1,5 +1,4 @@
-// false in dependencies to avoid loading "Ext.dom.Element.style"
-topSuite("Ext.dom.Element.style", [false, 'Ext.dom.Element'], function() {
+describe("Ext.Element.style", function() {
     var testEl;
     
     beforeEach(function() {
@@ -147,4 +146,5 @@ topSuite("Ext.dom.Element.style", [false, 'Ext.dom.Element'], function() {
             });
         });
     });
-});
+
+}, "/src/dom/Element.style.js");

@@ -55,19 +55,19 @@ $toolbar-font-weight: dynamic($font-weight-bold);
  * @var {number}
  * Toolbar font-size
  */
-$toolbar-font-size: dynamic($font-size);
+$toolbar-font-size: dynamic(1rem);
 
 /**
  * @var {number}
  * Toolbar font-size in the {@link Global_CSS#$enable-big big} sizing scheme
  */
-$toolbar-font-size-big: dynamic($font-size-big);
+$toolbar-font-size-big: dynamic(null);
 
 /**
  * @var {number}
  * Toolbar line-height
  */
-$toolbar-line-height: dynamic(16px);
+$toolbar-line-height: dynamic(1.25em);
 
 /**
  * @var {number}
@@ -85,39 +85,39 @@ $toolbar-font-family: dynamic($font-family);
  * @var {number/list}
  * Toolbar padding
  */
-$toolbar-padding: dynamic(6px 8px);
+$toolbar-padding: dynamic(.4616em .5em);
 
 /**
  * @var {number/list}
  * Toolbar padding in the {@link Global_CSS#$enable-big big} sizing scheme
  */
-$toolbar-padding-big: dynamic(6px 10px);
+$toolbar-padding-big: dynamic(.4em .67em);
 
 /**
  * @var {number}
  * The space in between horizontally aligned Toolbar items
  */
-$toolbar-horizontal-spacing: dynamic(8px);
+$toolbar-horizontal-spacing: dynamic(.2rem);
 
 /**
  * @var {number}
  * The space in between horizontally aligned Toolbar items in the
  * {@link Global_CSS#$enable-big big} sizing scheme
  */
-$toolbar-horizontal-spacing-big: dynamic(10px);
+$toolbar-horizontal-spacing-big: dynamic(.3rem);
 
 /**
  * @var {number}
  * The space in between vertically aligned Toolbar items
  */
-$toolbar-vertical-spacing: dynamic(6px);
+$toolbar-vertical-spacing: dynamic(.2rem);
 
 /**
  * @var {number}
  * The space in between vertically aligned Toolbar items in the
  * {@link Global_CSS#$enable-big big} sizing scheme
  */
-$toolbar-vertical-spacing-big: dynamic(8px);
+$toolbar-vertical-spacing-big: dynamic(.3rem);
 
 /**
  * @var {color}
@@ -167,22 +167,13 @@ $toolbar-title-padding-big: dynamic(null);
  * @var {number}
  * Toolbar min-height
  */
-$toolbar-min-height: dynamic(36px);
+$toolbar-min-height: dynamic(2.7693em);
 
 /**
  * @var {number}
  * Toolbar min-height in the {@link Global_CSS#$enable-big big} sizing scheme
  */
-$toolbar-min-height-big: dynamic(44px);
-
-/**
- * @var {map}
- * Parameters for the "footer" toolbar UI.
- * Set to `null` to eliminate the UI from the CSS output.
- */
-$toolbar-footer-ui: dynamic((
-    background-color: mix($base-light-color, $neutral-light-color, 30%)
-));
+$toolbar-min-height-big: dynamic(2.9334em);
 
 /**
  * Creates a visual theme for a Toolbar.
@@ -200,9 +191,6 @@ $toolbar-footer-ui: dynamic((
  * @param {string/list} $background-gradient
  * Toolbar background-gradient. Can be either the name of a gradient defined by
  * {@link Global_CSS#background-gradient} or a list of color stops.
- *
- * @param {color} $color
- * Toolbar color
  *
  * @param {number/list} $border-width
  * Toolbar border-width
@@ -341,6 +329,38 @@ $toolbar-footer-ui: dynamic((
             }
         }
 
+        @if $horizontal-spacing != null {
+            .#{$prefix}#{$xtype}-inner.#{$prefix}horizontal > * {
+                margin-right: $horizontal-spacing;
+
+                @if $enable-big and ($horizontal-spacing-big != $horizontal-spacing) {
+                    .#{$prefix}big & {
+                        margin-right: $horizontal-spacing-big;
+                    }
+                }
+
+                &:last-child {
+                    margin-right: 0;
+                }
+            }
+        }
+
+        @if $vertical-spacing != null {
+            .#{$prefix}vertical > * {
+                margin-bottom: $vertical-spacing;
+
+                @if $enable-big and ($vertical-spacing-big != $vertical-spacing) {
+                    .#{$prefix}big & {
+                        margin-bottom: $vertical-spacing-big;
+                    }
+                }
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+            }
+        }
+
         .#{$prefix}title {
             color: $title-color;
             padding: $title-padding;
@@ -359,7 +379,7 @@ $toolbar-footer-ui: dynamic((
         }
     }
 
-    .#{$prefix}#{$xtype}#{$ui-suffix}-body-el {
+    .#{$prefix}#{$xtype}-inner#{$ui-suffix} {
         padding: $padding;
         min-height: $min-height;
 
@@ -367,38 +387,6 @@ $toolbar-footer-ui: dynamic((
             .#{$prefix}big & {
                 padding: $padding-big;
                 min-height: $min-height-big;
-            }
-        }
-
-        @if $horizontal-spacing != null {
-            &.#{$prefix}horizontal > .#{$prefix}component {
-                margin-right: $horizontal-spacing;
-
-                @if $enable-big {
-                    .#{$prefix}big & {
-                        margin-right: $horizontal-spacing-big;
-                    }
-                }
-
-                &:last-child {
-                    margin-right: 0;
-                }
-            }
-        }
-
-        @if $vertical-spacing != null {
-            &.#{$prefix}vertical > .#{$prefix}component {
-                margin-bottom: $vertical-spacing;
-
-                @if $enable-big {
-                    .#{$prefix}big & {
-                        margin-bottom: $vertical-spacing-big;
-                    }
-                }
-
-                &:last-child {
-                    margin-bottom: 0;
-                }
             }
         }
     }
@@ -416,16 +404,12 @@ $toolbar-footer-ui: dynamic((
  * @param {string} $ui-label The name of the UI being created.
  *   Can not included spaces or special punctuation (used in class names)
  * @param {color} $color Base color for the UI.
- * @param {string} [$gradient=$toolbar-background-gradient] Background gradient style for the UI.
+ * @param {string} $gradient: $toolbar-background-gradient Background gradient style for the UI.
  *
  * @member Ext.Button
  * @deprecated 6.0 Use {@link #toolbar-ui} instead
  */
-@mixin sencha-toolbar-ui(
-    $ui-label,
-    $color,
-    $gradient: $toolbar-background-gradient
-) {
+@mixin sencha-toolbar-ui($ui-label, $color, $gradient: $toolbar-background-gradient) {
     @include toolbar-ui(
         $ui: $ui-label,
         $background-color: $color,

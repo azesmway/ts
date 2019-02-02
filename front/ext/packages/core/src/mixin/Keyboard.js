@@ -25,17 +25,10 @@
  *  - Command (or "Cmd" or "Meta")
  *  - CommandOrControl (or "CmdOrCtrl") for Cmd on Mac, Ctrl otherwise.
  *
- * *All these names are case insensitive and will be stored in upper case internally.*
- *
  * For example:
  *
  *      Ext.define('MyChartPanel', {
  *          extend: 'Ext.panel.Panel',
- *
- *          mixins: [
- *              'Ext.mixin.Keyboard'
- *          ],
- *
  *          controller: 'mycontroller',
  *
  *          // Map keys to methods (typically in a ViewController):
@@ -52,15 +45,6 @@
  *                  handler: 'destroy',
  *                  scope: 'this',
  *                  event: 'keypress'  // default would be keydown
- *              },
- *
- *              "ALT+DOWN": 'openExpander',
- *
- *              // Match any key modifiers and invoke before any other DOWN keys
- *              // handlers with lower or default priority.
- *              "*+DOWN": {
- *                  handler: 'preprocessDownKey',
- *                  priority: 100
  *              }
  *          }
  *      });
@@ -113,10 +97,8 @@ Ext.define('Ext.mixin.Keyboard', function (Keyboard) { return {
 
                 // We promote all values into objects but these objects do not get
                 // merged with base class values. Further, the keys get toUpperCased
-                // to normalize this aspect ('esc' vs 'ESC' vs 'Esc'). We do not want
-                // to overwrite a class baseValue with an instances value since those
-                // are additive (in applyKeyMap/combineKeyMaps).
-                var ret = (baseValue && !cls.isInstance) ? Ext.Object.chain(baseValue) : {},
+                // to normalize this aspect ('esc' vs 'ESC' vs 'Esc').
+                var ret = baseValue ? Ext.Object.chain(baseValue) : {},
                     key, ucKey, v, vs;
                 
                 for (key in value) {
@@ -162,7 +144,7 @@ Ext.define('Ext.mixin.Keyboard', function (Keyboard) { return {
     },
 
     /**
-     * @cfg {String} keyMapTarget
+     * @cfg {Boolean} keyMapTarget
      * The name of the member that should be used to listen for keydown/keypress events.
      * This is intended to be controlled at the class level not per instance.
      * @protected
@@ -171,29 +153,85 @@ Ext.define('Ext.mixin.Keyboard', function (Keyboard) { return {
 
     applyKeyMap: function (keyMap, existingKeyMap) {
         var me = this,
-            // During cached config setup, we don't yet have our own (instance) "config"
-            // so we can tell from that being present that we need our own keyMap.
-            own = me.hasOwnProperty('config');
+            defaultScope, entry, key, mapping;
 
-        if (own && existingKeyMap && existingKeyMap.$owner !== me) {
-            // As a cached config, we can be created with an existing value, but
-            // we do not want to modify that shared instance, so make a copy.
-            existingKeyMap = Ext.apply({}, existingKeyMap);
+        if (keyMap) {
+            if (existingKeyMap && me.isConfiguring) {
+                // As a cached config, we can be created with an existing value, but
+                // we do not want to modify that shared instance, so make a copy.
+                existingKeyMap = Ext.apply({}, existingKeyMap);
+            }
+
+            defaultScope = keyMap.scope || 'controller';
+
+            for (key in keyMap) {
+                if (key === 'scope') {
+                    continue;
+                }
+
+                if (!(mapping = keyMap[key])) {
+                    //<debug>
+                    if (mapping === undefined) {
+                        Ext.raise('keyMap entry "' + key + '" is undefined');
+                    }
+                    //</debug>
+
+                    // if we have no mapping (eg, "ESC: null") and no mappings to
+                    // overwrite, we can skip over it.
+                    if (!existingKeyMap) {
+                        continue;
+                    }
+                } else {
+                    if (typeof mapping === 'string' || typeof mapping === 'function') {
+                        // Direct calls to setKeyMap() can get here because instance and
+                        // class configs go through merge
+                        mapping = {
+                            handler: mapping,
+                            scope: defaultScope
+                        };
+                    } else if (mapping) {
+                        mapping = Ext.apply({
+                            handler: mapping.fn, // mapping.handler will override
+                            scope: defaultScope  // mapping.scope will override
+                            // all other properties of mapping are kept
+                        }, mapping);
+                    }
+
+                    existingKeyMap = existingKeyMap || {}; // we'll need a keyMap
+                }
+
+                if (Keyboard.parseEntry(key, entry = mapping || {})) {
+                    // So we end up with an object like this:
+                    //
+                    //  "ALT+PRINT_SCREEN": {
+                    //      handler: 'doSummat',
+                    //      scope: 'controller',
+                    //      altKey: true
+                    //  }
+                    //
+                    existingKeyMap[entry.name] = mapping;
+                }
+                //<debug>
+                else {
+                    Ext.raise('Invalid keyMap key specification "' + key + '"');
+                }
+                //</debug>
+            }
+        } else {
+            existingKeyMap = null; // nulling out the whole keyMap
         }
-
-        keyMap = keyMap ? Keyboard.combineKeyMaps(existingKeyMap, keyMap, own && me) : null;
 
         if (me._keyMapReady) {
-            me.setKeyMapListener(keyMap && me.getKeyMapEnabled());
+            me.setKeyMapListener(existingKeyMap && me.getKeyMapEnabled());
         }
 
-        return keyMap;
+        return existingKeyMap || null;
     },
 
     /**
      * This method should be called when the instance is ready to start listening for
      * keyboard events. This is called automatically for `Ext.Component` and derived
-     * classes. This is done after the component is rendered.
+     * classes. In Classic Toolkit, this is done after the component is rendered.
      * @protected
      */
     initKeyMap: function () {
@@ -209,21 +247,6 @@ Ext.define('Ext.mixin.Keyboard', function (Keyboard) { return {
         }
     },
 
-    disableKeyMapGroup: function (group) {
-        this.setKeyMapGroupEnabled(group, false);
-    },
-
-    enableKeyMapGroup: function (group) {
-        this.setKeyMapGroupEnabled(group, true);
-    },
-
-    setKeyMapGroupEnabled: function (group, state) {
-        var me = this,
-            disabledGroups = me.disabledKeyMapGroups || (me.disabledKeyMapGroups = {});
-
-        disabledGroups[group] = !state;
-    },
-
     updateKeyMapEnabled: function (enabled) {
         this.setKeyMapListener(enabled && this._keyMapReady && this.getKeyMap());
     },
@@ -234,60 +257,44 @@ Ext.define('Ext.mixin.Keyboard', function (Keyboard) { return {
         //</debug>
         _keyMapReady: false,
 
-        // Descending priority sort
-        comparePriorities: function(lhs, rhs) {
-            return (rhs.priority || 0) - (lhs.priority || 0);
+        callKeyMapEntry: function (entry, e) {
+            return entry && Ext.callback(entry.handler, entry.scope, [e, this], 0, this);
         },
 
-        findKeyMapEntries: function (e) {
+        findKeyMapEntry: function (e) {
             var me = this,
-                disabledGroups = me.disabledKeyMapGroups,
                 keyMap = me.getKeyMap(),
-                entries = keyMap && Keyboard.getKeyName(e),
-                entry, len, i, result = [];
+                key, entry;
 
-            entries = entries && keyMap[entries];
-
-            if (entries) {
-                // Ensure that the entries are in priority order
-                if (!entries.sorted) {
-                    Ext.Array.sort(entries, me.comparePriorities);
-                    entries.sorted = true;
-                }
-                len = entries.length;
-
-                for (i = 0; i < len; i++) {
-                    entry = entries[i];
-
-                    // If the key code and the modifier flags match, add entry
-                    // to invocation list.
-                    if (!disabledGroups || !disabledGroups[entry.group]) {
-                        if (Keyboard.matchEntry(entry, e)) {
-                            result.push(entry);
-                        }
+            if (keyMap) {
+                for (key in keyMap) {
+                    // If the key code and the modifier flags match, call the handler
+                    // Cast the mapping's flag because they will be undefined if not
+                    // true. Case metaKey because it's undefined on some platforms.
+                    if (Keyboard.matchEntry(key, entry = keyMap[key], e)) {
+                        return entry;
                     }
                 }
             }
 
-            return result;
+            return null;
         },
 
         onKeyMapEvent: function (e) {
             var me = this,
-                entries = me.getKeyMapEnabled() ? me.findKeyMapEntries(e) : null,
-                len = entries && entries.length, i, entry, result;
+                entry = me.getKeyMapEnabled() ? me.findKeyMapEntry(e) : null;
 
-            for (i = 0; i < len && result !== false; i++) {
-                entry = entries[i];
-                result = Ext.callback(entry.handler, entry.scope, [e, this], 0, this);
-            }
-            return result;
+            return me.callKeyMapEntry(entry, e);
         },
 
         setKeyMapListener: function (enabled) {
             var me = this,
                 listener = me._keyMapListener,
                 eventSource;
+
+            //<debug>
+            ++me._keyMapListenCount;
+            //</debug>
 
             if (listener) {
                 // We always destroy the old listener since the eventSource could be
@@ -297,164 +304,41 @@ Ext.define('Ext.mixin.Keyboard', function (Keyboard) { return {
             }
 
             if (enabled) {
-                //<debug>
-                ++me._keyMapListenCount;
-                //</debug>
-
-                if (enabled) {
-                    eventSource = me[me.keyMapTarget];
-                    if (typeof eventSource === 'function') {
-                        eventSource = eventSource.call(me); // eg, 'getFocusEl'
-                    }
-
-                    listener = eventSource.on({
-                        destroyable: true,
-                        scope: me,
-                        keydown: 'onKeyMapEvent',
-                        keypress: 'onKeyMapEvent'
-                    });
+                eventSource = me[me.keyMapTarget];
+                if (typeof eventSource === 'function') {
+                    eventSource = eventSource.call(me); // eg, 'getFocusEl'
                 }
+
+                listener = eventSource.on({
+                    destroyable: true,
+                    scope: me,
+                    keydown: 'onKeyMapEvent',
+                    keypress: 'onKeyMapEvent'
+                });
             }
 
             me._keyMapListener = listener || null;
         },
-
+        
         statics: {
             _charCodeRe: /^#([\d]+)$/,
-            _keySpecRe: /^(?:(?:(\*)[\+\-])|(?:([a-z\+\-]*)[\+\-]))?(?:([a-z0-9_]+|[\+\-]|(?:#?\d+))(?:\:([a-z]+))?)$/i,
-            _delimiterRe: /\-|\+/,
-
+            _hyphenRe: /^[a-z]+\-/i,  // eg "Ctrl-" (instead of "Ctrl+")
+    
             _keyMapEvents: {
                 charCode: 'keypress',
                 keyCode: 'keydown'
             },
 
-            combineKeyMaps: function (existingKeyMap, keyMap, owner) {
-                var defaultScope = keyMap.scope || 'controller',
-                    entry, key, mapping, existingMapping;
-
-                for (key in keyMap) {
-                    if (key === 'scope') {
-                        continue;
-                    }
-
-                    if (!(mapping = keyMap[key])) {
-                        //<debug>
-                        if (mapping === undefined) {
-                            Ext.raise('keyMap entry "' + key + '" is undefined');
-                        }
-                        //</debug>
-
-                        // if we have no mapping (eg, "ESC: null") and no mappings to
-                        // overwrite, we can skip over it.
-                        if (!existingKeyMap) {
-                            continue;
-                        }
-                    } else {
-                        if (typeof mapping === 'string' || typeof mapping === 'function') {
-                            // Direct calls to setKeyMap() can get here because
-                            // instance and class configs go through merge
-                            mapping = {
-                                handler: mapping,
-                                scope: defaultScope
-                            };
-                        } else if (mapping) {
-                            mapping = Ext.apply({
-                                handler: mapping.fn, // mapping.handler will override
-                                scope: defaultScope  // mapping.scope will override
-                                // all other properties of mapping are kept
-                            }, mapping);
-                        }
-
-                        existingKeyMap = existingKeyMap || {}; // we'll need a keyMap
-                    }
-
-                    if (Keyboard.parseEntry(key, entry = mapping || {})) {
-                        // Key modifiers are stripped off the key name
-                        // so we end up with an object like this:
-                        //
-                        //  "PRINT_SCREEN": {
-                        //      handler: 'doSummat',
-                        //      scope: 'controller',
-                        //      altKey: true
-                        //  }
-                        //
-                        // or
-                        //
-                        //  "UP": {
-                        //      handler: 'doSummat'
-                        //      scope: 'controller',
-                        //      ignoreModifiers: true
-                        //  }
-                        //
-                        existingMapping = existingKeyMap[entry.name];
-
-                        if (existingMapping) {
-                            if (owner && existingMapping.$owner !== owner) {
-                                existingKeyMap[entry.name] = existingMapping =
-                                    existingMapping.slice();
-                                existingMapping.$owner = owner;
-                            }
-
-                            existingMapping.push(mapping);
-
-                            existingMapping.sorted = false;
-                        } else {
-                            existingMapping = existingKeyMap[entry.name] = [ mapping ];
-                            existingMapping.$owner = owner;
-                            existingMapping.sorted = true;
-                        }
-                    }
-                    //<debug>
-                    else {
-                        Ext.raise('Invalid keyMap key specification "' + key + '"');
-                    }
-                    //</debug>
-                }
-
-                if (existingKeyMap && owner) {
-                    existingKeyMap.$owner = owner;
-                }
-
-                return existingKeyMap || null;
-            },
-
-            getKeyName: function (event) {
-                var keyCode;
-
-                if (event.isEvent) {
-                    keyCode = event.keyCode || event.charCode;
-                    event = event.browserEvent;
-
-                    // If it's the combination code, 229, then use the W3C code property.
-                    // https://developer.mozilla.org/en/docs/Web/API/KeyboardEvent/code
-                    if (keyCode === 229 && 'code' in event) {
-                        if (Ext.String.startsWith(event.code, 'Key')) {
-                            return event.key.substr(3);
-                        }
-                        if (Ext.String.startsWith(event.code, 'Digit')) {
-                            return event.key.substr(5);
-                        }
-                    }
-                }
-                else {
-                    keyCode = event;
-                }
-
-                // We are in a position of having a numeric key code, attempt to translate it to a name.
-                return Ext.event.Event.keyCodes[keyCode] || String.fromCharCode(keyCode);
-            },
-
-            matchEntry: function (entry, e) {
+            matchEntry: function (key, entry, e) {
                 var ev = e.browserEvent,
                     code;
-
+    
                 if (e.type !== entry.event) {
                     return false;
                 }
-
+    
                 if (!(code = entry.charCode)) {
-                    if (entry.keyCode !== e.keyCode || (!entry.ignoreModifiers && !entry.shiftKey !== !ev.shiftKey)) {
+                    if (entry.keyCode !== e.keyCode || !entry.shiftKey !== !ev.shiftKey) {
                         // when using keyCode, SHIFT must match too
                         return false;
                     }
@@ -462,93 +346,70 @@ Ext.define('Ext.mixin.Keyboard', function (Keyboard) { return {
                 else if (e.getCharCode() !== code) {
                     return false;
                 }
-
+    
                 // NOTE: All modifier key properties are !-ed to ensure boolean-ness since
                 // they can be undefined...
-                // Entry can be flagged to ignore modifiers and invoke purely on key match.
-                return entry.ignoreModifiers ||
-                        (!entry.ctrlKey  === !ev.ctrlKey &&
-                         !entry.altKey   === !ev.altKey &&
-                         !entry.metaKey  === !ev.metaKey &&
-                         !entry.shiftKey === !ev.shiftKey);
+                return !entry.ctrlKey === !ev.ctrlKey &&
+                       !entry.altKey  === !ev.altKey &&
+                       !entry.metaKey === !ev.metaKey;
             },
-
+    
             parseEntry: function (key, entry) {
                 key = key.toUpperCase();
-
+    
                 var me = this,
                     Event = Ext.event.Event,
                     keyFlags = Event.keyFlags,
-                    parts = me._keySpecRe.exec(key),
+                    delim = me._hyphenRe.test(key) ? '-' : '+',
+                    keySpec = (key === delim) ? [delim] : key.split(delim),
+                    n = keySpec.length - 1,
+                    k = keySpec[n],
+                    name = k,
                     type = 'keyCode',
-                    name, code, i, match, n;
-
-                // The _keySpecRe will split up a string thus:
-                //
-                // 'ALT+CTRL+A:GROUP' -> [.., undefined, "ALT+CTRL", "A", "GROUP"]
-                //
-                // '*+A:GROUP' -> [.., "*", undefined, "A", "GROUP"]
-                //
-                // 'ALT+CTRL+A' -> [.., undefined, "ALT+CTRL", "A", undefined]
-                //
-                // So parts is:
-                // [0] - Whole matched string
-                // [1] - All modifiers indicator, ie: '*'
-                // [2] - Delimited modifiers list, eg: 'ctrl+alt'
-                // [3] - The key name
-                // [4] - The optional group name
-
-                if (parts) {
-                    name = parts[3];
-                    if (parts[4]) {
-                        entry.group = parts[4];
+                    code, i, match;
+    
+                // Set the ctrlKey, altKey, metaKey, shiftKey flags
+                for (i = 0; i < n; i++) {
+                    //<debug>
+                    if (!keyFlags[keySpec[i]]) {
+                        return false;
                     }
-
-                    // If "*" modifier used, then means ignore modifiers and invoke
-                    // on raw key match.
-                    if (!(entry.ignoreModifiers = !!parts[1]) && parts[2]) {
-                        // Otherwise set flags according to modifer names if any.
-                        parts = parts[2].split(me._delimiterRe);
-                        n = parts.length;
-                        for (i = 0; i < n; i++) {
-                            //<debug>
-                            if (!keyFlags[parts[i]]) {
-                                return false;
-                            }
-                            //</debug>
-
-                            entry[keyFlags[parts[i]]] = true;
-                        }
-                    }
-
-                    // Entry is named by the unmodified key name.
-                    // Entries for the same key are kept as a prioritized array.
-                    entry.name = name;
-
-                    // Set the keyCode from the 'PRINT_SCREEN' key name.
-                    if (isNaN(code = Event[name])) {
-                        // Support charCode from a single letter or '#65' format.
-                        if (!(match = me._charCodeRe.exec(name))) {
-                            if (name.length === 1) {
-                                code = name.charCodeAt(0);
-                            }
-                        } else {
-                            code = +match[1]; // #42
-                        }
-
-                        if (code) {
-                            type = 'charCode';
-                        } else {
-                            // Last chance! Just a number (keyCode) like "27: 'onEscape'"?
-                            code = +name;
-                        }
-
-                        entry.name = Keyboard.getKeyName(code);
-                    }
-
-                    entry.event = entry.event || me._keyMapEvents[type];
-                    return !isNaN(code) && (entry[type] = code);
+                    //</debug>
+    
+                    entry[keyFlags[keySpec[i]]] = true;
                 }
+    
+                // Produce the canonical name of the key:
+                if (n) { // if (we have modifiers)
+                    name = entry.ctrlKey ? 'CTRL+' : '';
+                    name += entry.altKey ? 'ALT+' : '';
+                    name += entry.metaKey ? 'META+' : '';
+                    name += entry.shiftKey ? 'SHIFT+' : '';
+                    name += k;
+                }
+                entry.name = name;
+    
+                // Set the keyCode from the 'PRINT_SCREEN' key name.
+                if (isNaN(code = Event[k])) {
+                    // Support charCode from a single letter or '#65' format.
+                    if (!(match = me._charCodeRe.exec(k))) {
+                        if (k.length === 1) {
+                            code = k.charCodeAt(0);
+                        }
+                    } else {
+                        code = +match[1]; // #42
+                    }
+    
+                    if (code) {
+                        type = 'charCode';
+                    } else {
+                        // Last chance! Is it just a number (a keyCode) like "27: 'onEscape'"?
+                        code = +k;
+                    }
+                }
+    
+                entry.event = entry.event || me._keyMapEvents[type];
+                return !isNaN(code) && (entry[type] = code);
             }
         } // statics
     } // privates

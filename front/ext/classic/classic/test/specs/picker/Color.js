@@ -1,4 +1,4 @@
-topSuite("Ext.picker.Color", function() {
+describe("Ext.picker.Color", function() {
     var colorPicker,
         createPicker = function(config) {
             colorPicker = new Ext.picker.Color(Ext.apply({

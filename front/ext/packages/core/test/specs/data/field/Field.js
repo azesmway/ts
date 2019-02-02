@@ -1,8 +1,4 @@
-topSuite("Ext.data.field.Field", [
-    'Ext.data.field.*', 
-    'Ext.data.validator.*',
-    'Ext.data.summary.*'
-], function() {
+describe("Ext.data.field.Field", function() {
     
     var stypes = Ext.data.SortTypes,
         field;
@@ -58,10 +54,6 @@ topSuite("Ext.data.field.Field", [
         
         it("should have sortType: none", function() {
             expect(field.getSortType()).toBe(stypes.none);    
-        });
-
-        it("should have summary: null", function() {
-            expect(field.getSummary()).toBeNull();
         });
         
     });
@@ -360,70 +352,6 @@ topSuite("Ext.data.field.Field", [
                 expect(field.getSortType()).toBe(fn);
             });
         });
-
-        describe("summary", function() {
-            describe("as a string", function() {
-                beforeEach(function() {
-                    make({
-                        summary: 'sum'
-                    });
-                });
-
-                it("should return an instance", function() {
-                    expect(field.getSummary() instanceof Ext.data.summary.Sum);
-                });
-
-                it("should return the same instance", function() {
-                    var s = field.getSummary(); 
-                    expect(field.getSummary()).toBe(s);
-                });
-            });
-
-            describe("as an object", function() {
-                beforeEach(function() {
-                     make({
-                        summary: {
-                            type: 'min'
-                        }
-                    });
-                });
-
-                it("should return an instance", function() {
-                    expect(field.getSummary() instanceof Ext.data.summary.Min);
-                });
-
-                it("should return the same instance", function() {
-                    var s = field.getSummary(); 
-                    expect(field.getSummary()).toBe(s);
-                });
-            });
-
-            describe("as a function", function() {
-                var spy;
-
-                beforeEach(function() {
-                    spy = jasmine.createSpy();
-                    make({
-                        summary: spy
-                    });
-                });
-
-                afterEach(function() {
-                    spy = null;
-                });
-
-                it("should accept a function", function() {
-                    var summary = field.getSummary();
-                    expect(summary instanceof Ext.data.summary.Base);
-                    expect(summary.calculate).toBe(spy);
-                });
-
-                it("should return the same instance", function() {
-                    var s = field.getSummary(); 
-                    expect(field.getSummary()).toBe(s);
-                });
-            });
-        });
     });
     
     describe("collate", function() {
@@ -647,7 +575,7 @@ topSuite("Ext.data.field.Field", [
     });
     
     describe("subclassing with validators", function() {
-        var urlMsg = 'Is not a valid URL',
+        var presenceMsg = 'Must be present',
             formatMsg = 'Is in the wrong format',
             emailMsg = 'Is not a valid email address',
             A;
@@ -676,8 +604,8 @@ topSuite("Ext.data.field.Field", [
         });
 
         it("should accept a string", function() {
-            defineA('url');
-            expectError(A, null, null, [urlMsg]);
+            defineA('presence');
+            expectError(A, null, null, [presenceMsg]);
         });
 
         it("should accept an object", function() {
@@ -696,20 +624,20 @@ topSuite("Ext.data.field.Field", [
         });
 
         it("should accept an array of mixed string/object/function", function() {
-            defineA(['url', {
+            defineA(['presence', {
                 type: 'format',
                 matcher: /foo/
             }, function() {
                 return 'Fail';
             }]);
-            expectError(A, null, null, [urlMsg, formatMsg, 'Fail']);
+            expectError(A, null, null, [presenceMsg, formatMsg, 'Fail']);
         });
 
         it("should combine instance validators with class validators", function() {
-            defineA('url');
+            defineA('presence');
             expectError(A, {
                 validators: 'email'
-            }, null, [urlMsg, emailMsg]);
+            }, null, [presenceMsg, emailMsg]);
         });
 
         describe("extending a custom field", function() {
@@ -728,37 +656,37 @@ topSuite("Ext.data.field.Field", [
 
             describe("merging", function() {
                 it("should merge a string and a string", function() {
-                    defineA('url');
+                    defineA('presence');
                     defineB('email');
-                    expectError(B, null, null, [urlMsg, emailMsg]);
+                    expectError(B, null, null, [presenceMsg, emailMsg]);
                 });
 
                 it("should merge a string and an object", function() {
-                    defineA('url');
+                    defineA('presence');
                     defineB({
                         type: 'format',
                         matcher: /foo/
                     });
-                    expectError(B, null, null, [urlMsg, formatMsg]);
+                    expectError(B, null, null, [presenceMsg, formatMsg]);
                 });
 
                 it("should merge a string and a function", function() {
-                    defineA('url');
+                    defineA('presence');
                     defineB(function() {
                         return 'Fail';
                     });
-                    expectError(B, null, null, [urlMsg, 'Fail']);
+                    expectError(B, null, null, [presenceMsg, 'Fail']);
                 });
 
                 it("should merge a string and an array", function() {
-                    defineA('url');
+                    defineA('presence');
                     defineB(['email', {
                         type: 'format',
                         matcher: /foo/
                     }, function() {
                         return 'Fail';
                     }]);
-                    expectError(B, null, null, [urlMsg, emailMsg, formatMsg, 'Fail']);
+                    expectError(B, null, null, [presenceMsg, emailMsg, formatMsg, 'Fail']);
                 });
 
                 it("should merge an object and a string", function() {
@@ -766,16 +694,16 @@ topSuite("Ext.data.field.Field", [
                         type: 'format',
                         matcher: /foo/
                     });
-                    defineB('url');
-                    expectError(B, null, null, [formatMsg, urlMsg]);
+                    defineB('presence');
+                    expectError(B, null, null, [formatMsg, presenceMsg]);
                 });
 
                 it("should merge a function and a string", function() {
                     defineA(function() {
                         return 'Fail';
                     });
-                    defineB('url');
-                    expectError(B, null, null, ['Fail', urlMsg]);
+                    defineB('presence');
+                    expectError(B, null, null, ['Fail', presenceMsg]);
                 });
 
                 it("should merge an array and a string", function() {
@@ -785,116 +713,21 @@ topSuite("Ext.data.field.Field", [
                     }, function() {
                         return 'Fail';
                     }]);
-                    defineB('url');
-                    expectError(B, null, null, [emailMsg, formatMsg, 'Fail', urlMsg]);
+                    defineB('presence');
+                    expectError(B, null, null, [emailMsg, formatMsg, 'Fail', presenceMsg]);
                 });
 
                 it("should merge 2 arrays", function() {
-                    defineA(['url']);
+                    defineA(['presence']);
                     defineB(['email']);
-                    expectError(B, null, null, [urlMsg, emailMsg]);
+                    expectError(B, null, null, [presenceMsg, emailMsg]);
                 });
 
                 it("should not modify the superclass validators", function() {
-                    defineA('url');
+                    defineA('presence');
                     defineB('email');
-                    expectError(A, null, null, [urlMsg]);
-                    expectError(B, null, null, [urlMsg, emailMsg]);
-                });
-            });
-        });
-    });
-
-    describe("validate", function() {
-        var validator;
-
-        beforeEach(function() {
-            validator = jasmine.createSpy().andReturn('failed');
-        });
-
-        afterEach(function() {
-            validator = null;
-        });
-
-        describe("blank values", function() {
-            describe("with a presence validator", function() {
-                beforeEach(function() {
-                    make({
-                        validators: [validator, 'presence']
-                    });
-                });
-
-                it("should fail and not run other validators when value is undefined", function() {
-                    expect(field.validate(undefined)).toBe('Must be present');
-                    expect(validator).not.toHaveBeenCalled();
-                });
-
-                it("should fail and not run other validators when value is null", function() {
-                    expect(field.validate(null)).toBe('Must be present');
-                    expect(validator).not.toHaveBeenCalled();
-                });
-
-                it("should fail and not run other validators when value is ''", function() {
-                    expect(field.validate('')).toBe('Must be present');
-                    expect(validator).not.toHaveBeenCalled();
-                });
-
-                it("should push the error into an error collection", function() {
-                    var errors = [];
-                    field.validate('', null, errors);
-                    expect(errors).toEqual(['Must be present']);
-                });
-            });
-
-            describe("with no presence validator", function() {
-                beforeEach(function() {
-                    make({
-                        validators: [validator]
-                    });
-                });
-
-                it("should run other validators when value is undefined", function() {
-                    expect(field.validate(undefined)).toBe('failed');
-                    expect(validator.callCount).toBe(1);
-                });
-
-                it("should run other validators when value is null", function() {
-                    expect(field.validate(null)).toBe('failed');
-                    expect(validator.callCount).toBe(1);
-                });
-
-                it("should run other validators when value is ''", function() {
-                    expect(field.validate('')).toBe('failed');
-                    expect(validator.callCount).toBe(1);
-                });
-            });
-        });
-
-        describe("non blank values", function() {
-            describe("with a presence validator", function() {
-                beforeEach(function() {
-                    make({
-                        validators: [validator, 'presence']
-                    });
-                });
-
-                it("should run other validators", function() {
-                    expect(field.validate('foo')).toBe('failed');
-                });
-
-                it("should push the error into an error collection", function() {
-                    var errors = [];
-                    field.validate('foo', null, errors);
-                    expect(errors).toEqual(['failed']);
-                });
-            });
-
-            describe("with no presence validator", function() {
-                it("should run other validators", function() {
-                    make({
-                        validators: [validator]
-                    });
-                    expect(field.validate('foo')).toBe('failed');
+                    expectError(A, null, null, [presenceMsg]);
+                    expectError(B, null, null, [presenceMsg, emailMsg]);
                 });
             });
         });

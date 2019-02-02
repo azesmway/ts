@@ -247,13 +247,12 @@ Ext.define('Ext.data.proxy.Ajax', {
        headers: undefined,
     
         /**
-         * @cfg {Boolean} paramsAsJson
-         * Set to `true` to have any request parameters sent as {@link Ext.data.Connection#method-request jsonData}
-         * where they can be parsed from the raw request. By default, parameters are sent via the
-         * {@link Ext.data.Connection#method-request params} property. **Note**: This setting does not apply when the
-         * request is sent as a 'GET' request. See {@link #cfg!actionMethods} for controlling the HTTP verb
-         * that is used when sending requests.
-         */
+        * @cfg {Boolean} paramsAsJson `true` to have any request parameters sent as {@link Ext.data.Connection#method-request jsonData} 
+        * where they can be parsed from the raw request. By default, parameters are sent via the 
+        * {@link Ext.data.Connection#method-request params} property. **Note**: This setting does not apply when the
+        * request is sent as a 'GET' request. See {@link #actionMethods} for controlling the HTTP verb
+        * that is used when sending requests.
+        */
         paramsAsJson: false,
         
         /**
@@ -323,10 +322,6 @@ Ext.define('Ext.data.proxy.Ajax', {
             disableCaching      : false // explicitly set it to false, ServerProxy handles caching
         });
         
-        if (me.responseType != null && Ext.supports.XHR2) {
-            request.setResponseType(me.responseType);
-        }
-        
         if (method.toUpperCase() !== 'GET' && me.getParamsAsJson()) {
             params = request.getParams();
 
@@ -377,7 +372,7 @@ Ext.define('Ext.data.proxy.Ajax', {
     
     /**
      * Returns the HTTP method name for a given request. By default this returns based on a lookup on
-     * {@link #cfg!actionMethods}.
+     * {@link #actionMethods}.
      * @param {Ext.data.Request} request The request object
      * @return {String} The HTTP method to use (should be one of 'GET', 'POST', 'PUT' or 'DELETE')
      */
@@ -401,16 +396,13 @@ Ext.define('Ext.data.proxy.Ajax', {
      * @return {Function} The callback function
      */
     createRequestCallback: function(request, operation) {
+        var me = this;
+        
         return function(options, success, response) {
-            var me = this;
-            
             if (request === me.lastRequest) {
                 me.lastRequest = null;
             }
-            
-            if (!me.destroying && !me.destroyed) {
-                me.processResponse(success, operation, request, response);
-            }
+            me.processResponse(success, operation, request, response);
         };
     },
     

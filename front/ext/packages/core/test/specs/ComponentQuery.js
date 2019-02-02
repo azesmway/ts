@@ -1,7 +1,6 @@
-topSuite("Ext.ComponentQuery", ["Ext.Container"], function() {
+describe("Ext.ComponentQuery", function() {
     var cq,
         cm,
-        realComponentMgrAll,
         EA,
         result,
         root,
@@ -23,8 +22,8 @@ topSuite("Ext.ComponentQuery", ["Ext.Container"], function() {
                     setup(o.items[i], o);
                 }
             }
+            
             Ext.apply(o, {
-                $iid: ++Ext.$nextIid,
                 getItemId: function() {
                     return this.itemId !== undefined ? this.itemId : this.id;
                 },
@@ -97,16 +96,12 @@ topSuite("Ext.ComponentQuery", ["Ext.Container"], function() {
             
             expect(actual.id).toBe(expected.id);
         }
-    }
+    };
 
     beforeEach(function() {
         cq = Ext.ComponentQuery;
         cm = Ext.ComponentManager;
         EA = Ext.Array;
-        realComponentMgrAll = cm.all;
-
-        // The test uses a fake ComponentManager cache
-        cm.all = {};
 
         root = {
             id: 'root',
@@ -185,7 +180,7 @@ topSuite("Ext.ComponentQuery", ["Ext.Container"], function() {
     });
 
     afterEach(function() {
-        cm.all = realComponentMgrAll;
+        cm.all = {};
     });
     
     describe("parser", function() {
@@ -334,13 +329,6 @@ topSuite("Ext.ComponentQuery", ["Ext.Container"], function() {
                     expect(cq.is(child5, '> #child5', child3)).toBe(false);
                 });
             });
-        });
-    });
-
-    describe("query with no selector", function() {
-        it("should return all components", function() {
-            var result = cq.query();
-            expect(result.length).toBe(13);
         });
     });
     
@@ -825,7 +813,7 @@ topSuite("Ext.ComponentQuery", ["Ext.Container"], function() {
 
         it('should only match candidates [@foo=bar] with ownProperty "foo" equal to "bar"', function() {
             expect(Ext.ComponentQuery.query('[@foo=bar]', candidates).length).toBe(1);
-            expect(Ext.ComponentQuery.query('[@foo=bar]', candidates)[0]).toBe(candidates[1]);
+            expect(Ext.ComponentQuery.query('[@foo=bar]', candidates)[0]).toBe(candidates[1])
             expect(Ext.ComponentQuery.is(candidates[0], '[@foo=bar]')).toBe(false);
             expect(Ext.ComponentQuery.is(candidates[1], '[@foo=bar]')).toBe(true);
         });
@@ -898,8 +886,8 @@ topSuite("Ext.ComponentQuery", ["Ext.Container"], function() {
         beforeEach(function () {
             c = new Ext.container.Container({
                 items: {
-                    xtype: 'component',
-                    html: 'Test',
+                    xtype: 'button',
+                    text: 'Test',
                     action: 'selectVendors'
                 },
                 renderTo: document.body
@@ -1090,8 +1078,7 @@ topSuite("Ext.ComponentQuery", ["Ext.Container"], function() {
             Ext.define('spec.Foo', {
                 extend: 'Ext.Component',
                 config: {
-                    bar: 1,
-                    cqUnitTestConfigName: 1
+                    bar: 1
                 },
                 baz: 2
             });
@@ -1137,11 +1124,6 @@ topSuite("Ext.ComponentQuery", ["Ext.Container"], function() {
             expect(result.length).toBe(1);
             expect(result[0]).toBe(foo);
         });
-        it("should match instance config presence", function(){
-            result = cq.query('[cqUnitTestConfigName]');
-            expect(result.length).toBe(1);
-            expect(result[0]).toBe(foo);
-        });
 
         it("should match a property on the instance", function() {
             result = cq.query('[baz=2]');
@@ -1160,7 +1142,8 @@ topSuite("Ext.ComponentQuery", ["Ext.Container"], function() {
             expect(result.length).toBe(1);
             expect(result[0]).toBe(bletch);
         });
-    });
+
+});
     
     describe('querying non Ext classes', function() {
         it('should be able to query on raw objects', function() {

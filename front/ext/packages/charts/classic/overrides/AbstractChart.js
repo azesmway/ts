@@ -22,9 +22,7 @@ Ext.define('Ext.chart.overrides.AbstractChart', {
 
     afterComponentLayout: function(width, height, oldWidth, oldHeight) {
         this.callParent([width, height, oldWidth, oldHeight]);
-        if (!this.hasFirstLayout) {
-            this.scheduleLayout();
-        }
+        this.scheduleLayout();
     },
 
     allowSchedule: function() {

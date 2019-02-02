@@ -6,7 +6,7 @@
 Ext.define('Ext.util.translatable.ScrollPosition', {
     extend: 'Ext.util.translatable.Dom',
 
-    alias: 'translatable.scrollposition', // also configures Factoryable
+    type: 'scrollposition',
 
     constructor: function(config) {
         if (config && config.element){

@@ -356,22 +356,11 @@ Ext.define('Ext.util.CollectionKey', {
         return map;
     },
 
-    updateCollection: function (collection, oldCollection) {
-        if (collection) {
-            collection.addObserver(this);
-        }
-        if (oldCollection) {
-            oldCollection.removeObserver(this);
-        }
+    updateCollection: function (collection) {
+        collection.addObserver(this);
     },
 
     clone: function() {
         return new Ext.util.CollectionKey(this.getCurrentConfig());
-    },
-
-    destroy: function() {
-        this.clear();
-        this.getCollection().removeObserver(this);
-        this.destroyed = true;
     }
 });

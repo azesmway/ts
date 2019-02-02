@@ -1,9 +1,4 @@
-/* eslint indent: off */
-
-topSuite("Ext.form.field.Text",
-    ['Ext.form.field.Display', 'Ext.form.field.Checkbox', 'Ext.Panel',
-     'Ext.app.ViewModel', 'Ext.Button', 'Ext.data.validator.*', 'Ext.field.InputMask'],
-function() {
+describe("Ext.form.field.Text", function() {
     var component;
     
     function makeComponent(config) {
@@ -124,126 +119,7 @@ function() {
         });
     });
 
-    describe("inputMask", function () {
-        it("should create an InputMask", function () {
-            makeComponent({
-                inputMask: '(999) 999-9999'
-            });
-            
-            expect(component.getInputMask().getPattern()).toBe('(999) 999-9999');
-        });
-
-        it("should add the mask on focus", function() {
-            makeComponent({
-                inputMask: '(999) 999-9999',
-                renderTo: document.body
-            });
-
-            jasmine.focusAndWait(component.inputEl);
-            
-            runs(function(){
-                expect(component.inputEl.dom.value).toBe('(___) ___-____');
-            });
-        });
-
-        it("should clear the field on blur", function () {
-            makeComponent({
-                inputMask: '(999) 999-9999',
-                renderTo: document.body
-            });
-
-            jasmine.focusAndWait(component.inputEl);
-            jasmine.blurAndWait(component);
-            
-            runs(function(){
-                expect(component.inputEl.dom.value).toBe('');
-            });
-        });
-
-        describe("paste", function() {
-            TODO(Ext.isIE8).
-            it("should format value", function() {
-                makeComponent({
-                    inputMask: '(999) 999-9999',
-                    enableKeyEvents: true,
-                    renderTo: document.body
-                });
-
-                jasmine.focusAndWait(component.inputEl);
-
-                var e = {
-                    browserEvent:{
-                        clipboardData: { 
-                            getData: function() {
-                                return '1234567890';
-                            }
-                        }
-                    },
-                    preventDefault: Ext.emptyFn
-                };
-
-                runs(function() {
-                    component.inputEl.fireEvent('paste', e);
-                    expect(component.inputEl.dom.value).toBe('(123) 456-7890');
-                });
-            });
-
-            TODO(Ext.isIE8).
-            it("should not change a formatted value", function() {
-                makeComponent({
-                    inputMask: '(999) 999-9999',
-                    enableKeyEvents: true,
-                    renderTo: document.body
-                });
-
-                jasmine.focusAndWait(component.inputEl);
-
-                var e = {
-                    browserEvent:{
-                        clipboardData: { 
-                            getData: function() {
-                                return '(123) 456-7890';
-                            }
-                        }
-                    },
-                    preventDefault: Ext.emptyFn
-                };
-
-                runs(function() {
-                    component.inputEl.fireEvent('paste', e);
-                    expect(component.inputEl.dom.value).toBe('(123) 456-7890');
-                });
-            });
-
-            it("should not format invalid values", function() {
-                makeComponent({
-                    inputMask: '(999) 999-9999',
-                    enableKeyEvents: true,
-                    renderTo: document.body
-                });
-
-                jasmine.focusAndWait(component.inputEl);
-
-                var e = {
-                    browserEvent:{
-                        clipboardData: { 
-                            getData: function() {
-                                return 'abcd';
-                            }
-                        }
-                    },
-                    preventDefault: Ext.emptyFn
-                };
-
-                runs(function() {
-                    component.inputEl.fireEvent('paste', e);
-                    expect(component.inputEl.dom.value).toBe('(___) ___-____');
-                });
-            });
-        });
-    });
-
-    it("should encode the input value in the template", function() {
+    it("should encode the input value in the template", function(){
         makeComponent({
             renderTo: Ext.getBody(),
             value: 'test "  <br/> test'
@@ -259,19 +135,6 @@ function() {
         expect(component.getValue()).toBe('100');
     });
 
-    it("should be able to set a value in the render event", function() {
-        makeComponent({
-            renderTo: Ext.getBody(),
-            listeners: {
-                render: function(c) {
-                    c.setValue('foo');
-                }
-            }
-        });
-        expect(component.getValue()).toBe('foo');
-        expect(component.inputEl.dom.value).toBe('foo');
-    });
-
     describe("rendering", function() {
         // NOTE this doesn't yet test the main label, error icon, etc. just the parts specific to Text.
         describe('should work', function () {
@@ -282,15 +145,11 @@ function() {
                 });
             });
 
-            afterEach(function() {
-                component.destroy();
-            });
-
-            describe("afterSubEl", function () {
-                it("should exist", function () {
+            describe('afterSubEl', function () {
+                it('should exist', function () {
                     expect(component.afterSubEl.dom.tagName.toUpperCase()).toBe('H1');
                 });
-                it("should have proper id", function () {
+                it('should have proper id', function () {
                     expect(component.afterSubEl.id).toBe(component.id + '-afterSubEl');
                 });
             });
@@ -361,130 +220,31 @@ function() {
                 });
             });
 
-            describe("sizing", function() {
-                var panel, fields, createPanel = function(cfg) {
-                    panel = Ext.create('Ext.panel.Panel',Ext.apply({
-                        width: 300,
-                        defaults: {
-                            margin: '0 0 20'
-                        },
-                        items: [{
-                            xtype: 'textfield',
-                            fieldLabel: 'label'
-                        }, {
-                            xtype: 'textfield',
-                            fieldLabel: 'this is a really really really really long label'
-                        }, {
-                            xtype: 'textfield',
-                            fieldLabel: 'heighted',
-                            height: 200
-                        }, {
-                            xtype: 'textfield',
-                            fieldLabel: 'flexed with really long label sflkdj skl fkdlsfj dlskjf klds j',
-                            flex: 1
-                        }],
-                        renderTo: document.body
-                    }, cfg));
-
-                    fields = panel.items.getRange();
-                },
-                diff = Ext.isIE8 ? 2 : 0;
-
-                afterEach(function() {
-                    panel.destroy();
-                    panel = fields = null;
+            xdescribe("sizing", function(){
+                it("should have the size property affect size when shrink wrapping", function(){
+                    var width = component.getWidth();
+                    component.destroy();
+                    makeComponent({
+                        size: 20,
+                        renderTo: Ext.getBody()
+                    });
+                    expect(component.getWidth()).toBeGreaterThan(width);
+                    component.destroy();
+                    makeComponent({
+                        size: 5,
+                        renderTo: Ext.getBody()
+                    });
+                    expect(component.getWidth()).toBeLessThan(width);
                 });
 
-                describe("layout auto", function() {
-                    beforeEach(function() {
-                        createPanel();
+                it("should give preference to a calculated/configured width", function(){
+                    component.destroy();
+                    makeComponent({
+                        size: 12,
+                        width: 500,
+                        renderTo: Ext.getBody()
                     });
-
-                    it("should not expand the fields height when the label causes a line break", function() {
-                        expect(fields[0].inputWrap.getHeight()).toBeGreaterThan(0);
-                        expect(fields[1].inputWrap.getHeight()).toBe(fields[0].inputWrap.getHeight());
-                    });
-
-                    it("should respect the configured height", function() {
-                        expect(fields[2].inputWrap.getHeight()).toBe(200 + diff);
-                        // it should not flex the height
-                        expect(fields[3].inputWrap.getHeight()).toBe(fields[0].inputWrap.getHeight());
-                    });
-
-                    it("should contain the heighted cls only when height is configured", function() {
-                        expect(fields[0].hasCls(Ext.baseCSSPrefix + 'form-text-heighted')).toBe(false);
-                        expect(fields[2].hasCls(Ext.baseCSSPrefix + 'form-text-heighted')).toBe(true);
-                        // Flex should be ignored with Layout auto
-                        expect(fields[3].hasCls(Ext.baseCSSPrefix + 'form-text-heighted')).toBe(false);
-                    });
-                });
-
-                describe("layout vbox", function() {
-                    describe("non-heighted", function() {
-                        beforeEach(function() {
-                            createPanel({
-                                layout: 'vbox'
-                            });
-                        });
-
-                        it("should not expand the fields height when the label causes a line break", function() {
-                            expect(fields[0].inputWrap.getHeight()).toBeGreaterThan(0);
-                            expect(fields[1].inputWrap.getHeight()).toBe(fields[0].inputWrap.getHeight());
-                        });
-
-                        it("should respect the configured height", function() {
-                            expect(fields[2].inputWrap.getHeight()).toBe(200 + diff);
-                            // it should not flex the height
-                            expect(fields[3].inputWrap.getHeight()).toBe(fields[0].inputWrap.getHeight());
-                        });
-
-                        it("should contain the heighted cls only when height is configured", function() {
-                            expect(fields[0].hasCls(Ext.baseCSSPrefix + 'form-text-heighted')).toBe(false);
-                            expect(fields[2].hasCls(Ext.baseCSSPrefix + 'form-text-heighted')).toBe(true);
-                            // Flex should be ignored with Layout auto
-                            expect(fields[3].hasCls(Ext.baseCSSPrefix + 'form-text-heighted')).toBe(false);
-                        });
-                    });
-
-                    describe("heighted", function() {
-                        beforeEach(function() {
-                            createPanel({
-                                layout: 'vbox',
-                                minHeight: 500
-                            });
-                        });
-
-                        it("should not expand the fields height when the label causes a line break", function() {
-                            expect(fields[0].inputWrap.getHeight()).toBeGreaterThan(0);
-                            expect(fields[1].inputWrap.getHeight()).toBe(fields[0].inputWrap.getHeight());
-                        });
-
-                        TODO(Ext.isIE8).
-                        it("should respect the configured height", function() {
-                            var margins = 80 - diff,
-                                innerCt = panel.el.down('[data-ref=innerCt]'); // 20px for each field
-
-                            expect(fields[2].inputWrap.getHeight()).toBe(200 + diff);
-                            
-                            if (Ext.isIE8) {
-                                waitsFor(function() {
-                                    return fields[3].inputWrap.getHeight() > 100;
-                                }, 'layout to run', 100);
-                            }
-
-                            runs(function() {
-                                expect(fields[3].inputWrap.getHeight() - diff).toBe(innerCt.getHeight() - fields[0].getHeight() - fields[1].getHeight() - fields[2].getHeight() - margins);
-                            });
-                            
-                        });
-
-                        it("should contain the heighted cls only when height is configured", function() {
-                            expect(fields[0].hasCls(Ext.baseCSSPrefix + 'form-text-heighted')).toBe(false);
-                            expect(fields[2].hasCls(Ext.baseCSSPrefix + 'form-text-heighted')).toBe(true);
-                            expect(fields[3].hasCls(Ext.baseCSSPrefix + 'form-text-heighted')).toBe(true);
-                        });
-                    });
-                    
+                    expect(component.getWidth()).toBe(500);
                 });
             });
         });
@@ -936,15 +696,6 @@ function() {
                 expect(component.inputEl).toHaveCls(component.emptyCls);
             });
 
-            it("should be able to use \" in the emptyText", function() {
-                makeComponent({
-                    emptyText: 'Please type "foo" here!',
-                    renderTo: Ext.getBody()
-                });
-
-                expect(component.inputEl.dom.placeholder).toBe('Please type "foo" here!');
-            });
-
             it("should be able to be added with setEmptyText", function() {
                 makeComponent({
                     renderTo: Ext.getBody()
@@ -1006,17 +757,6 @@ function() {
                 it("should set placeholder label text to the emptyText", function() {
                     expect(label.getHtml()).toBe('empty');
                     expect(component.inputEl.dom.value).toBe('');
-                });
-
-                it("should be able to use \" in the emptyText", function() {
-                    component.destroy();
-
-                    makeComponent({
-                        emptyText: 'Please type "foo" here!',
-                        renderTo: Ext.getBody()
-                    });
-
-                    expect(component.placeholderLabel.getHtml()).toBe('Please type "foo" here!');
                 });
 
                 it("should add the emptyCls to the inputEl", function() {
@@ -1573,9 +1313,10 @@ function() {
     describe("selectText method", function() {
         // utility to get the begin and end of the selection range across browsers
         function getSelectedText() {
-            var selection = component.getTextSelection();
-
-            return component.inputEl.dom.value.substring(selection[0], selection[1]);
+            var el = component.inputEl.dom;
+            return el.setSelectionRange ?
+                   el.value.substring(el.selectionStart, el.selectionEnd) : //Standard
+                   document.selection.createRange().text; //IE<9
         }
 
         beforeEach(function() {
@@ -1585,32 +1326,17 @@ function() {
         it("should select the entire value by default", function() {
             component.setValue('field value');
             component.selectText();
-            if (Ext.isIE) {
-                waits(10);
-            }
-            runs(function() {
-                expect(getSelectedText()).toEqual('field value');
-            });
+            expect(getSelectedText()).toEqual('field value');
         });
         it("should select from the 'start' argument", function() {
             component.setValue('field value');
             component.selectText(3);
-            if (Ext.isIE) {
-                waits(10);
-            }
-            runs(function() {
-                expect(getSelectedText()).toEqual('ld value');
-            });
+            expect(getSelectedText()).toEqual('ld value');
         });
         it("should select to the 'end' argument", function() {
             component.setValue('field value');
             component.selectText(3, 8);
-            if (Ext.isIE) {
-                waits(10);
-            }
-            runs(function() {
-                expect(getSelectedText()).toEqual('ld va');
-            });
+            expect(getSelectedText()).toEqual('ld va');
         });
     });
 
@@ -1803,7 +1529,7 @@ function() {
             runs(function() {
                 expect(called).toBe(false);
             });
-        });
+        })    
     });
 
     describe('getSubmitData', function() {
@@ -1965,10 +1691,7 @@ function() {
                 });
 
                 describe("for invalid fields", function() {
-                    var V = Ext.data.validator;
-                    function getMessage(T) {
-                        return T.prototype.config.message;
-                    }
+                    var Val = Ext.data.validator.Validator.all;
 
                     it('should report description too short', function () {
                         var item = panel.child('#description');
@@ -2025,7 +1748,7 @@ function() {
 
                         expect(scheduler.passes).toBe(1);
                         expect(errors.length).toBe(1);
-                        expect(errors[0]).toBe(getMessage(V.Format));
+                        expect(errors[0]).toBe(Val.format.config.message);
 
                         // Now make the field valid and see if our binding is notified.
                         var rec = session.getRecord('User', 42);
@@ -2048,7 +1771,7 @@ function() {
 
                         expect(scheduler.passes).toBe(1);
                         expect(errors.length).toBe(1);
-                        expect(errors[0]).toBe(getMessage(V.Inclusion));
+                        expect(errors[0]).toBe(Val.inclusion.config.message);
 
                         // Now make the field valid and see if our binding is notified.
                         var rec = session.getRecord('User', 42);
@@ -2071,7 +1794,7 @@ function() {
 
                         expect(scheduler.passes).toBe(1);
                         expect(errors.length).toBe(1);
-                        expect(errors[0]).toBe(getMessage(V.Exclusion));
+                        expect(errors[0]).toBe(Val.exclusion.config.message);
 
                         // Now make the field valid and see if our binding is notified.
                         var rec = session.getRecord('User', 42);
@@ -2094,7 +1817,7 @@ function() {
 
                         expect(scheduler.passes).toBe(1);
                         expect(errors.length).toBe(1);
-                        expect(errors[0]).toBe(getMessage(V.Email));
+                        expect(errors[0]).toBe(Val.email.config.message);
 
                         // Now make the field valid and see if our binding is notified.
                         var rec = session.getRecord('User', 42);
@@ -2522,16 +2245,15 @@ function() {
 
         function getExpectedWidth() {
             var inputEl = component.inputEl,
-                textMeasure = inputEl.getTextWidth(inputEl.dom.value),
+                textMeasure = inputEl.getTextWidth(inputEl.dom.value + component.growAppend),
                 borders = component.inputWrap.getBorderWidth('lr') + component.triggerWrap.getBorderWidth('lr'),
-                inputElPadding = inputEl.getPadding('lr'),
                 triggerWidth = 0;
 
             Ext.Object.each(component.getTriggers(), function(key, trigger) {
                 triggerWidth += trigger.el.getWidth();
             });
 
-            return textMeasure + borders + triggerWidth + inputElPadding;
+            return textMeasure + borders + triggerWidth;
         }
 
         it("should start out at growMin", function() {
@@ -2551,7 +2273,6 @@ function() {
                 grow: true,
                 growMin: 50
             });
-
             expect(component.getWidth()).toBe(getExpectedWidth());
         });
 
@@ -3483,22 +3204,9 @@ function() {
                 jasmine.fireMouseEvent(component.inputEl, 'mouseup');
 
                 indices = getTextSelectionIndices(component.inputEl.dom);
-                // start and end of selection should be the same since selectOnFocus: false
-                expect(indices[0]).toBe(indices[1]);
-            });
-
-            it("should not select text onFocus when selectOnFocus: false", function () {
-                var indices;
-
-                create(false);
-
-                jasmine.focusAndWait(component);
-
-                runs(function() {
-                    indices = getTextSelectionIndices(component.inputEl.dom);
-                    // start and end of selection should be the same since selectOnFocus: false
-                    expect(indices[0]).toBe(indices[1]);
-                });
+                // start and end of selection should be 0 since selectOnFocus: false
+                expect(indices[0]).toBe(0);
+                expect(indices[1]).toBe(0);
             });
 
             it("should select text when selectOnFocus: true", function () {
@@ -3506,18 +3214,13 @@ function() {
 
                 create(true);
 
-                jasmine.focusAndWait(component);
+                jasmine.fireMouseEvent(component.inputEl, 'mousedown');
+                jasmine.fireMouseEvent(component.inputEl, 'mouseup');
 
-                if (Ext.isIE) {
-                    waits(10);
-                }
-
-                runs(function() {
-                    indices = getTextSelectionIndices(component.inputEl.dom);
-                    // end of selection should be 3 since selectOnFocus: true
-                    expect(indices[0]).toBe(0);
-                    expect(indices[1]).toBe(3);
-                });
+                indices = getTextSelectionIndices(component.inputEl.dom);
+                // end of selection should be 3 since selectOnFocus: true
+                expect(indices[0]).toBe(0);
+                expect(indices[1]).toBe(3);              
             });
         });
     });

@@ -10,25 +10,20 @@
  * using {@link #getSelection}.
  */
 Ext.define('Ext.toolbar.Breadcrumb', {
-    extend: 'Ext.container.Container',
+    extend: 'Ext.Container',
     xtype: 'breadcrumb',
     requires: [
         'Ext.data.TreeStore',
         'Ext.button.Split'
     ],
+    
+    mixins: [
+        'Ext.util.FocusableContainer'
+    ],
 
     isBreadcrumb: true,
-    
-    /**
-     * @cfg baseCls
-     * @inheritdoc
-     */
     baseCls: Ext.baseCSSPrefix + 'breadcrumb',
 
-    /**
-     * @cfg layout
-     * @inheritdoc
-     */
     layout: {
         type: 'hbox',
         align: 'middle'
@@ -36,21 +31,21 @@ Ext.define('Ext.toolbar.Breadcrumb', {
 
     config: {
         /**
-         * @cfg {String} buttonUI
+         * @cfg {String} [buttonUI='plain-toolbar']
          * Button UI to use for breadcrumb items.  Use {@link #extjs-breadcrumb-ui} to
          * add special styling to the breadcrumb arrows
          */
         buttonUI: 'plain-toolbar',
 
         /**
-         * @cfg {String} displayField
+         * @cfg {String}
          * The name of the field in the data model to display in the navigation items of
          * this breadcrumb toolbar
          */
         displayField: 'text',
 
         /**
-         * @cfg {String} overflowHandler
+         * @cfg {String} [overflowHandler=null]
          * The overflowHandler for this Breadcrumb:
          *
          * - `null` - hidden overflow
@@ -60,7 +55,7 @@ Ext.define('Ext.toolbar.Breadcrumb', {
         overflowHandler: null,
 
         /**
-         * @cfg {Boolean} showIcons
+         * @cfg {Boolean} [showIcons=null]
          *
          * Controls whether or not icons of tree nodes are displayed in the breadcrumb
          * buttons.  There are 3 possible values for this config:
@@ -79,7 +74,7 @@ Ext.define('Ext.toolbar.Breadcrumb', {
         showIcons: null,
 
         /**
-         * @cfg {Boolean} showMenuIcons
+         * @cfg {Boolean} [showMenuIcons=null]
          *
          * Controls whether or not icons of tree nodes are displayed in the breadcrumb
          * menu items. There are 3 possible values for this config:
@@ -104,7 +99,7 @@ Ext.define('Ext.toolbar.Breadcrumb', {
         store: null,
 
         /**
-         * @cfg {Boolean} useSplitButtons
+         * @cfg {Boolean} [useSplitButtons=true]
          * `false` to use regular {@link Ext.button.Button Button}s instead of {@link
          * Ext.button.Split Split Buttons}.  When `true`, a click on the body of a button
          * will navigate to the specified node, and a click on the arrow will show a menu
@@ -123,28 +118,13 @@ Ext.define('Ext.toolbar.Breadcrumb', {
         selection: 'root'
     },
 
-    /**
-     * @cfg publishes
-     * @inheritdoc
-     */
     publishes: ['selection'],
-    
-    /**
-     * @cfg twoWayBindable
-     * @inheritdoc
-     */
     twoWayBindable: ['selection'],
 
     _breadcrumbCls: Ext.baseCSSPrefix + 'breadcrumb',
     _btnCls: Ext.baseCSSPrefix + 'breadcrumb-btn',
     _folderIconCls: Ext.baseCSSPrefix + 'breadcrumb-icon-folder',
     _leafIconCls: Ext.baseCSSPrefix + 'breadcrumb-icon-leaf',
-    
-    /**
-     * @cfg focusableContainer
-     * @inheritdoc
-     */
-    focusableContainer: true,
 
     initComponent: function() {
         var me = this,
@@ -265,8 +245,7 @@ Ext.define('Ext.toolbar.Breadcrumb', {
                         isCrumb: true,
                         xtype: me.getUseSplitButtons() ? 'splitbutton' : 'button',
                         ui: me.getButtonUI(),
-                        componentCls: me._btnCls + ' ' + me._btnCls + '-' + me.ui,
-                        separateArrowStyling: false,
+                        cls: me._btnCls + ' ' + me._btnCls + '-' + me.ui,
                         text: text,
                         showEmptyMenu: true,
                         // begin with an empty menu - items are populated on beforeshow

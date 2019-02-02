@@ -1,4 +1,4 @@
-topSuite("Ext.app.domain.Component", ['Ext.menu.Menu'], function() {
+describe("Ext.app.domain.Component", function() {
     var panel, ctrl;
     
     beforeEach(function() {

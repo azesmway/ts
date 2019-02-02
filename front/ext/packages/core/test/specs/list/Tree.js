@@ -1,4 +1,5 @@
-topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
+describe("Ext.list.Tree", function() {
+
     var root, list, store, sampleData;
 
     var Model = Ext.define(null, {
@@ -64,10 +65,6 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                 text: 'Item 4.3',
                 leaf: true
             }]
-        }, {
-            id: 'i5',
-            text: 'Item 5',
-            leaf: true
         }];
     });
 
@@ -117,12 +114,8 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                         model: Model
                     }
                 }, true);
-                
-                // Make sure the store gets destroyed
-                store = list.getStore();
-                
-                expect(store.$className).toBe('Ext.data.TreeStore');
-                expect(store.getStoreId()).toBe('storeWithId');
+                expect(list.getStore().$className).toBe('Ext.data.TreeStore');
+                expect(list.getStore().getStoreId()).toBe('storeWithId');
             });
 
             it("should accept a store config with a type", function() {
@@ -138,12 +131,8 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                         model: Model
                     }
                 }, true);
-                
-                // Ditto
-                store = list.getStore();
-                
-                expect(store.$className).toBe('spec.CustomTreeStore');
-                expect(store.getStoreId()).toBe('storeWithId');
+                expect(list.getStore().$className).toBe('spec.CustomTreeStore');
+                expect(list.getStore().getStoreId()).toBe('storeWithId');
 
                 Ext.undefine('spec.CustomTreeStore');
             });
@@ -180,11 +169,8 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                         storeId: 'storeWithId',
                         model: Model
                     });
-
-                    store = list.getStore();
-                
-                    expect(store.$className).toBe('Ext.data.TreeStore');
-                    expect(store.getStoreId()).toBe('storeWithId');
+                    expect(list.getStore().$className).toBe('Ext.data.TreeStore');
+                    expect(list.getStore().getStoreId()).toBe('storeWithId');
                 });
 
                 it("should accept a store config with a type", function() {
@@ -198,11 +184,8 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                         storeId: 'storeWithId',
                         model: Model
                     });
-
-                    store = list.getStore();
-                
-                    expect(store.$className).toBe('spec.CustomTreeStore');
-                    expect(store.getStoreId()).toBe('storeWithId');
+                    expect(list.getStore().$className).toBe('spec.CustomTreeStore');
+                    expect(list.getStore().getStoreId()).toBe('storeWithId');
 
                     Ext.undefine('spec.CustomTreeStore');
                 });
@@ -251,9 +234,6 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                     expect(list.getStore().$className).toBe('Ext.data.TreeStore');
                     expect(list.getStore().getStoreId()).toBe('storeWithId');
                     expect(getListeners()).toEqual(listeners);
-                    
-                    // Stores with ID are not destroyed automatically
-                    list.getStore().destroy();
                 });
 
                 it("should accept a store config with a type and unbind old store listeners", function() {
@@ -270,8 +250,7 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                     expect(list.getStore().$className).toBe('spec.CustomTreeStore');
                     expect(list.getStore().getStoreId()).toBe('storeWithId');
                     expect(getListeners()).toEqual(listeners);
-                    
-                    list.getStore().destroy();
+
                     Ext.undefine('spec.CustomTreeStore');
                 });
 
@@ -337,7 +316,7 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
     // Because the item class is expected to be subclassed, there's not much point testing
     // the UI portion default class here. This is why these tests seem a little abstract.
     describe("items", function() {
-        var insertSpy, removeSpy, expandSpy, collapseSpy;
+        var insertSpy, removeSpy, expandSpy, collapseSpy, hasFirst;
 
         function makeCustomList(cfg, noStore) {
             makeList(Ext.merge({
@@ -353,126 +332,118 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                 itemcollapse: collapseSpy
             });
         }
-        
-        beforeAll(function() {
-            // We create this first to prevent the inconsistency with the way configs behave
-            // when using cached: true. After the first instance, the behaviour will remain the same
-            Ext.define('spec.treelist.CustomItem', {
-                extend: 'Ext.list.AbstractTreeItem',
-
-                xtype: 'spec_treelist_customitem',
-
-                config: {
-                    testConfig: null,
-                    floated: false
-                },
-
-                constructor: function(config) {
-                    this.$noClearOnDestroy = (this.$noClearOnDestroy || {});
-                    this.$noClearOnDestroy.logs = true;
-                    
-                    this.logs = {
-                        expandable: [],
-                        expanded: [],
-                        iconCls: [],
-                        leaf: [],
-                        loading: [],
-                        text: [],
-
-                        onNodeCollapse: [],
-                        onNodeExpand: [],
-                        onNodeInsert: [],
-                        onNodeRemove: [],
-                        onNodeUpdate: [],
-
-                        insertItem: [],
-                        removeItem: []
-                    };
-                    this.callParent([config]);
-                },
-                
-                doDestroy: function() {
-                    if (this.toolElement) {
-                        this.toolElement.destroy();
-                    }
-                    
-                    this.callParent();
-                },
-
-                getToolElement: function() {
-                    if (!this.toolElement) {
-                        this.toolElement = this.element.createChild();
-                    }   
-                    return this.toolElement;
-                },
-
-                insertItem: function(item, refItem) {
-                    this.logs.insertItem.push([item, refItem]);
-                },  
-
-                removeItem: function(item) {
-                    this.logs.removeItem.push(item);
-                },
-
-                nodeCollapse: function(node) {
-                    this.logs.onNodeCollapse.push(node);
-                    this.callParent(arguments);
-                },
-
-                nodeExpand: function(node) {
-                    this.logs.onNodeExpand.push(node);
-                    this.callParent(arguments);
-                },
-
-                nodeInsert: function(node, refNode) {
-                    this.logs.onNodeInsert.push([node, refNode]);
-                    this.callParent(arguments);
-                },
-
-                nodeRemove: function(node) {
-                    this.logs.onNodeRemove.push(node);
-                    this.callParent(arguments);
-                },
-
-                nodeUpdate: function(node, modifiedFieldNames) {
-                    this.logs.onNodeUpdate.push([node, modifiedFieldNames]);
-                    this.callParent(arguments);
-                },
-
-                updateExpandable: function(expandable) {
-                    this.logs.expandable.push(expandable);
-                },
-
-                updateExpanded: function(expanded) {
-                    this.logs.expanded.push(expanded);
-                },
-
-                updateIconCls: function(iconCls) {
-                    this.logs.iconCls.push(iconCls);
-                },
-
-                updateLeaf: function(leaf) {
-                    this.logs.leaf.push(leaf);
-                },
-
-                updateLoading: function(loading) {
-                    this.logs.loading.push(loading);
-                },
-
-                updateText: function(text) {
-                    this.logs.text.push(text);
-                }
-            });
-            
-            var temp = new spec.treelist.CustomItem();
-            temp.destroy();
-        });
 
         beforeEach(function() {
             insertSpy = jasmine.createSpy();
             removeSpy = jasmine.createSpy();
             expandSpy = jasmine.createSpy();
             collapseSpy = jasmine.createSpy();
+
+            // We create this first to prevent the inconsistency with the way configs behave
+            // when using cached: true. After the first instance, the behaviour will remain the same
+            if (!hasFirst) {
+                Ext.define('spec.treelist.CustomItem', {
+                    extend: 'Ext.list.AbstractTreeItem',
+
+                    xtype: 'spec_treelist_customitem',
+
+                    config: {
+                        testConfig: null,
+                        floated: false
+                    },
+
+                    constructor: function(config) {
+                        this.$noClearOnDestroy = (this.$noClearOnDestroy || {});
+                        this.$noClearOnDestroy.logs = true;
+                        
+                        this.logs = {
+                            expandable: [],
+                            expanded: [],
+                            iconCls: [],
+                            leaf: [],
+                            loading: [],
+                            text: [],
+
+                            onNodeCollapse: [],
+                            onNodeExpand: [],
+                            onNodeInsert: [],
+                            onNodeRemove: [],
+                            onNodeUpdate: [],
+
+                            insertItem: [],
+                            removeItem: []
+                        };
+                        this.callParent([config]);
+                    },
+
+                    getToolElement: function() {
+                        if (!this.toolElement) {
+                            this.toolElement = this.element.createChild();
+                        }   
+                        return this.toolElement;
+                    },
+
+                    insertItem: function(item, refItem) {
+                        this.logs.insertItem.push([item, refItem]);
+                    },  
+
+                    removeItem: function(item) {
+                        this.logs.removeItem.push(item);
+                    },
+
+                    nodeCollapse: function(node) {
+                        this.logs.onNodeCollapse.push(node);
+                        this.callParent(arguments);
+                    },
+
+                    nodeExpand: function(node) {
+                        this.logs.onNodeExpand.push(node);
+                        this.callParent(arguments);
+                    },
+
+                    nodeInsert: function(node, refNode) {
+                        this.logs.onNodeInsert.push([node, refNode]);
+                        this.callParent(arguments);
+                    },
+
+                    nodeRemove: function(node) {
+                        this.logs.onNodeRemove.push(node);
+                        this.callParent(arguments);
+                    },
+
+                    nodeUpdate: function(node, modifiedFieldNames) {
+                        this.logs.onNodeUpdate.push([node, modifiedFieldNames]);
+                        this.callParent(arguments);
+                    },
+
+                    updateExpandable: function(expandable) {
+                        this.logs.expandable.push(expandable);
+                    },
+
+                    updateExpanded: function(expanded) {
+                        this.logs.expanded.push(expanded);
+                    },
+
+                    updateIconCls: function(iconCls) {
+                        this.logs.iconCls.push(iconCls);
+                    },
+
+                    updateLeaf: function(leaf) {
+                        this.logs.leaf.push(leaf);
+                    },
+
+                    updateLoading: function(loading) {
+                        this.logs.loading.push(loading);
+                    },
+
+                    updateText: function(text) {
+                        this.logs.text.push(text);
+                    }
+                });
+                var temp = new spec.treelist.CustomItem();
+                hasFirst = true;
+                temp.destroy();
+            }
         });
 
         afterEach(function() {
@@ -1904,7 +1875,7 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                         // We can test the DOM here because root is a special subclass
                         it("should insert the item at the end", function() {
                             var item = getItem('i9');
-                            expect(item.el.prev()).toBe(getItem('i5').el);
+                            expect(item.el.prev()).toBe(getItem('i4').el);
                         });
 
                         describe("events", function() {
@@ -3943,8 +3914,8 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                             id: 'foo'
                         });
                         var toolNodes = list.toolsElement.dom.childNodes;
-                        expect(toolNodes.length).toBe(6);
-                        expect(toolNodes[5]).toBe(getItem('foo').getToolElement().dom);
+                        expect(toolNodes.length).toBe(5);
+                        expect(toolNodes[4]).toBe(getItem('foo').getToolElement().dom);
                     });
 
                     it("should handle insertion", function() {
@@ -3954,14 +3925,14 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
 
                         var toolNodes = list.toolsElement.dom.childNodes;
 
-                        expect(toolNodes.length).toBe(6);
+                        expect(toolNodes.length).toBe(5);
                         expect(toolNodes[0]).toBe(getItem('foo').getToolElement().dom);
 
                         store.getRoot().insertChild(2, {
                             id: 'foo'
                         });
 
-                        expect(toolNodes.length).toBe(7);
+                        expect(toolNodes.length).toBe(6);
                         expect(toolNodes[2]).toBe(getItem('foo').getToolElement().dom);
                     });
 
@@ -3970,12 +3941,11 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                         root.removeChild(root.getChildAt(1));
 
                         var toolNodes = list.toolsElement.dom.childNodes;
-                        expect(toolNodes.length).toBe(4);
+                        expect(toolNodes.length).toBe(3);
 
                         expect(toolNodes[0]).toBe(getItem('i1').getToolElement().dom);
                         expect(toolNodes[1]).toBe(getItem('i3').getToolElement().dom);
                         expect(toolNodes[2]).toBe(getItem('i4').getToolElement().dom);
-                        expect(toolNodes[3]).toBe(getItem('i5').getToolElement().dom);
                     });
                 });
             });
@@ -3994,7 +3964,6 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                     makeList({
                         micro: true
                     });
-                    Ext.event.publisher.Dom.instance.reset();
                 });
 
                 it("should have the microCls", function() {
@@ -4006,7 +3975,7 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                 });
 
                 // https://sencha.jira.com/browse/EXTJS-20210
-                if (!jasmine.supportsTouch) {
+                if (!Ext.supports.Touch) {
                     it('should hide the icon on float', function() {
                         var rec0 = store.getAt(0),
                             item0 = list.getItem(rec0);
@@ -4073,66 +4042,6 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
                     expect(list.toolsElement.isVisible()).toBe(true);
                 });
             });
-        });
-
-        describe('menu', function () {
-            beforeEach(function() {
-                makeList({
-                    micro: true
-                });
-            });
-
-            function makeShowMenuSpecs (event) {
-                describe(event, function () {
-                    var isClick = event === 'click';
-
-                    it('should show menu of items', function () {
-                        var node = byId('i1'),
-                            item = list.getItem(node);
-
-                        jasmine.fireMouseEvent(item.toolElement, event);
-
-                        expect(list.activeFloater).toBe(item);
-                        expect(item.getFloated()).toBe(true);
-                    });
-
-                    it('should ' + (isClick ? 'not ' : '') + 'show menu for leaf node', function () {
-                        var node = byId('i5'),
-                            item = list.getItem(node);
-
-                        jasmine.fireMouseEvent(item.toolElement, event);
-
-                        if (isClick) {
-                            expect(list.activeFloater).toBeFalsy();
-                            expect(item.getFloated()).toBeFalsy();
-                        } else {
-                            expect(list.activeFloater).toBeTruthy();
-                            expect(item.getFloated()).toBe(true);
-                        }
-                    });
-
-                    if (isClick) {
-                        // only click event can prevent floating leaf items
-                        it('should show menu for leaf node', function () {
-                            var node = byId('i5'),
-                                item = list.getItem(node);
-
-                            list.setFloatLeafItems(true);
-
-                            jasmine.fireMouseEvent(item.toolElement, event);
-
-                            expect(list.activeFloater).toBeTruthy();
-                            expect(item.getFloated()).toBe(true);
-                        });
-                    }
-                });
-            }
-
-            makeShowMenuSpecs('click');
-
-            if (!jasmine.supportsTouch) {
-                makeShowMenuSpecs('mouseover');
-            }
         });
     });
 
@@ -4580,37 +4489,6 @@ topSuite("Ext.list.Tree", ['Ext.data.TreeStore'], function() {
         it("should unbind the store", function() {
             list.destroy();
             expect(list._store).toBeNull();
-        });
-    });
-
-    describe('selection', function () {
-        beforeEach(function() {
-            makeList({
-                selection: 'i11'
-            });
-        });
-
-        it('should select leaf node', function () {
-            var node = byId('i11'),
-                item = list.getItem(node);
-
-            expect(item.getSelected()).toBe(true);
-            expect(node.parentNode.isExpanded()).toBe(true);
-        });
-
-        it('should collapse parent of selected leaf', function () {
-            var node = byId('i11'),
-                parentNode = node.parentNode,
-                item = list.getItem(node),
-                parentItem = list.getItem(parentNode),
-                el = parentItem.expanderElement.dom;
-
-            expect(item.getSelected()).toBe(true);
-            expect(parentNode.isExpanded()).toBe(true);
-
-            jasmine.fireMouseEvent(el, 'click');
-
-            expect(parentNode.isExpanded()).toBe(false);
         });
     });
 

@@ -77,7 +77,7 @@ Ext.define('Ext.grid.selection.SelectionExtender', {
 
         // If we've done a "select all rows" and there is buffered rendering, then
         // the cells might not be rendered, so we can't activate the replicator.
-        if (firstPos && lastPos && firstPos.getCell(true) && lastPos.getCell(true)) {
+        if (firstPos && lastPos && firstPos.getCell() && lastPos.getCell()) {
             if (me.curPos) {
                 me.curPos.setPosition(lastPos);
             } else {
@@ -93,8 +93,8 @@ Ext.define('Ext.grid.selection.SelectionExtender', {
 
     alignHandle: function() {
         var me = this,
-            firstCell = me.firstPos && me.firstPos.getCell(true),
-            lastCell = me.lastPos && me.lastPos.getCell(true);
+            firstCell = me.firstPos && me.firstPos.getCell(),
+            lastCell = me.lastPos && me.lastPos.getCell();
 
         // Cell corresponding to the position might not be rendered.
         // This will be called upon scroll
@@ -246,8 +246,7 @@ Ext.define('Ext.grid.selection.SelectionExtender', {
             firstPos = me.firstPos.clone(),
             lastPos = me.lastPos.clone(),
             extensionStart = me.firstPos.clone(),
-            extensionEnd = me.lastPos.clone(),
-            preventReduce = !me.allowReduceSelection;
+            extensionEnd = me.lastPos.clone();
 
         // Constrain cell positions to be within rendered range.
         firstPos.setRow(Math.min(Math.max(firstPos.rowIdx, rows.startIndex), rows.endIndex));
@@ -279,6 +278,7 @@ Ext.define('Ext.grid.selection.SelectionExtender', {
             maskBox.width = selRegion.right - selRegion.left;
             maskBox.height = selRegion.top - overCell.getY();
         }
+
         // Dragged below selection
         else if (curPos.rowIdx > me.lastPos.rowIdx && me.extendY) {
             me.extensionDescriptor = {
@@ -293,26 +293,11 @@ Ext.define('Ext.grid.selection.SelectionExtender', {
             maskBox.y = selRegion.bottom;
             maskBox.width = selRegion.right - selRegion.left;
             maskBox.height = overCell.getRegion().bottom - selRegion.bottom;
-        } 
-        // reducing Y selection dragged from the bottom
-        else if (!preventReduce && curPos.rowIdx < me.lastPos.rowIdx && me.extendY && curPos.colIdx === me.lastPos.colIdx) {
-            me.extensionDescriptor = {
-                type: 'rows',
-                start: extensionStart.setRow(me.firstPos.rowIdx),
-                end: extensionEnd.setRow(curPos.rowIdx),
-                rows: -1,
-                mousePosition: me.lastXY,
-                reduce: true
-            };
-            me.mask.dom.style.borderTopWidth = '0';
-            maskBox.x = selRegion.x;
-            maskBox.y = selRegion.top;
-            maskBox.width = selRegion.right - selRegion.left;
-            maskBox.height = overCell.getRegion().bottom - selRegion.top;
         }
 
         // row position is within selected row range
         else {
+
             // Dragged to left of selection
             if (curPos.colIdx < me.firstPos.colIdx && me.extendX) {
                 me.extensionDescriptor = {
@@ -325,9 +310,10 @@ Ext.define('Ext.grid.selection.SelectionExtender', {
                 me.mask.dom.style.borderRightWidth = '0';
                 maskBox.x = overCell.getX();
                 maskBox.y = selRegion.top;
-                maskBox.width = selRegion.left - overCell.getRegion().left;
+                maskBox.width = selRegion.left - overCell.getX();
                 maskBox.height = selRegion.bottom - selRegion.top;
             }
+
             // Dragged to right of selection
             else if (curPos.colIdx > me.lastPos.colIdx && me.extendX) {
                 me.extensionDescriptor = {
@@ -341,22 +327,6 @@ Ext.define('Ext.grid.selection.SelectionExtender', {
                 maskBox.x = selRegion.right;
                 maskBox.y = selRegion.top;
                 maskBox.width = overCell.getRegion().right - selRegion.right;
-                maskBox.height = selRegion.bottom - selRegion.top;
-            } 
-            // reducing X selection dragged from the right
-            else if (!preventReduce && curPos.colIdx < me.lastPos.colIdx && me.extendX) {
-                me.extensionDescriptor = {
-                    type: 'columns',
-                    start: extensionStart.setColumn(me.firstPos.colIdx),
-                    end: extensionEnd.setColumn(curPos.colIdx),
-                    columns: -1,
-                    mousePosition: me.lastXY,
-                    reduce: true
-                };
-                me.mask.dom.style.borderLeftWidth = '0';
-                maskBox.x = selRegion.left;
-                maskBox.y = selRegion.top;
-                maskBox.width = overCell.getRegion().right - selRegion.left;
                 maskBox.height = selRegion.bottom - selRegion.top;
             } else {
                 me.extensionDescriptor = null;

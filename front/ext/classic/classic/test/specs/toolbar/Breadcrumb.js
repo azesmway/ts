@@ -1,4 +1,4 @@
-topSuite("Ext.toolbar.Breadcrumb", ['Ext.app.ViewModel'], function() {
+describe('Ext.toolbar.Breadcrumb', function() {
     var store, breadcrumbBar, treeData;
 
     function createBreadcrumbBar(config) {

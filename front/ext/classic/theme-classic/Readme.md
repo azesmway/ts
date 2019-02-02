@@ -1,4 +1,2 @@
-# theme-classic 
-
-The classic blue Ext JS theme.
+# theme-classic - Read Me
 

@@ -176,102 +176,20 @@ Ext.define('Ext.data.reader.Reader', {
 
     config: {
         /**
-         * @cfg {String/Function} [groupRootProperty]
-         * Name of the property from which to retrieve remote grouping summary information.
-         * There should be an item for each group.
-         *
-         * The remote summary data should be parseable as a {@link #model} used by this reader.
-         */
-        groupRootProperty: '',
-
-        /**
-        * @cfg {Boolean} [implicitIncludes]
-        * True to automatically parse models nested within other models in a response object. See the
-        * Ext.data.reader.Reader intro docs for full explanation.
+        * @cfg {String} [totalProperty]
+        * Name of the property from which to retrieve the total number of records in the dataset. This is only needed if
+        * the whole dataset is not passed in one go, but is being paged from the remote server.
         */
-        implicitIncludes: true,
+        totalProperty: 'total',
 
         /**
-         * @cfg {Boolean} [keepRawData] Determines if the Reader will keep raw data
-         * received from the server in the {@link #rawData} property.
-         *
-         * While this might seem useful to do additional data processing, keeping raw data
-         * might cause adverse effects such as memory leaks. It is recommended to set
-         * `keepRawData` to `false` if you do not need the raw data.
-         *
-         * If you need to process data packet to extract additional data such as row summaries,
-         * it is recommended to use {@link #transform} function for that purpose.
-         *
-         * Note that starting with Ext JS 6.0 the default behavior has been changed to
-         * **not** keep the raw data because of the high potential for memory leaks.
-         * @since 5.1.1
-         */
-        keepRawData: null,
-
-        /**
-        * @cfg {String/Function} messageProperty
-        * The name of the property which contains a response message for exception handling. If you want to return a false success
-        * response from the server, maybe due to some server-side validation, the messageProperty can hold the error message. For
-        * example:
-        *
-        *     {
-        *         "success": false,
-        *         "error": "There was an error with your request"
-        *     }
-        *
-        * You can retrieve this error message in a callback when loading a {@link Ext.data.Store Store} or {@link Ext.data.Model Model} like:
-        *
-        *     var store = new Ext.data.Store({
-        *         fields : ['foo'],
-        *         proxy  : {
-        *             type   : 'ajax',
-        *             url    : 'data.json',
-        *             reader : {
-        *                 type            : 'json',
-        *                 rootProperty    : 'data',
-        *                 messageProperty : 'error'
-        *             }
-        *         }
-        *     });
-        *
-        *     store.load({
-        *         callback: function(records, operation, success) {
-        *             if (success) {
-        *                 // ...
-        *             } else {
-        *                 var error = operation.getError();
-        *
-        *                 Ext.Msg.alert('Error', error);
-        *             }
-        *         }
-        *     });
-        *
-        * In this example, the callback will execute with `success` being `false` and will therefore show the {@link Ext.MessageBox#alert Ext.Msg.alert} with
-        * the error string returned in the response.
+        * @cfg {String} [successProperty]
+        * Name of the property from which to retrieve the `success` attribute, the value of which indicates
+        * whether a given request succeeded or failed (typically a boolean or 'true'|'false'). See
+        * {@link Ext.data.proxy.Server}.{@link Ext.data.proxy.Server#exception exception} for additional information.
         */
-       messageProperty: '',
-
-        /**
-         * @cfg {String/Ext.data.Model} [model]
-         * The model to use for this reader. This config is only required if the reader is being used
-         * without a proxy, otherwise the proxy will automatically set the model.
-         */
-        model: null,
-
-        /**
-         * @cfg {Ext.data.proxy.Proxy} [proxy]
-         * The proxy attached to this reader. Typically only needed onMetaChange so that
-         * we can set the new model on the proxy.
-         * @private
-         */
-        proxy: null,
-    
-        /**
-        * @cfg {Boolean} [readRecordsOnFailure]
-        * True to extract the records from a data packet even if the {@link #successProperty} returns false.
-        */
-        readRecordsOnFailure: true,
-
+        successProperty: 'success',
+       
         /**
          * @cfg {String/Function} rootProperty
          * The property that contains data items corresponding to the 
@@ -374,30 +292,102 @@ Ext.define('Ext.data.reader.Reader', {
          *     });
          */
          rootProperty: '',
-
+    
         /**
-        * @cfg {String} [successProperty]
-        * Name of the property from which to retrieve the `success` attribute, the value of which indicates
-        * whether a given request succeeded or failed (typically a boolean or 'true'|'false'). See
-        * {@link Ext.data.proxy.Server}.{@link Ext.data.proxy.Server#exception exception} for additional information.
+        * @cfg {String} messageProperty
+        * The name of the property which contains a response message for exception handling. If you want to return a false success
+        * response from the server, maybe due to some server-side validation, the messageProperty can hold the error message. For
+        * example:
+        *
+        *     {
+        *         "success": false,
+        *         "error": "There was an error with your request"
+        *     }
+        *
+        * You can retrieve this error message in a callback when loading a {@link Ext.data.Store Store} or {@link Ext.data.Model Model} like:
+        *
+        *     var store = new Ext.data.Store({
+        *         fields : ['foo'],
+        *         proxy  : {
+        *             type   : 'ajax',
+        *             url    : 'data.json',
+        *             reader : {
+        *                 type            : 'json',
+        *                 rootProperty    : 'data',
+        *                 messageProperty : 'error'
+        *             }
+        *         }
+        *     });
+        *
+        *     store.load({
+        *         callback: function(records, operation, success) {
+        *             if (success) {
+        *                 // ...
+        *             } else {
+        *                 var error = operation.getError();
+        *
+        *                 Ext.Msg.alert('Error', error);
+        *             }
+        *         }
+        *     });
+        *
+        * In this example, the callback will execute with `success` being `false` and will therefore show the {@link Ext.MessageBox#alert Ext.Msg.alert} with
+        * the error string returned in the response.
         */
-        successProperty: 'success',
+       messageProperty: '',
 
+       /**
+        * @cfg {String} [typeProperty]
+        * The name of the property in a node raw data block which indicates the type of the model to be created from that raw data. Useful for heterogeneous trees.
+        *
+        * For example, hierarchical geographical data may look like this:
+        *
+        *     {
+        *         nodeType: 'Territory',
+        *         name: 'EMEA',
+        *         children: [{
+        *             nodeType: 'Country',
+        *             name: 'United Kingdon',
+        *             children: [{
+        *                 nodeType: 'City',
+        *                 name: 'London'
+        *             }]
+        *         }]
+        *     }
+        *
+        * You would configure the typeProperty in this case to be `"nodeType"` which would cause the models named "Territory", "Country" and "City" to
+        * be used.
+        */
+       typeProperty: '',
+    
         /**
-         * @cfg {String/Function} [summaryRootProperty]
-         * Name of the property from which to retrieve remote summary information.
-         *
-         * The remote summary data should be parseable as a {@link #model} used by this reader.
+        * @cfg {Boolean} [implicitIncludes]
+        * True to automatically parse models nested within other models in a response object. See the
+        * Ext.data.reader.Reader intro docs for full explanation.
+        */
+        implicitIncludes: true,
+    
+        /**
+        * @cfg {Boolean} [readRecordsOnFailure]
+        * True to extract the records from a data packet even if the {@link #successProperty} returns false.
+        */
+        readRecordsOnFailure: true,
+        
+        /**
+         * @cfg {String/Ext.data.Model} [model]
+         * The model to use for this reader. This config is only required if the reader is being used
+         * without a proxy, otherwise the proxy will automatically set the model.
          */
-        summaryRootProperty: '',
-
+        model: null,
+        
         /**
-        * @cfg {String} [totalProperty]
-        * Name of the property from which to retrieve the total number of records in the dataset. This is only needed if
-        * the whole dataset is not passed in one go, but is being paged from the remote server.
-        */
-        totalProperty: 'total',
-
+         * @cfg {Ext.data.proxy.Proxy} [proxy]
+         * The proxy attached to this reader. Typically only needed onMetaChange so that
+         * we can set the new model on the proxy.
+         * @private
+         */
+        proxy: null,
+        
         /**
          * @cfg {Function|String|Object} [transform]
          * If a transform function is set, it will be invoked just before {@link #readRecords} executes.
@@ -428,30 +418,23 @@ Ext.define('Ext.data.reader.Reader', {
          *
          */ 
         transform: null,
-
-       /**
-        * @cfg {String} [typeProperty]
-        * The name of the property in a node raw data block which indicates the type of the model to be created from that raw data. Useful for heterogeneous trees.
-        *
-        * For example, hierarchical geographical data may look like this:
-        *
-        *     {
-        *         nodeType: 'Territory',
-        *         name: 'EMEA',
-        *         children: [{
-        *             nodeType: 'Country',
-        *             name: 'United Kingdon',
-        *             children: [{
-        *                 nodeType: 'City',
-        *                 name: 'London'
-        *             }]
-        *         }]
-        *     }
-        *
-        * You would configure the typeProperty in this case to be `"nodeType"` which would cause the models named "Territory", "Country" and "City" to
-        * be used.
-        */
-       typeProperty: ''
+        
+        /**
+         * @cfg {Boolean} [keepRawData] Determines if the Reader will keep raw data
+         * received from the server in the {@link #rawData} property.
+         *
+         * While this might seem useful to do additional data processing, keeping raw data
+         * might cause adverse effects such as memory leaks. It is recommended to set
+         * `keepRawData` to `false` if you do not need the raw data.
+         *
+         * If you need to process data packet to extract additional data such as row summaries,
+         * it is recommended to use {@link #transform} function for that purpose.
+         *
+         * Note that starting with Ext JS 6.0 the default behavior has been changed to
+         * **not** keep the raw data because of the high potential for memory leaks.
+         * @since 5.1.1
+         */
+        keepRawData: null
     },
     
     /**
@@ -522,32 +505,10 @@ Ext.define('Ext.data.reader.Reader', {
         me.buildExtractors();
     },
     
-    forceBuildExtractors: function() {
-        if (!this.duringInit) {
-            this.buildExtractors(true);
-        }
-    },
-
-    updateGroupRootProperty: function() {
-        this.forceBuildExtractors();
-    },
-    
-    updateMessageProperty: function() {
-        this.forceBuildExtractors();    
-    },
-
     applyModel: function (model) {
         return Ext.data.schema.Schema.lookupEntity(model);
     },
-
-    updateSuccessProperty: function() {
-        this.forceBuildExtractors();
-    },
     
-    updateTotalProperty: function() {
-        this.forceBuildExtractors();    
-    },
-
     applyTransform: function(transform) {
         if (transform) {
             if (Ext.isFunction(transform)) {
@@ -561,6 +522,24 @@ Ext.define('Ext.data.reader.Reader', {
         }
         
         return transform;
+    },
+    
+    forceBuildExtractors: function() {
+        if (!this.duringInit) {
+            this.buildExtractors(true);
+        }
+    },
+    
+    updateTotalProperty: function() {
+        this.forceBuildExtractors();    
+    },
+    
+    updateMessageProperty: function() {
+        this.forceBuildExtractors();    
+    },
+    
+    updateSuccessProperty: function() {
+        this.forceBuildExtractors();
     },
 
     /**
@@ -577,11 +556,9 @@ Ext.define('Ext.data.reader.Reader', {
         var data, result, responseText;
 
         if (response) {
-            responseText = response.responseText;
-            
-            if (response.responseType || responseText) {
+            responseText = response.responseText
+            if (responseText) {
                 result = this.getResponseData(response);
-                
                 if (result && result.__$isError) {
                     return new Ext.data.ResultSet({
                         total  : 0,
@@ -590,12 +567,10 @@ Ext.define('Ext.data.reader.Reader', {
                         success: false,
                         message: result.msg
                     });
-                }
-                else {
+                } else {
                     data = this.readRecords(result, readOptions);
                 }
-            }
-            else if (responseText !== '') {
+            } else if (responseText !== '') {
                 data = this.readRecords(response, readOptions);
             }
         }
@@ -633,17 +608,21 @@ Ext.define('Ext.data.reader.Reader', {
      * processing should not be needed.
      * @param {Object} data The raw data object
      * @param {Object} [readOptions] See {@link #read} for details.
-     * @param {Object} [internalReadOptions] (private)
      * @return {Ext.data.ResultSet} A ResultSet object
      */
-    readRecords: function(data, readOptions, internalReadOptions) {
+    readRecords: function(data, readOptions, /* private */ internalReadOptions) {
         var me = this,
             recordsOnly = internalReadOptions && internalReadOptions.recordsOnly,
             asRoot = internalReadOptions && internalReadOptions.asRoot,
-            groupData = null,
-            summaryData = null,
-            success, recordCount, records, root, remoteTotal,
-            total, value, message, transform, meta, summaryOptions;
+            success,
+            recordCount,
+            records,
+            root,
+            total,
+            value,
+            message,
+            transform,
+            meta;
 
         // Extract the metadata to return with the ResultSet.
         // If found reconfigure accordingly.
@@ -691,60 +670,31 @@ Ext.define('Ext.data.reader.Reader', {
             // If we pass an array as the data, we don't use getRoot on the data.
             // Instead the root equals to the data.
             root = (asRoot || Ext.isArray(data)) ? data : me.getRoot(data);
-
+            
             if (root) {
                 total = root.length;
             }
 
-            if (me.getTotalProperty()) {
+          if (me.getTotalProperty()) {
                 value = parseInt(me.getTotal(data), 10);
                 if (!isNaN(value)) {
-                    remoteTotal = total = value;
+                    total = value;
                 }
             }
 
-            if (root) {
+           if (root) {
                 records = me.extractData(root, readOptions);
                 recordCount = records.length;
-            }
-
-            if (me.getGroupRootProperty()) {
-                root = me.getGroupRoot(data);
-                if (root) {
-                    summaryOptions = {
-                        includes: false,
-                        model: me.getModel().getSummaryModel()
-                    };
-                    groupData = me.extractData(root, summaryOptions) || null;
-                }
-            }
-
-            if (me.getSummaryRootProperty()) {
-                root = me.getSummaryRoot(data);
-                if (root) {
-                    summaryOptions = summaryOptions || {
-                        includes: false,
-                        model: me.getModel().getSummaryModel()
-                    };
-                    summaryData = me.extractData(root, summaryOptions) || null;
-                    // This always returns an array, so transform it
-                    if (summaryData) {
-                        summaryData = summaryData[0];
-                    }
-                }
             }
         }
 
         return recordsOnly ? records : new Ext.data.ResultSet({
-            total: total || recordCount,
-            remoteTotal: remoteTotal,
-            metadata: meta,
-            count: recordCount,
-            records: records,
-            success: success,
-            message: message,
-            groupData: groupData,
-            summaryData: summaryData
+            total    : total || recordCount,
+            metadata : meta,
+            count    : recordCount,
+            records  : records,
+            success  : success,
+            message  : message
         });
     },
 
@@ -764,8 +714,8 @@ Ext.define('Ext.data.reader.Reader', {
         var me = this,
             entityType = readOptions && readOptions.model ? Ext.data.schema.Schema.lookupEntity(readOptions.model) : me.getModel(),
             schema = entityType.schema,
-            includes = readOptions && 'includes' in readOptions ? readOptions.includes : schema.hasAssociations(entityType) && me.getImplicitIncludes(),
-            fieldExtractorInfo = me.getFieldExtractorInfo(entityType),
+            includes = schema.hasAssociations(entityType) && me.getImplicitIncludes(),
+            fieldExtractorInfo = me.getFieldExtractorInfo(entityType.fieldExtractors),
             length = root.length,
             records = new Array(length),
             typeProperty = me.getTypeProperty(),
@@ -795,7 +745,7 @@ Ext.define('Ext.data.reader.Reader', {
 
                     record = reader.extractRecord(node, readOptions, nodeType,
                                 schema.hasAssociations(nodeType) && reader.getImplicitIncludes(),
-                                reader.getFieldExtractorInfo(nodeType));
+                                reader.getFieldExtractorInfo(nodeType.fieldExtractors));
                 } else {
                     record = me.extractRecord(node, readOptions, entityType, includes,
                                               fieldExtractorInfo);
@@ -836,7 +786,7 @@ Ext.define('Ext.data.reader.Reader', {
 
     extractRecordData: function(node, readOptions) {
         var entityType = readOptions && readOptions.model ? Ext.data.schema.Schema.lookupEntity(readOptions.model) : this.getModel(),
-            fieldExtractorInfo = this.getFieldExtractorInfo(entityType);
+            fieldExtractorInfo = this.getFieldExtractorInfo(entityType.fieldExtractors);
 
         return this.extractRecord(node, readOptions, entityType, false, fieldExtractorInfo);
     },
@@ -857,28 +807,26 @@ Ext.define('Ext.data.reader.Reader', {
         return record;
     },
     
-    getFieldExtractorInfo: function(entityType) {
-        var extractors = entityType.fieldExtractors,
-            type, extractor;
+    getFieldExtractorInfo: function(extractors) {
         // If the base Ext.data.Model class is being used, there will be no extractor info
         // The raw data block will be imported unchanged.
         if (!extractors) {
             return;
         }
 
-        type = this.$className;
-        extractor = extractors[type];
+        var type = this.$className,
+            extractor = extractors[type];
             
         // If we have no extractors, buildFieldExtractors will return null,
         // so we never need to rebuild them
         if (extractor === undefined) {
-            extractors[type] = extractor = this.buildFieldExtractors(entityType);
+            extractors[type] = extractor = this.buildFieldExtractors();
         }   
         return extractor;
     },
     
-    buildFieldExtractors: function(entityType) {
-        var fields = entityType.getFields(),
+    buildFieldExtractors: function() {
+        var fields = this.getFields(),
             len = fields.length,
             buffer = [],
             extractors = [],
@@ -892,7 +840,7 @@ Ext.define('Ext.data.reader.Reader', {
             if (extractor) {
                 name = field.name;
                 // Use [] property access since we may have non-JS looking field names
-                buffer.push('val = extractors[' + cnt + '](raw, self); if (val !== undefined) { data[\'' + name + '\'] = val; }');
+                buffer.push('val = extractors[' + cnt + '](raw); if (val !== undefined) { data[\'' + name + '\'] = val; }');
                 extractors.push(extractor);
                 ++cnt;
             }
@@ -901,17 +849,13 @@ Ext.define('Ext.data.reader.Reader', {
         if (buffer.length) {
             out = {
                 extractors: extractors,
-                fn: new Function('raw', 'data', 'extractors', 'self', 'var val;' + buffer.join('\n'))  
+                fn: new Function('raw', 'data', 'extractors', 'var val;' + buffer.join(''))  
             };
         }
         return out;
     },
     
     defaultRecordCreator: function (data, Model) {
-        return new Model(data);
-    },
-
-    defaultRecordCreatorFromServer: function (data, Model) {
         var record = new Model(data);
         // If the server did not include an id in the response data, the Model constructor will mark the record as phantom.
         // We  need to set phantom to false here because records created from a server response using a reader by definition are not phantom records.
@@ -930,7 +874,7 @@ Ext.define('Ext.data.reader.Reader', {
         // We may not have any mappings to process
         if (fieldExtractorInfo) {
             fn = fieldExtractorInfo.fn;
-            fn(raw, data, fieldExtractorInfo.extractors, this);
+            fn(raw, data, fieldExtractorInfo.extractors);
         }
         return data;
     },
@@ -956,6 +900,10 @@ Ext.define('Ext.data.reader.Reader', {
                 }
             }
         }
+    },
+    
+    getFields: function() {
+        return this.getModel().fields;
     },
 
     /**
@@ -1087,14 +1035,10 @@ Ext.define('Ext.data.reader.Reader', {
 
         if (typeof prop === 'string') {
             key = me.getAccessorKey(prop);
-            if (key) {
-                ret = cache.get(key);
-            }
+            ret = cache.get(key);
             if (!ret) {
                 ret = me.createAccessor(prop);
-                if (key) {
-                    cache.add(key, ret);
-                }
+                cache.add(key, ret);
             }
         } else {
             ret = me.createAccessor(prop);
@@ -1103,8 +1047,7 @@ Ext.define('Ext.data.reader.Reader', {
     },
 
     getAccessorKey: function(prop) {
-        var className = this.$className;
-        return className ? className + prop : '';
+        return this.$className + prop;
     },
     
     createAccessor: Ext.emptyFn,
@@ -1137,11 +1080,7 @@ Ext.define('Ext.data.reader.Reader', {
             me.setConfig(reader.getConfig());
             --me.duringInit;
             me.hasExtractors = true;
-        },
-
-        getGroupRoot: Ext.privateFn,
-
-        getSummaryRoot: Ext.privateFn
+        }
     }
 }, function(Cls) {
     var proto = Cls.prototype;

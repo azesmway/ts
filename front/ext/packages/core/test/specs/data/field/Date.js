@@ -1,4 +1,4 @@
-topSuite("Ext.data.field.Date", function() {
+describe("Ext.data.field.Date", function() {
     
     var field;
     

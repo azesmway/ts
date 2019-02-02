@@ -1,7 +1,3 @@
-/**
- * @class Ext.draw.ContainerBase
- * @private
- */
 Ext.define('Ext.draw.ContainerBase', {
     extend: 'Ext.Container',
 
@@ -10,11 +6,26 @@ Ext.define('Ext.draw.ContainerBase', {
         this.initAnimator();
     },
 
-    onResize: function (width, height, oldWidth, oldHeight) {
-        this.handleResize({
-            width: width,
-            height: height
-        }, true);
+    initialize: function () {
+        this.callParent();
+        this.element.on('resize', 'onResize', this);
+    },
+
+    onResize: function (element, size) {
+        this.handleResize(size);
+    },
+
+    getElementConfig: function () {
+        return {
+            reference: 'element',
+            className: 'x-container',
+            children: [
+                {
+                    reference: 'innerElement',
+                    className: 'x-inner'
+                }
+            ]
+        };
     },
 
     addElementListener: function() {
@@ -27,22 +38,22 @@ Ext.define('Ext.draw.ContainerBase', {
         el.un.apply(el, arguments);
     },
 
-    preview: function (image) {
-        var item;
-
-        image = image || this.getImage();
+    preview: function () {
+        var image = this.getImage(),
+            items;
 
         if (image.type === 'svg-markup') {
-            item = {
+            items = {
                 xtype: 'container',
                 html: image.data
             };
         } else {
-            item = {
+            items = {
                 xtype: 'image',
                 mode: 'img',
-                imageCls: '',
-                cls: Ext.baseCSSPrefix + 'chart-preview',
+                style: {
+                    overflow: 'hidden'
+                },
                 src: image.data
             };
         }
@@ -51,22 +62,15 @@ Ext.define('Ext.draw.ContainerBase', {
             xtype: 'panel',
             layout: 'fit',
             modal: true,
-            border: 1,
-            shadow: true,
             width: '90%',
             height: '90%',
             hideOnMaskTap: true,
             centered: true,
-            floated: true,
             scrollable: false,
-            closable: true,
-            // Use 'hide' so that hiding via close button/mask tap go through
-            // the same code path
-            closeAction: 'hide',
-            items: [item],
+            items: items,
             listeners: {
                 hide: function () {
-                    this.destroy();
+                    Ext.Viewport.remove(this);
                 }
             }
         }).show();

@@ -186,7 +186,7 @@ Ext.define('Ext.direct.Provider', {
     /**
      * Send the Ajax request
      *
-     * @param {Object} params Ajax request parameters
+     * @param {Object} Ajax request parameters
      *
      * @private
      */

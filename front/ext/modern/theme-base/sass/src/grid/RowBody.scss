@@ -1,5 +1,5 @@
 .#{$prefix}rowbody {
-    display: flex;
+    @include st-box;
 
     .#{$prefix}grid:not(.#{$prefix}has-rowexpander) & {
         .#{$prefix}spacer-el {

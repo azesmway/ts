@@ -78,26 +78,27 @@ Ext.define('Ext.picker.Time', {
      */
     increment: 15,
 
+    //<locale>
     /**
      * @cfg {String} [format=undefined]
      * The default time format string which can be overriden for localization support. The format must be valid
      * according to {@link Ext.Date#parse}.
      *
      * Defaults to `'g:i A'`, e.g., `'3:15 PM'`. For 24-hour time format try `'H:i'` instead.
-     * @locale
      */
-    format: "g:i A",
+    format : "g:i A",
+    //</locale>
 
     /**
+     * @private
      * The field in the implicitly-generated Model objects that gets displayed in the list. This is
      * an internal field name only and is not useful to change via config.
-     * @private
      */
     displayField: 'disp',
 
     /**
-     * Year, month, and day that all times will be normalized into internally.
      * @private
+     * Year, month, and day that all times will be normalized into internally.
      */
     initDate: [2008,0,1],
 
@@ -106,7 +107,7 @@ Ext.define('Ext.picker.Time', {
     alignOnScroll: false,
 
     /**
-     * @cfg loadMask
+     * @cfg
      * @private
      */
     loadMask: false,

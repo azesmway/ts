@@ -69,17 +69,10 @@ Ext.define('Ext.Media', {
         /**
          * @cfg {Boolean} enableControls
          * Set this to `false` to turn off the native media controls.
-         * @accessor
-         * @deprecated 6.5 Please use {@link #controls} instead.
-         */
-        enableControls: true,
-
-        /**
-         * @cfg {Boolean} controls
-         * Set this to `false` to turn off the native media controls.
+         * Defaults to `false` when you are on Android, as it doesn't support controls.
          * @accessor
          */
-        controls: true,
+        enableControls: Ext.os.is.Android ? false : true,
 
         /**
          * @cfg {Boolean} autoResume
@@ -131,20 +124,20 @@ Ext.define('Ext.Media', {
         muted: false
     },
 
-    constructor: function(config) {
+    constructor: function() {
         this.mediaEvents = {};
-        this.callParent([config]);
+        this.callParent(arguments);
     },
 
     initialize: function() {
         var me = this;
-
         me.callParent();
 
         me.on({
             scope: me,
-            show: 'onActivate',
-            hide: 'onDeactivate'
+
+            show  : me.onActivate,
+            hide: me.onDeactivate
         });
 
         me.addMediaListener({
@@ -248,18 +241,11 @@ Ext.define('Ext.Media', {
      * Updates the controls of the video element.
      */
     updateEnableControls: function(enableControls) {
-        this.setControls(enableControls);
-    },
-
-    updateControls: function (value) {
-        this.media.set({
-            controls: value ? 'controls' : undefined
-        });
+        this.media.dom.controls = enableControls ? 'controls' : false;
     },
 
     /**
      * Updates the loop setting of the media element.
-     * @param {Boolean} loop
      */
     updateLoop: function(loop) {
         this.media.dom.loop = loop ? 'loop' : false;
@@ -365,15 +351,5 @@ Ext.define('Ext.Media', {
         });
 
         me.callParent();
-    },
-
-    deprecated: {
-        '6.5': {
-            configs: {
-                enableControls: {
-                    message: 'Please use "controls" instead.'
-                }
-            }
-        }
     }
 });

@@ -1,4 +1,4 @@
-topSuite("Ext.form.field.File", function() {
+describe("Ext.form.field.File", function() {
     var field, makeField;
     
     beforeEach(function() {

@@ -1,4 +1,4 @@
-topSuite("Ext.data.proxy.JsonP", ['Ext.data.ArrayStore'], function() {
+describe("Ext.data.proxy.JsonP", function() {
    var proxy;
 
     beforeEach(function(){

@@ -1,28 +1,27 @@
 /**
- * This column type displays the record index of the record in the store.
+ * This column type displays the record index of the record in the store..
  */
 Ext.define('Ext.grid.cell.RowNumberer', {
-    extend: 'Ext.grid.cell.Number',
+    extend: 'Ext.grid.cell.Base',
     xtype: 'rownumberercell',
 
     classCls: Ext.baseCSSPrefix + 'rownumberercell',
 
-    /**
-     * @cfg {String} format
-     * A format string as used by {@link Ext.util.Format#number} to format values for
-     * this column.
-     */
-    format: '0,000',
+    updateRecord: function (record) {
+        var column = this.getColumn(),
+            store,
+            page,
+            result;
 
-    refreshValue: function (context) {
-        var row = context.row,
-            ret;
-
-        if (context.summary) {
-            ret = '\xA0';
-        } else {
-            ret = row ? row.$datasetIndex + 1 : null;
+        // Column will be null during destruction.
+        if (column) {
+            store = this.getColumn().grid.getStore();
+            page = store.currentPage;
+            result = store.indexOf(record);
+            if (page > 1) {
+                result += (page - 1) * store.pageSize;
+            }
+            this.innerElement.dom.textContent = result + 1;
         }
-        return ret;
     }
 });

@@ -101,7 +101,7 @@ Ext.define('Ext.data.request.Form', {
                 form.appendChild(hiddenItem);
                 hiddens.push(hiddenItem);
             },
-            hiddenItem, obj, value, name, vLen, v, hLen, h;
+            hiddenItem, obj, value, name, vLen, v, hLen, h, request;
 
         /*
          * Originally this behaviour was modified for Opera 10 to apply the secure URL after
@@ -116,7 +116,6 @@ Ext.define('Ext.data.request.Form', {
         });
 
         document.body.appendChild(frameDom);
-        document.body.appendChild(form);
 
         // This is required so that IE doesn't pop the response up in a new window.
         if (document.frames) {
@@ -160,7 +159,6 @@ Ext.define('Ext.data.request.Form', {
         });
 
         form.submit();
-        document.body.removeChild(form);
 
         // Restore form to previous settings
         Ext.fly(form).set(buf);
@@ -208,10 +206,7 @@ Ext.define('Ext.data.request.Form', {
         if (me.aborted || me.timedout) {
             me.result = response = me.createException();
             response.responseXML = null;
-            response.responseText = Ext.encode({
-                success: false,
-                message: Ext.String.trim(response.statusText)
-            });
+            response.responseText = '{success:false,message:"' + Ext.String.trim(response.statusText) + '"}';
            
             response.request = me;
             callback = options.failure;
@@ -273,10 +268,7 @@ Ext.define('Ext.data.request.Form', {
                 // Report any error in the message property
                 response.status = 400;
                 response.statusText = (e.message || e.description) + '';
-                response.responseText = Ext.encode({
-                    success: false,
-                    message: Ext.String.trim(response.statusText)
-                });
+                response.responseText = '{success:false,message:"' + Ext.String.trim(response.statusText) + '"}';
                 response.responseXML = null;
                 
                 callback = options.failure;

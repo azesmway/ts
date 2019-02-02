@@ -1,4 +1,4 @@
-topSuite("Ext.button.Split", function() {
+describe("Ext.button.Split", function() {
     var button;
     
     function makeButton(config) {

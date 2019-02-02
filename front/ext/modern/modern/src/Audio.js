@@ -19,7 +19,7 @@
  * This example shows the use of the {@link Ext.Audio} component in a fullscreen container--change 
  * the url: item for the location of an audio file--note that the audio starts on page load:
  *
- *     @example
+ *     @example preview
  *     Ext.create('Ext.Container', {
  *         fullscreen: true,
  *         layout: {
@@ -43,7 +43,7 @@
  * You can also set the {@link #hidden} configuration of the {@link Ext.Audio} component to true by default,
  * and then control the audio by using the {@link #method-play}, {@link #method-pause}, and {@link #toggle} methods:
  *
- *     @example
+ *     @example preview
  *     Ext.create('Ext.Container', {
  *         fullscreen: true,
  *         layout: {
@@ -75,7 +75,8 @@
  *                 ]
  *             },
  *             {
- *                 html: 'Hidden audio!'
+ *                 html: 'Hidden audio!',
+ *                 styleHtmlContent: true
  *             },
  *             {
  *                 xtype : 'audio',
@@ -91,7 +92,7 @@ Ext.define('Ext.Audio', {
 
     config: {
         /**
-         * @cfg cls
+         * @cfg
          * @inheritdoc
          */
         cls: Ext.baseCSSPrefix + 'audio'

@@ -1,4 +1,4 @@
-topSuite("Ext.chart.MarkerHolder", ['Ext.chart.*', 'Ext.data.ArrayStore'], function() {
+describe('Ext.chart.MarkerHolder', function () {
     describe('bindMarker', function () {
         it("should release the bound marker when the marker is destroyed", function () {
             var surface = new Ext.draw.Surface({}),
@@ -16,8 +16,8 @@ topSuite("Ext.chart.MarkerHolder", ['Ext.chart.*', 'Ext.data.ArrayStore'], funct
 
             surface.destroy();
 
-            expect(markerHolder.destroyed).toBe(true);
-            expect(template.destroyed).toBe(true);
+            expect(markerHolder.isDestroyed).toBe(true);
+            expect(template.isDestroyed).toBe(true);
         });
     });
 });

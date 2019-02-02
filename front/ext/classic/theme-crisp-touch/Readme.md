@@ -1,4 +1,2 @@
-# theme-crisp-touch
-
-Crisp-Based Touch Theme.
+# theme-crisp-touch - Read Me
 

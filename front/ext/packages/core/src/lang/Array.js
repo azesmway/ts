@@ -330,7 +330,7 @@ Ext.Array = (function() {
          *
          * {@link Ext#each Ext.each} is alias for {@link Ext.Array#each Ext.Array.each}
          *
-         * @param {Array/NodeList/Object} array The value to be iterated. If this
+         * @param {Array/NodeList/Object} iterable The value to be iterated. If this
          * argument is not iterable, the callback function is called once.
          * @param {Function} fn The callback function. If it returns `false`, the iteration
          * stops and this method returns the current `index`. Returning `undefined` (i.e 
@@ -342,9 +342,7 @@ Ext.Array = (function() {
          * @param {Boolean} fn.return Return `false` to stop iteration.
          * @param {Object} [scope] The scope (`this` reference) in which the specified function is executed.
          * @param {Boolean} [reverse=false] Reverse the iteration order (loop from the end to the beginning).
-         * @return {Boolean/Number} If all array entries were iterated, this will be `true. If
-         * iteration was halted early because the passed fuction returned `false`, this will
-         * be the index at which iteration was halted.
+         * @return {Boolean} See description for the `fn` parameter.
          */
         each: function(array, fn, scope, reverse) {
             array = ExtArray.from(array);
@@ -370,34 +368,6 @@ Ext.Array = (function() {
             return true;
         },
 
-        /*
-         * Calculates the the insertion index of a passed object into the passed Array according
-         * to the passed comparator function. Note that the passed Array *MUST* already be ordered.
-         * @param {Object} item The item to calculate the insertion index for.
-         * @param {Array} The array into which the item is to be inserted.
-         * @param {Function} comparatorFn The comparison function. Must return -1 or 0 or 1.
-         * @param {Object} comparatorFn.lhs The left object to compare.
-         * @param {Object} comparatorFn.rhs The right object to compare.
-         * @param {Number} index The possible correct index to try first before a binary
-         * search is instigated.
-         */
-        findInsertionIndex: function(item, items, comparatorFn, index) {
-            var len = items.length,
-                beforeCheck, afterCheck;
-
-            comparatorFn = comparatorFn || ExtArray.lexicalCompare;
-
-            if (index < len) {
-                beforeCheck = index > 0 ? comparatorFn(items[index - 1], item) : 0;
-                afterCheck = index < len - 1 ? comparatorFn(item, items[index]) : 0;
-                if (beforeCheck < 1 && afterCheck < 1) {
-                    return index;
-                }
-            }
-
-            return ExtArray.binarySearch(items, item, comparatorFn);
-        },
-
         /**
          * @method
          * Iterates an array and invoke the given callback function for each item. Note that this will simply
@@ -414,7 +384,7 @@ Ext.Array = (function() {
          * specified function is executed.
          */
         forEach: ('forEach' in arrayPrototype) ? function(array, fn, scope) {
-            array.forEach(fn, scope);
+            return array.forEach(fn, scope);
         } : function(array, fn, scope) {
             for (var i = 0, ln = array.length; i < ln; i++) {
                 fn.call(scope, array[i], i, array);
@@ -589,7 +559,7 @@ Ext.Array = (function() {
          * @param {Number} fn.index Index of the item.
          * @param {Array} fn.array The whole array that's being iterated.
          * @param {Object} scope Callback function scope.
-         * @return {Boolean} `true` if no false value is returned by the callback function.
+         * @return {Boolean} `treu` if no false value is returned by the callback function.
          */
         every: ('every' in arrayPrototype) ? function(array, fn, scope) {
             //<debug>
@@ -1278,33 +1248,27 @@ Ext.Array = (function() {
          *
          *      // map = { A: 1, B: 2, C: 3 };
          * 
-         * @param {String/String[]} strings The strings from which to create the map.
+         * @param {Array} array The Array to create the map from.
          * @param {String/Function} [getKey] Name of the object property to use
          * as a key or a function to extract the key.
          * @param {Object} [scope] Value of `this` inside callback specified for `getKey`.
          * @return {Object} The resulting map.
          */
-        toMap: function (strings, getKey, scope) {
-            if (!strings) {
-                return null;
-            }
-
+        toMap: function(array, getKey, scope) {
             var map = {},
-                i = strings.length;
+                i = array.length;
 
-            if (typeof strings === 'string') {
-                map[strings] = 1;
-            } else if (!getKey) {
+            if (!getKey) {
                 while (i--) {
-                    map[strings[i]] = i+1;
+                    map[array[i]] = i+1;
                 }
             } else if (typeof getKey === 'string') {
                 while (i--) {
-                    map[strings[i][getKey]] = i+1;
+                    map[array[i][getKey]] = i+1;
                 }
             } else {
                 while (i--) {
-                    map[getKey.call(scope, strings[i])] = i+1;
+                    map[getKey.call(scope, array[i])] = i+1;
                 }
             }
 
@@ -1481,23 +1445,22 @@ Ext.Array = (function() {
          * be an Array, in which case all the elements of that Array will be pushed into the end of the
          * destination Array.
          * @return {Array} An array containing all the new items push onto the end.
+         *
          */
         push: function(target) {
-            var args = arguments,
-                len = args.length,
-                i, newItem;
+            var len = arguments.length,
+                i = 1,
+                newItem;
 
             if (target === undefined) {
                 target = [];
             } else if (!Ext.isArray(target)) {
                 target = [target];
             }
-
-            for (i = 1; i < len; i++) {
-                newItem = args[i];
+            for (; i < len; i++) {
+                newItem = arguments[i];
                 Array.prototype.push[Ext.isIterable(newItem) ? 'apply' : 'call'](target, newItem);
             }
-
             return target;
         },
         

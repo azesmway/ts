@@ -1,6 +1,7 @@
 /**
  * Used in the {@link Ext.tab.Bar} component. This shouldn't be used directly, instead use
  * {@link Ext.tab.Bar} or {@link Ext.tab.Panel}.
+ * @private
  */
 Ext.define('Ext.tab.Tab', {
     extend: 'Ext.Button',
@@ -14,49 +15,52 @@ Ext.define('Ext.tab.Tab', {
 
     config: {
         /**
-         * @cfg {Boolean}
+         * @cfg baseCls
+         * @inheritdoc
+         */
+        baseCls: Ext.baseCSSPrefix + 'tab',
+
+        /**
+         * @cfg {String} pressedCls
+         * The CSS class to be applied to a Tab when it is pressed.
+         * Providing your own CSS for this class enables you to customize the pressed state.
+         * @accessor
+         */
+        pressedCls: Ext.baseCSSPrefix + 'tab-pressed',
+
+        /**
+         * @cfg {String} activeCls
+         * The CSS class to be applied to a Tab when it is active.
+         * Providing your own CSS for this class enables you to customize the active state.
+         * @accessor
+         */
+        activeCls: Ext.baseCSSPrefix + 'tab-active',
+
+        /**
+         * @cfg {Boolean} active
          * Set this to `true` to have the tab be active by default.
+         * @accessor
          */
-        active: null,
+        active: false,
 
         /**
-         * @cfg {String}
+         * @cfg {String} title
          * The title of the card that this tab is bound to.
+         * @accessor
          */
-        title: null,
-
-        /**
-         * @cfg {Boolean} [closable=false]
-         * True to make the Tab closable and display the close icon
-         */
-        closable: null
+        title: '&nbsp;'
     },
 
-    pressedDelay: true,
+    updateIconCls : function(newCls, oldCls) {
+        this.callParent([newCls, oldCls]);
 
-    classCls: Ext.baseCSSPrefix + 'tab',
-    activeCls: Ext.baseCSSPrefix + 'active',
-    closableCls: Ext.baseCSSPrefix + 'closable',
+        if (oldCls) {
+            this.removeCls('x-tab-icon');
+        }
 
-    getTemplate: function() {
-        var template = this.callParent();
-
-        template.push({
-            reference: 'activeIndicatorElement',
-            cls: Ext.baseCSSPrefix + 'active-indicator-el'
-        }, {
-            reference: 'closeIconElement',
-            cls: Ext.baseCSSPrefix + 'close-icon-el ' + Ext.baseCSSPrefix + 'font-icon ' + Ext.baseCSSPrefix + 'no-ripple' ,
-            listeners: {
-                click: 'onClick'
-            }
-        });
-
-        return template;
-    },
-
-    shouldRipple: function() {
-        return this.getRipple();
+        if (newCls) {
+            this.addCls('x-tab-icon');
+        }
     },
 
     /**
@@ -71,55 +75,20 @@ Ext.define('Ext.tab.Tab', {
      * @param {Ext.tab.Tab} this
      */
 
-    onClick: function(e) {
-        var me = this,
-            tabBar = me.tabBar;
-
-        if (e.currentTarget === me.closeIconElement.dom) {
-            if (tabBar && !me.getDisabled()) {
-                tabBar.closeTab(me);
-            }
-
-            e.stopPropagation();
-        } else {
-            return me.callParent([e]);
-        }
-    },
-
     updateTitle: function(title) {
         this.setText(title);
     },
 
     updateActive: function(active, oldActive) {
-        var me = this,
-            el = me.el,
-            activeCls = me.activeCls;
-
+        var activeCls = this.getActiveCls();
         if (active && !oldActive) {
-            el.addCls(activeCls);
-            me.fireEvent('activate', me);
+            this.element.addCls(activeCls);
+            this.fireEvent('activate', this);
         } else if (oldActive) {
-            el.removeCls(activeCls);
-            me.fireEvent('deactivate', me);
+            this.element.removeCls(activeCls);
+            this.fireEvent('deactivate', this);
         }
-    },
-
-    updateClosable: function(closable) {
-        this.toggleCls(this.closableCls, !!closable);
-    },
-
-    onAdded: function (parent, instanced) {
-        this.callParent([parent, instanced]);
-
-        this.tabBar = parent.isTabBar ? parent : null;
-    },
-
-    onRemoved: function (destroying) {
-        this.callParent([destroying]);
-
-        this.tabBar = null;
     }
-    
 }, function() {
     this.override({
         activate: function() {

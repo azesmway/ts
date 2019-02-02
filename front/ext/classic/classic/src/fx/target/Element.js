@@ -14,13 +14,6 @@ Ext.define('Ext.fx.target.Element', {
     /* End Definitions */
 
     type: 'element',
-    
-    constructor: function(target) {
-        this.callParent([target]);
-
-        // Allow simple local left/top style setting for top level absolute positioned elements.
-        this.isAbsoluteOnPage = this.target.dom.parentNode === document.body && this.target.isStyle('position', 'absolute');
-    },
 
     getElVal: function(el, attr, val) {
         if (val === undefined) {
@@ -68,17 +61,9 @@ Ext.define('Ext.fx.target.Element', {
     
     setElVal: function(element, attr, value){
         if (attr === 'x') {
-            if (this.isAbsoluteOnPage) {
-                element.setLocalX(value);
-            } else {
-                element.setXY([value, null]);
-            }
+            element.setX(value);
         } else if (attr === 'y') {
-            if (this.isAbsoluteOnPage) {
-                element.setLocalY(value);
-            } else {
-                element.setXY([null, value]);
-            }
+            element.setY(value);
         } else if (attr === 'scrollTop') {
             element.scrollTo('top', value);
         } else if (attr === 'scrollLeft') {

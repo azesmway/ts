@@ -1,5 +1,5 @@
-topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
-    var field, fieldpanel;
+describe('Ext.field.Radio', function() {
+    var field, fieldset;
 
     function makeField(cfg) {
         field = new Ext.field.Radio(cfg);
@@ -10,16 +10,16 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
             f.name = 'group';
         });
 
-        fieldpanel = new Ext.field.Panel({
+        fieldset = new Ext.form.FieldSet({
             defaultType: 'radiofield',
             items: fields
         });
 
-        fieldpanel.render(Ext.getBody());
+        fieldset.renderTo(Ext.getBody());
     }
 
     afterEach(function() {
-        fieldpanel = field = Ext.destroy(field, fieldpanel);
+        fieldset = field = Ext.destroy(field, fieldset);
     });
 
     describe("getGroupValue", function() {
@@ -31,7 +31,7 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                 value: 'blue'
             }]);
 
-            var fields = fieldpanel.query('radiofield');
+            var fields = fieldset.query('radiofield');
             fields.forEach(function(f) {
                 expect(f.getGroupValue()).toBe('blue');
             });
@@ -45,9 +45,9 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                 value: 'blue'
             }]);
 
-            fieldpanel.items.first().check();
+            fieldset.items.first().check();
 
-            var fields = fieldpanel.query('radiofield');
+            var fields = fieldset.query('radiofield');
             fields.forEach(function(f) {
                 expect(f.getGroupValue()).toBe('red');
             });
@@ -60,7 +60,7 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                 value: 'blue'
             }]);
 
-            var fields = fieldpanel.query('radiofield');
+            var fields = fieldset.query('radiofield');
             fields.forEach(function(f) {
                 expect(f.getGroupValue()).toBeNull();
             });
@@ -73,7 +73,7 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                 i;
 
             for (i = 0; i < len; ++i) {
-                expect(fieldpanel.getAt(i).getChecked()).toBe(states[i]);
+                expect(fieldset.getAt(i).getChecked()).toBe(states[i]);
             }
         }
 
@@ -111,13 +111,13 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                 value: 'green'
             }]);
 
-            fieldpanel.getAt(0).check();
+            fieldset.getAt(0).check();
             expectChecked([true, false, false]);
 
-            fieldpanel.getAt(1).check();
+            fieldset.getAt(1).check();
             expectChecked([false, true, false]);
 
-            fieldpanel.getAt(2).check();
+            fieldset.getAt(2).check();
             expectChecked([false, false, true]);
         });
 
@@ -131,7 +131,7 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                 value: 'green'
             }]);
 
-            fieldpanel.getAt(0).uncheck();
+            fieldset.getAt(0).uncheck();
             expectChecked([false, false, false]);
         });
     });
@@ -147,11 +147,11 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                 value: 'blue'
             }]);
 
-            var f = fieldpanel.getAt(1);
+            var f = fieldset.getAt(1);
 
             jasmine.fireMouseEvent(f.getComponent().maskElement.dom, 'click');
 
-            expect(fieldpanel.getAt(0).getChecked()).toBe(false);
+            expect(fieldset.getAt(0).getChecked()).toBe(false);
             expect(f.getChecked()).toBe(true);
         });
     });
@@ -189,14 +189,14 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                     });
 
                     it("should set the checked state", function() {
-                        var f = fieldpanel.getAt(0);
+                        var f = fieldset.getAt(0);
                         f.setChecked(true);
                         expect(f.getChecked()).toBe(true);
                         expect(f.isChecked()).toBe(true);
                     });
 
                     it("should fire change, check, not fire uncheck", function() {
-                        var f = fieldpanel.getAt(0);
+                        var f = fieldset.getAt(0);
                         attachSpies(f);
 
                         f.setChecked(true);
@@ -223,18 +223,18 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                     });
 
                     it("should set the checked state", function() {
-                        var f = fieldpanel.getAt(0);
+                        var f = fieldset.getAt(0);
                         f.setChecked(true);
                         expect(f.getChecked()).toBe(true);
                         expect(f.isChecked()).toBe(true);
                     });
 
                     it("should not fire any events", function() {
-                        var f = fieldpanel.getAt(0);
+                        var f = fieldset.getAt(0);
                         attachSpies(f);
 
                         f.setChecked(true);
-
+                        
                         expect(changeSpy).not.toHaveBeenCalled();
                         expect(checkSpy).not.toHaveBeenCalled();
                         expect(uncheckSpy).not.toHaveBeenCalled();
@@ -253,18 +253,18 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                     });
 
                     it("should set the checked state", function() {
-                        var f = fieldpanel.getAt(0);
+                        var f = fieldset.getAt(0);
                         f.setChecked(false);
                         expect(f.getChecked()).toBe(false);
                         expect(f.isChecked()).toBe(false);
                     });
 
                     it("should not fire any events", function() {
-                        var f = fieldpanel.getAt(0);
+                        var f = fieldset.getAt(0);
                         attachSpies(f);
 
                         f.setChecked(false);
-
+                        
                         expect(changeSpy).not.toHaveBeenCalled();
                         expect(checkSpy).not.toHaveBeenCalled();
                         expect(uncheckSpy).not.toHaveBeenCalled();
@@ -282,14 +282,14 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                     });
 
                     it("should set the checked state", function() {
-                        var f = fieldpanel.getAt(0);
+                        var f = fieldset.getAt(0);
                         f.setChecked(false);
                         expect(f.getChecked()).toBe(false);
                         expect(f.isChecked()).toBe(false);
                     });
 
                     it("should fire change, check, not fire uncheck", function() {
-                        var f = fieldpanel.getAt(0);
+                        var f = fieldset.getAt(0);
                         attachSpies(f);
 
                         f.setChecked(false);
@@ -318,14 +318,14 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                 });
 
                 it("should set the checked state", function() {
-                    var f = fieldpanel.getAt(0);
+                    var f = fieldset.getAt(0);
                     f.check();
                     expect(f.getChecked()).toBe(true);
                     expect(f.isChecked()).toBe(true);
                 });
 
                 it("should fire change, check, not fire uncheck", function() {
-                    var f = fieldpanel.getAt(0);
+                    var f = fieldset.getAt(0);
                     attachSpies(f);
 
                     f.check();
@@ -352,18 +352,18 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                 });
 
                 it("should set the checked state", function() {
-                    var f = fieldpanel.getAt(0);
+                    var f = fieldset.getAt(0);
                     f.check();
                     expect(f.getChecked()).toBe(true);
                     expect(f.isChecked()).toBe(true);
                 });
 
                 it("should not fire any events", function() {
-                    var f = fieldpanel.getAt(0);
+                    var f = fieldset.getAt(0);
                     attachSpies(f);
 
                     f.check();
-
+                    
                     expect(changeSpy).not.toHaveBeenCalled();
                     expect(checkSpy).not.toHaveBeenCalled();
                     expect(uncheckSpy).not.toHaveBeenCalled();
@@ -382,18 +382,18 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                 });
 
                 it("should set the checked state", function() {
-                    var f = fieldpanel.getAt(0);
+                    var f = fieldset.getAt(0);
                     f.uncheck();
                     expect(f.getChecked()).toBe(false);
                     expect(f.isChecked()).toBe(false);
                 });
 
                 it("should not fire any events", function() {
-                    var f = fieldpanel.getAt(0);
+                    var f = fieldset.getAt(0);
                     attachSpies(f);
 
                     f.uncheck();
-
+                    
                     expect(changeSpy).not.toHaveBeenCalled();
                     expect(checkSpy).not.toHaveBeenCalled();
                     expect(uncheckSpy).not.toHaveBeenCalled();
@@ -411,14 +411,14 @@ topSuite("Ext.field.Radio", ['Ext.field.Panel', 'Ext.layout.VBox'], function() {
                 });
 
                 it("should set the checked state", function() {
-                    var f = fieldpanel.getAt(0);
+                    var f = fieldset.getAt(0);
                     f.uncheck();
                     expect(f.getChecked()).toBe(false);
                     expect(f.isChecked()).toBe(false);
                 });
 
                 it("should fire change, check, not fire uncheck", function() {
-                    var f = fieldpanel.getAt(0);
+                    var f = fieldset.getAt(0);
                     attachSpies(f);
 
                     f.uncheck();

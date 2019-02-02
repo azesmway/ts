@@ -19,3 +19,7 @@
     $disabled-opacity: $toggleslider-disabled-opacity,
     $thumb-inset: $toggleslider-thumb-inset
 );
+
+@include thumb-toggle-on-ui;
+@include thumb-toggle-off-ui;
+

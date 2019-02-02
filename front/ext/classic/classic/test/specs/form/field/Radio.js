@@ -1,4 +1,4 @@
-topSuite("Ext.form.field.Radio", function() {
+describe("Ext.form.field.Radio", function() {
     var component, radios;
     
     function makeComponent(config) {

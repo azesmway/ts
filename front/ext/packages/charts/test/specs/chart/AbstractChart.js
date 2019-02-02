@@ -1,4 +1,4 @@
-topSuite("Ext.chart.AbstractChart", ['Ext.chart.*', 'Ext.data.ArrayStore'], function() {
+describe('Ext.chart.AbstractChart', function() {
     var chart, store;
 
     var Model = Ext.define(null, {
@@ -22,11 +22,6 @@ topSuite("Ext.chart.AbstractChart", ['Ext.chart.*', 'Ext.data.ArrayStore'], func
             data: data
         });
     }
-    
-    beforeEach(function() {
-        // Tons of warnings regarding Sencha download server in the console
-        spyOn(Ext.log, 'warn');
-    });
 
     afterEach(function() {
         store = chart = Ext.destroy(chart, store);
@@ -315,9 +310,6 @@ topSuite("Ext.chart.AbstractChart", ['Ext.chart.*', 'Ext.data.ArrayStore'], func
     });
 
     describe('adding and removing series', function() {
-
-        var layoutDone;
-
         beforeEach(function() {
             store = new Ext.data.Store({
                 fields: ['x', 'y', 'z'],
@@ -327,9 +319,6 @@ topSuite("Ext.chart.AbstractChart", ['Ext.chart.*', 'Ext.data.ArrayStore'], func
                 ]
             });
             chart = new Ext.chart.CartesianChart({
-                renderTo: Ext.getBody(),
-                width: 400,
-                height: 400,
                 store: store,
                 axes: [{
                     position: 'left',
@@ -337,17 +326,8 @@ topSuite("Ext.chart.AbstractChart", ['Ext.chart.*', 'Ext.data.ArrayStore'], func
                 }, {
                     position: 'bottom',
                     type: 'numeric'
-                }],
-                listeners: {
-                    layout: function () {
-                        layoutDone = true;
-                    }
-                }
+                }]
             });
-        });
-
-        afterEach(function () {
-            layoutDone = false;
         });
 
         it('should start with no series', function() {
@@ -357,172 +337,85 @@ topSuite("Ext.chart.AbstractChart", ['Ext.chart.*', 'Ext.data.ArrayStore'], func
         it('should add and remove series using setSeries', function() {
             var series;
 
-            waitsFor(function () {
-                return layoutDone;
-            });
+            chart.setSeries([{
+                type: 'line',
+                xField: 'x',
+                yField: 'y',
+                id: 'xySeries'
+            }]);
+            series = chart.getSeries();
 
-            runs(function () {
-                layoutDone = false;
+            expect(series.length).toBe(1);
+            expect(series[0].getId()).toBe('xySeries');
 
-                chart.setSeries([{
-                    type: 'line',
-                    xField: 'x',
-                    yField: 'y',
-                    id: 'xySeries'
-                }]);
-            });
+            chart.setSeries([{
+                type: 'line',
+                xField: 'x',
+                yField: 'z',
+                id: 'xzSeries'
+            }]);
+            series = chart.getSeries();
 
-            waitsFor(function () {
-                return layoutDone;
-            });
-
-            runs(function () {
-                layoutDone = false;
-
-                series = chart.getSeries();
-
-                expect(series.length).toBe(1);
-                expect(series[0].getId()).toBe('xySeries');
-
-                chart.setSeries([{
-                    type: 'line',
-                    xField: 'x',
-                    yField: 'z',
-                    id: 'xzSeries'
-                }]);
-            });
-
-            waitsFor(function () {
-                return layoutDone;
-            });
-
-            runs(function () {
-                layoutDone = false;
-
-                series = chart.getSeries();
-
-                expect(series.length).toBe(1);
-                expect(series[0].getId()).toBe('xzSeries');
-            });
+            expect(series.length).toBe(1);
+            expect(series[0].getId()).toBe('xzSeries');
         });
 
         it('should add series using addSeries', function() {
             var series;
 
-            waitsFor(function () {
-                return layoutDone;
+            chart.addSeries([{
+                type: 'line',
+                xField: 'x',
+                yField: 'y',
+                id: 'xySeries'
+            }]);
+            series = chart.getSeries();
+
+            expect(series.length).toBe(1);
+            expect(series[0].getId()).toBe('xySeries');
+
+            chart.addSeries({
+                type: 'line',
+                xField: 'x',
+                yField: 'z',
+                id: 'xzSeries'
             });
+            series = chart.getSeries();
 
-            runs(function () {
-                layoutDone = false;
-
-                chart.addSeries([{
-                    type: 'line',
-                    xField: 'x',
-                    yField: 'y',
-                    id: 'xySeries'
-                }]);
-            });
-
-            waitsFor(function () {
-                return layoutDone;
-            });
-
-            runs(function () {
-                layoutDone = false;
-
-                series = chart.getSeries();
-
-                expect(series.length).toBe(1);
-                expect(series[0].getId()).toBe('xySeries');
-
-                chart.addSeries({
-                    type: 'line',
-                    xField: 'x',
-                    yField: 'z',
-                    id: 'xzSeries'
-                });
-            });
-
-            waitsFor(function () {
-                return layoutDone;
-            });
-
-            runs(function () {
-                layoutDone = false;
-
-                series = chart.getSeries();
-
-                expect(series.length).toBe(2);
-                expect(series[0].getId()).toBe('xySeries');
-                expect(series[1].getId()).toBe('xzSeries');
-            });
+            expect(series.length).toBe(2);
+            expect(series[0].getId()).toBe('xySeries');
+            expect(series[1].getId()).toBe('xzSeries');
         });
 
         it('should remove series using removeSeries', function() {
             var series;
 
-            waitsFor(function () {
-                return layoutDone;
-            });
+            chart.addSeries([{
+                type: 'line',
+                xField: 'x',
+                yField: 'y',
+                id: 'xySeries'
+            }, {
+                type: 'line',
+                xField: 'x',
+                yField: 'z',
+                id: 'xzSeries'
+            }]);
+            series = chart.getSeries();
 
-            runs(function () {
-                layoutDone = false;
+            expect(series.length).toBe(2);
+            expect(series[0].getId()).toBe('xySeries');
+            expect(series[1].getId()).toBe('xzSeries');
 
-                chart.addSeries([{
-                    type: 'line',
-                    xField: 'x',
-                    yField: 'y',
-                    id: 'xySeries'
-                }, {
-                    type: 'line',
-                    xField: 'x',
-                    yField: 'z',
-                    id: 'xzSeries'
-                }]);
-            });
+            // Remove Series id "xySeries", should leave only "xzSeries"
+            chart.removeSeries('xySeries');
+            series = chart.getSeries();
+            expect(series.length).toBe(1);
+            expect(series[0].getId()).toBe('xzSeries');
 
-            waitsFor(function () {
-                return layoutDone;
-            });
-
-            runs(function () {
-                layoutDone = false;
-
-                series = chart.getSeries();
-
-                expect(series.length).toBe(2);
-                expect(series[0].getId()).toBe('xySeries');
-                expect(series[1].getId()).toBe('xzSeries');
-
-                // Remove Series id "xySeries", should leave only "xzSeries"
-                chart.removeSeries('xySeries');
-            });
-
-            waitsFor(function () {
-                return layoutDone;
-            });
-
-            runs(function () {
-                layoutDone = false;
-
-                series = chart.getSeries();
-                expect(series.length).toBe(1);
-                expect(series[0].getId()).toBe('xzSeries');
-
-                // Remove a Series by specifying the instance should leav no Series
-                chart.removeSeries(series[0]);
-            });
-
-            waitsFor(function () {
-                return layoutDone;
-            });
-
-            runs(function () {
-                layoutDone = false;
-
-                expect(chart.getSeries().length).toBe(0);
-            });
+            // Remove a Series by specifying the instance should leav no Series
+            chart.removeSeries(series[0]);
+            expect(chart.getSeries().length).toBe(0);
         });
     });
 
@@ -563,63 +456,6 @@ topSuite("Ext.chart.AbstractChart", ['Ext.chart.*', 'Ext.data.ArrayStore'], func
             expect(itemhighlight.isItemHighlight).toBe(true);
             expect(crosszoom.isCrossZoom).toBe(true);
             expect(itemedit.isItemEdit).toBe(true);
-        });
-    });
-
-    describe('processData', function () {
-        it('should refresh legend store', function () {
-            var layoutEnd, processDataSpy;
-
-            runs(function () {
-                chart = new Ext.chart.PolarChart({
-                    animation: false,
-                    renderTo: document.body,
-                    width: 400,
-                    height: 400,
-                    legend: {
-                        docked: 'right'
-                    },
-                    store: {
-                        data: [{
-                            "name": "A",
-                            "data1": 1
-                        }, {
-                            "name": "B",
-                            "data1": 2
-                        }]
-                    },
-                    series: {
-                        type: 'pie3d',
-                        angleField: 'data1',
-                        label: {
-                            field: 'name'
-                        }
-                    },
-                    listeners: {
-                        layout: function () {
-                            layoutEnd = true;
-                        }
-                    }
-                });
-            });
-            waitsFor(function () {
-                return layoutEnd;
-            });
-            runs(function () {
-                layoutEnd = false;
-
-                expect(chart.getLegend().getStore().getAt(0).get('name')).toBe('A');
-                processDataSpy = spyOn(chart, 'processData').andCallThrough();
-                chart.getStore().loadData([{
-                    name: 'X',
-                    data1: 24
-                }, {
-                    name: 'Y',
-                    data1: 25
-                }]);
-                expect(processDataSpy).toHaveBeenCalled();
-                expect(chart.getLegend().getStore().getAt(0).get('name')).toBe('X');
-            });
         });
     });
 
@@ -697,59 +533,6 @@ topSuite("Ext.chart.AbstractChart", ['Ext.chart.*', 'Ext.data.ArrayStore'], func
             fillStyle = seriesSprite.attr.fillStyle;
             // should have different colors for updated gradient
             expect(fillStyle.getStops()[0].color).toBe('#000000');
-        });
-    });
-
-    describe('legend render checking if legend is getting rendered along with Chart', function () {
-
-        afterEach(function() {
-            chart = Ext.destroy(chart);
-        });
-
-        it("legend should be rendered", function () {
-            runs(function () {
-                chart = Ext.create({
-                    xtype: 'cartesian',
-                    renderTo: Ext.getBody(),
-                    width: 400,
-                    height: 400,
-                    innerPadding: 10,
-                    store: {
-                        fields: ['name', 'data1'],
-                        data: [[{
-                            age: '0',
-                            value: 400
-                        }, {
-                            age: '2',
-                            value: 150
-                        }, {
-                            age: '4',
-                            value: 120
-                        }, {
-                            age: '6',
-                            value: 100
-                        }, {
-                            age: '8',
-                            value: 1500
-                        }]]
-                    },
-                    legend: {
-                        type: 'dom',
-                        docked: 'right'
-                    },
-                    series: {
-                        type: 'pie',
-                        highlight: true,
-                        angleField: 'data1',
-                        donut: 30
-                    }
-                });
-            });
-
-            runs(function () {
-                var legend = chart.getLegend();
-                expect(legend.rendered).toBe(true);
-            });
         });
     });
 });

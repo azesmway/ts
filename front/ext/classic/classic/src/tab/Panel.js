@@ -457,12 +457,12 @@ Ext.define('Ext.tab.Panel', {
             headerItems;
 
         // Configure the layout with our deferredRender, and with our activeTeb
-        me.layout = Ext.apply({
-            type: 'card',
+        me.layout = new Ext.layout.container.Card(Ext.apply({
+            owner: me,
             deferredRender: me.deferredRender,
             itemCls: me.itemCls,
             activeItem: activeTab
-        }, me.layout);
+        }, me.layout));
 
         if (tabBarHeaderPosition != null) {
             header = me.header = Ext.apply({}, header);
@@ -839,7 +839,6 @@ Ext.define('Ext.tab.Panel', {
                 me.getTabBar().setActiveTab(activeTab.tab);
             }
         }
-        return me;
     },
 
     privates: {
@@ -854,10 +853,6 @@ Ext.define('Ext.tab.Panel', {
             var me = this,
                 toActivate;
 
-            // The component is not removed from the items collection until callParent, so
-            // don't trigger a layout until that happens
-            Ext.suspendLayouts();
-
             // Destroying, or removing the last item, nothing to activate
             if (me.removingAll || me.destroying || me.items.getCount() === 1) {
                 me.activeTab = null;
@@ -870,8 +865,6 @@ Ext.define('Ext.tab.Panel', {
             }
             
             me.callParent([item, autoDestroy]);
-
-            Ext.resumeLayouts(); // Don't want to flush here, this will happen in remove()
 
             if (item.tab) {
                 // Remove the two references

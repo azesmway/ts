@@ -40,7 +40,7 @@ Ext.define('Ext.container.Monitor', {
         var me = this,
             target = me.target;
         
-        if (target && !target.destroying && !target.destroyed) {
+        if (target && !target.destroyed) {
             me.onContainerRemove(target, target);
             target.un('beforedestroy', me.disable, me);
         }

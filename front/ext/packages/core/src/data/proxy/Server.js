@@ -50,12 +50,6 @@ Ext.define('Ext.data.proxy.Server', {
          * @cfg {String} [groupDirectionParam="groupDir"]
          * The name of the direction parameter to send in a request. **This is only used when simpleGroupMode is set to
          * true.**
-         * If this is set to the same value as the {@link #groupParam}, then the group property name *and* direction
-         * of each grouper is passed as a single, space separated parameter, looking like a database `group by` specification.
-         *
-         * So if there are multiple groupers, the single group parameter will look like this:
-         *
-         *     ?group=name%20ASC&group=age%20DESC
          */
         groupDirectionParam: 'groupDir',
     
@@ -77,13 +71,6 @@ Ext.define('Ext.data.proxy.Server', {
          * @cfg {String} [directionParam="dir"]
          * The name of the direction parameter to send in a request. **This is only used when simpleSortMode is set to
          * true.**
-         * 
-         * If this is set to the same value as the {@link #sortParam}, then the sort property name *and* direction
-         * of each sorter is passed as a single, space separated parameter, looking like a database `order by` specification.
-         *
-         * So if there are multiple sorters, the single sort parameter will look like this:
-         *
-         *     ?sort=name%20ASC&sort=age%20DESC
          */
         directionParam: 'dir',
     
@@ -95,16 +82,9 @@ Ext.define('Ext.data.proxy.Server', {
     
         /**
          * @cfg {Boolean} [simpleSortMode=false]
-         * Enabling simpleSortMode in conjunction with remoteSort will send the sorted field names in the
-         * parameter named by {@link #sortParam}, and the directions for each sorted field in a parameter named by {@link #directionParam}.
-         *
-         * In the simplest case, with one Sorter, this will result in HTTP parameters like this:
-         *
-         *     ?sort=name&dir=ASC
-         *
-         * If there are multiple sorters, the parameters will be encoded like this:
-         *
-         *     ?sort=name&sort=age&dir=ASC&dir=DESC
+         * Enabling simpleSortMode in conjunction with remoteSort will only send one sort property and a direction when a
+         * remote sort is requested. The {@link #directionParam} and {@link #sortParam} will be sent with the property name
+         * and either 'ASC' or 'DESC'.
          */
         simpleSortMode: false,
     
@@ -176,14 +156,12 @@ Ext.define('Ext.data.proxy.Server', {
         extraParams: {}
     },
 
-    primitiveRe: /string|number|boolean/,
-
     /**
      * @event exception
      * Fires when the server returns an exception. This event may also be listened
      * to in the event that a request has timed out or has been aborted.
      * @param {Ext.data.proxy.Proxy} this
-     * @param {Ext.data.Response} response The response that was received
+     * @param {Ext.data.Request} request The request that was sent
      * @param {Ext.data.operation.Operation} operation The operation that triggered the request
      */
 
@@ -280,7 +258,7 @@ Ext.define('Ext.data.proxy.Server', {
      */
     processResponse: function(success, operation, request, response) {
         var me = this,
-            exception, reader, resultSet, meta, destroyOp;
+            exception, reader, resultSet, meta;
         
         // Async callback could have landed at any time, including during and after
         // destruction. We don't want to unravel the whole response chain in such case.
@@ -305,16 +283,10 @@ Ext.define('Ext.data.proxy.Server', {
             } else {
                 resultSet = reader.read(me.extractResponseData(response), {
                     // If we're doing an update, we want to construct the models ourselves.
-                    recordCreator: operation.getRecordCreator() ||
-                    reader.defaultRecordCreatorFromServer
+                    recordCreator: operation.getRecordCreator()
                 });
             }
 
-            if (!operation.$destroyOwner) {
-                operation.$destroyOwner = me;
-                destroyOp = true;
-            }
-            
             operation.process(resultSet, request, response);
             exception = !operation.wasSuccessful();
         } else {
@@ -322,19 +294,10 @@ Ext.define('Ext.data.proxy.Server', {
             exception = true;
         }
         
-        // It is possible that exception callback destroyed the store and owning proxy,
-        // in which case we can't do nothing except punt.
-        if (me.destroyed) {
-            if (!operation.destroyed && destroyOp && operation.$destroyOwner === me) {
-                operation.destroy();
-            }
-            
-            return;
-        }
-        
         if (exception) {
             me.fireEvent('exception', me, response, operation);
         }
+
         // If a JsonReader detected metadata, process it now.
         // This will fire the 'metachange' event which the Store processes to fire its own 'metachange'
         else {
@@ -344,25 +307,12 @@ Ext.define('Ext.data.proxy.Server', {
             }
         }
 
-        // Ditto
-        if (me.destroyed) {
-            if (!operation.destroyed && destroyOp && operation.$destroyOwner === me) {
-                operation.destroy();
-            }
-            
-            return;
-        }
-
         me.afterRequest(request, success);
 
         // Tell owning store processing has finished.
         // It will fire its endupdate event which will cause interested views to 
         // resume layouts.
         me.fireEvent('endprocessresponse', me, response, operation);
-        
-        if (!operation.destroyed && destroyOp && operation.$destroyOwner === me) {
-            operation.destroy();
-        }
     },
     
     /**
@@ -427,8 +377,7 @@ Ext.define('Ext.data.proxy.Server', {
     encodeFilters: function (filters) {
         var out = [],
             length = filters.length,
-            needsEncoding,
-            i, filter, encodedFilter;
+            i, filter;
 
         for (i = 0; i < length; i++) {
             filter = filters[i];
@@ -439,15 +388,11 @@ Ext.define('Ext.data.proxy.Server', {
             // is therefore okay to serialize.
             filter.getFilterFn();
             if (filter.generatedFilterFn) {
-                encodedFilter = filter.serialize();
-                needsEncoding |= !this.primitiveRe.test(typeof encodedFilter);
-                out.push(encodedFilter);
+                out.push(filter.serialize());
             }
         }
 
-        // If any Filters return Objects encapsulating their full state, then the parameters
-        // needs JSON encoding.
-        return needsEncoding ? this.applyEncoding(out) : out;
+        return this.applyEncoding(out);
     },
 
     /**
@@ -496,13 +441,7 @@ Ext.define('Ext.data.proxy.Server', {
             // Grouper is a subclass of sorter, so we can just use the sorter method
             if (simpleGroupMode) {
                 params[groupParam] = grouper.getProperty();
-
-                // Allow for direction to be encoded into the same parameter
-                if (groupDirectionParam === groupParam) {
-                    params[groupParam] += ' ' + grouper.getDirection();
-                } else {
-                    params[groupDirectionParam] = grouper.getDirection();
-                }
+                params[groupDirectionParam] = grouper.getDirection();
             } else {
                 params[groupParam] = me.encodeSorters([grouper], true);
             }
@@ -510,20 +449,17 @@ Ext.define('Ext.data.proxy.Server', {
 
         if (sortParam && sorters && sorters.length > 0) {
             if (simpleSortMode) {
-                // Group will be included in sorters, so skip sorter 0 if groups
-                for (index = (sorters.length > 1 && hasGroups) ? 1 : 0; index < sorters.length; index++) {
-
-                    // Allow for direction to be encoded into the same parameter
-                    if (directionParam === sortParam) {
-                        params[sortParam] = Ext.Array.push(params[sortParam]||[], sorters[index].getProperty() + ' ' + sorters[index].getDirection());
-                    } else {
-                        params[sortParam] = Ext.Array.push(params[sortParam]||[], sorters[index].getProperty());
-                        params[directionParam] = Ext.Array.push(params[directionParam]||[], sorters[index].getDirection());
-                    }
+                index = 0;
+                // Group will be included in sorters, so grab the next one
+                if (sorters.length > 1 && hasGroups) {
+                    index = 1;
                 }
+                params[sortParam] = sorters[index].getProperty();
+                params[directionParam] = sorters[index].getDirection();
             } else {
                 params[sortParam] = me.encodeSorters(sorters);
             }
+
         }
 
         if (filterParam && filters && filters.length > 0) {
@@ -574,16 +510,16 @@ Ext.define('Ext.data.proxy.Server', {
     },
 
     /**
-     * In ServerProxy subclasses, the {@link #method-create}, {@link #method-read}, {@link #method-update} and
-     * {@link #method-erase} methods all pass through to doRequest. Each ServerProxy subclass must implement the
-     * doRequest method - see {@link Ext.data.proxy.JsonP} and {@link Ext.data.proxy.Ajax} for examples. This method
-     * carries the same signature as each of the methods that delegate to it.
+     * In ServerProxy subclasses, the {@link #create}, {@link #read}, {@link #update} and {@link #erase} methods all
+     * pass through to doRequest. Each ServerProxy subclass must implement the doRequest method - see {@link
+     * Ext.data.proxy.JsonP} and {@link Ext.data.proxy.Ajax} for examples. This method carries the same signature as
+     * each of the methods that delegate to it.
      *
      * @param {Ext.data.operation.Operation} operation The Ext.data.operation.Operation object
      * @param {Function} callback The callback function to call when the Operation has completed
      * @param {Object} scope The scope in which to execute the callback
      */
-    doRequest: function(operation, callback, scope) {
+    doRequest: function(operation) {
         //<debug>
         Ext.raise("The doRequest function has not been implemented on your Ext.data.proxy.Server subclass. See src/data/ServerProxy.js for details");
         //</debug>

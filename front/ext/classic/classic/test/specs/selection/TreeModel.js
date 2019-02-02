@@ -1,4 +1,4 @@
-topSuite("Ext.selection.TreeModel", ['Ext.tree.Panel', 'Ext.grid.Panel'], function() {
+describe("Ext.selection.TreeModel", function() {
     var tree, data, selModel, col;
 
     function makeTree(cfg, root) {
@@ -90,7 +90,7 @@ topSuite("Ext.selection.TreeModel", ['Ext.tree.Panel', 'Ext.grid.Panel'], functi
                 }
             });
             selModel = tree.getSelectionModel();
-            jasmine.fireMouseEvent(tree.view.lockedView.getCellByPosition({row:1,column:0}, true), 'click');
+            jasmine.fireMouseEvent(tree.view.lockedView.getCellByPosition({row:1,column:0}), 'click');
             expect(selModel.isSelected(1)).toBe(true);
         });
     });
@@ -236,12 +236,12 @@ topSuite("Ext.selection.TreeModel", ['Ext.tree.Panel', 'Ext.grid.Panel'], functi
             });
 
             it("should not select when clicking on the expander", function() {
-                click(row.querySelector(view.expanderSelector));
+                click(Ext.fly(row).down(view.expanderSelector));
                 expect(selModel.isSelected(node)).toBe(false);
             });
 
             it("should select when clicking on another part of the row", function() {
-                click(row.querySelector('.' + col.iconCls));
+                click(Ext.fly(row).down('.' + col.iconCls));
                 expect(selModel.isSelected(node)).toBe(true);
             });
         });
@@ -262,12 +262,12 @@ topSuite("Ext.selection.TreeModel", ['Ext.tree.Panel', 'Ext.grid.Panel'], functi
             });
 
             it("should select when clicking on the expander", function() {
-                click(row.querySelector(view.expanderSelector));
+                click(Ext.fly(row).down(view.expanderSelector));
                 expect(selModel.isSelected(node)).toBe(true);
             });
 
             it("should select when clicking on another part of the row", function() {
-                click(row.querySelector('.' + col.iconCls));
+                click(Ext.fly(row).down('.' + col.iconCls));
                 expect(selModel.isSelected(node)).toBe(true);
             });
         });

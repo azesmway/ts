@@ -20,11 +20,9 @@
 
 @if $loadmask-border-width-focus != 0 {
     .#{$prefix}mask.#{$prefix}focus {
-        .#{$prefix}keyboard-mode & {
-            border-style: $loadmask-border-style-focus;
-            border-width: $loadmask-border-width-focus;
-            border-color: $loadmask-border-color-focus;
-        }
+        border-style: $loadmask-border-style-focus;
+        border-width: $loadmask-border-width-focus;
+        border-color: $loadmask-border-color-focus;
     }
 }
 

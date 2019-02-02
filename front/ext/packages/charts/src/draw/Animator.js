@@ -77,10 +77,6 @@ Ext.define('Ext.draw.Animator', {
     empty: function () {
         return this.animations.length === 0;
     },
-    
-    idle: function() {
-        return this.scheduled === 0 && this.animations.length === 0;
-    },
 
     /**
      * Given a frame time it will filter out finished animations from the pool.
@@ -121,12 +117,9 @@ Ext.define('Ext.draw.Animator', {
         if (Ext.isString(callback)) {
             callback = scope[callback];
         }
-        
         Ext.draw.Animator.frameCallbacks[id] = {fn: callback, scope: scope, once: true};
         this.scheduled++;
-        
         Ext.draw.Animator.ignite();
-        
         return id;
     },
 
@@ -160,20 +153,9 @@ Ext.define('Ext.draw.Animator', {
      */
     cancel: function (id) {
         if (Ext.draw.Animator.frameCallbacks[id] && Ext.draw.Animator.frameCallbacks[id].once) {
-            this.scheduled = Math.max(--this.scheduled, 0);
+            this.scheduled--;
             delete Ext.draw.Animator.frameCallbacks[id];
-            Ext.draw.Draw.endUpdateIOS();
         }
-        
-        if (this.idle()) {
-            this.extinguish();
-        }
-    },
-
-    clear: function() {
-        this.animations.length = 0;
-        Ext.draw.Animator.frameCallbacks = {};
-        this.extinguish();
     },
 
     /**
@@ -188,10 +170,9 @@ Ext.define('Ext.draw.Animator', {
         if (Ext.isString(callback)) {
             callback = scope[callback];
         }
-        
         var id = 'frameCallback' + (this.frameCallbackId++);
+
         Ext.draw.Animator.frameCallbacks[id] = {fn: callback, scope: scope};
-        
         return id;
     },
 
@@ -201,10 +182,6 @@ Ext.define('Ext.draw.Animator', {
      */
     removeFrameCallback: function (id) {
         delete Ext.draw.Animator.frameCallbacks[id];
-        
-        if (this.idle()) {
-            this.extinguish();
-        }
     },
 
     /**
@@ -224,7 +201,7 @@ Ext.define('Ext.draw.Animator', {
             fn.call(cb.scope);
 
             if (callbacks[id] && cb.once) {
-                this.scheduled = Math.max(--this.scheduled, 0);
+                this.scheduled--;
                 delete callbacks[id];
             }
         }
@@ -235,9 +212,10 @@ Ext.define('Ext.draw.Animator', {
 
         me.step(me.animationTime());
         me.fireFrameCallbacks();
-        
-        if (me.idle()) {
-            me.extinguish();
+        if (!me.scheduled && me.empty()) {
+            Ext.AnimationQueue.stop(me.handleFrame, me);
+            me.running = false;
+            Ext.draw.Draw.endUpdateIOS();
         }
     },
 
@@ -247,11 +225,5 @@ Ext.define('Ext.draw.Animator', {
             Ext.AnimationQueue.start(this.handleFrame, this);
             Ext.draw.Draw.beginUpdateIOS();
         }
-    },
-    
-    extinguish: function() {
-        this.running = false;
-        Ext.AnimationQueue.stop(this.handleFrame, this);
-        Ext.draw.Draw.endUpdateIOS();
     }
 });

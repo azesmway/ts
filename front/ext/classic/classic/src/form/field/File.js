@@ -75,10 +75,6 @@ Ext.define('Ext.form.field.File', {
     
     needArrowKeys: false,
 
-    /**
-     * @cfg triggers
-     * @inheritdoc
-     */
     triggers: {
         filebutton: {
             type: 'component',
@@ -93,13 +89,14 @@ Ext.define('Ext.form.field.File', {
         }
     },
 
+    //<locale>
     /**
      * @cfg {String} buttonText
      * The button text to display on the upload button. Note that if you supply a value for
      * {@link #buttonConfig}, the buttonConfig.text value will be used instead if available.
-     * @locale
      */
     buttonText: 'Browse...',
+    //</locale>
 
     /**
      * @cfg {Boolean} buttonOnly
@@ -159,21 +156,17 @@ Ext.define('Ext.form.field.File', {
     inputCls: Ext.baseCSSPrefix + 'form-text-file',
 
     /**
-     * @cfg {Boolean} readOnly
+     * @cfg {Boolean} [readOnly=true]
      * Unlike with other form fields, the readOnly config defaults to true in File field.
      */
     readOnly: true,
 
     /**
-     * @cfg editable
+     * @cfg {Boolean} editable
      * @inheritdoc
      */
     editable: false,
 
-    /**
-     * @cfg submitValue
-     * @inheritdoc
-     */
     submitValue: false,
 
     /**
@@ -263,8 +256,7 @@ Ext.define('Ext.form.field.File', {
 
         // Ensure the trigger element is sized correctly upon render
         trigger.el.setWidth(buttonEl.getWidth() + buttonEl.getMargin('lr'));
-        
-        if (Ext.isIE8) {
+        if (Ext.isIE) {
             me.button.getEl().repaint();
         }
     },
@@ -339,7 +331,7 @@ Ext.define('Ext.form.field.File', {
     },
 
     /**
-     * @method isFileUpload
+     * @method
      * @inheritdoc
      */
     isFileUpload: Ext.returnTrue,

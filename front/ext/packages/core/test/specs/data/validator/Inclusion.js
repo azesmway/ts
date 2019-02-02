@@ -1,4 +1,5 @@
-topSuite("Ext.data.validator.Inclusion", function() {
+describe("Ext.data.validator.Inclusion", function() {
+    
     var v;
     
     function validate(value, list) {

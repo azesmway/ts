@@ -474,7 +474,7 @@ Ext.define('Ext.grid.plugin.Editing', {
         } 
         // Clicking on a component in a widget column
         else if (ownerGrid.actionableMode && view.owns(e.target) &&
-                 (targetCmp = Ext.Component.from(e, cell)) && targetCmp.focusable) {
+                 (targetCmp = Ext.Component.fromElement(e.target, cell) && targetCmp.focusable)) {
             return;
         }
         // The cell is not actionable, we we must exit actionable mode
@@ -532,16 +532,17 @@ Ext.define('Ext.grid.plugin.Editing', {
      * Collects all information necessary for any subclasses to perform their editing functions.
      * @param {Ext.data.Model/Number} record The record or record index to edit.
      * @param {Ext.grid.column.Column/Number} columnHeader The column of column index to edit.
-     * @param {Boolean} horizontalScroll True to scroll horizontally and display the Cell in the editing context
-     * @param {Ext.view.Table} view The view to get the context from (only useful with lockable grids).
      * @return {Ext.grid.CellContext/undefined} The editing context based upon the passed record and column
      */
-    getEditingContext: function(record, columnHeader, horizontalScroll, view) {
+    getEditingContext: function(record, columnHeader) {
         var me = this,
             grid = me.grid,
-            colMgr = ((view && view.grid) || grid).visibleColumnManager,
-            layoutView = me.grid.lockable ? me.grid : me.view,
-            gridRow, rowIdx, colIdx, result;
+            colMgr = grid.visibleColumnManager,
+            view,
+            gridRow,
+            rowIdx, colIdx,
+            result,
+            layoutView = me.grid.lockable ? me.grid : me.view;
 
         // The view must have had a layout to show the editor correctly, defer until that time.
         // In case a grid's startup code invokes editing immediately.
@@ -575,9 +576,7 @@ Ext.define('Ext.grid.plugin.Editing', {
         }
 
         // Navigate to the view and grid which the column header relates to.
-        if (!view) {
-            view = columnHeader.getView();
-        }
+        view = columnHeader.getView();
         grid = view.ownerCt;
 
         if (Ext.isNumber(record)) {
@@ -588,8 +587,8 @@ Ext.define('Ext.grid.plugin.Editing', {
         }
 
         // Ensure the row we want to edit is in the rendered range if the view is buffer rendered
-        grid.ensureVisible(record,{
-            column: horizontalScroll ? columnHeader : null
+        grid.ensureVisible(record, {
+            column : columnHeader
         });
         
         gridRow = view.getRow(record);

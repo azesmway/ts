@@ -14,8 +14,6 @@ Ext.define('Ext.grid.RowBody', {
 
     classCls: Ext.baseCSSPrefix + 'rowbody',
 
-    inheritUi: true,
-
     template: [{
         reference: 'spacerElement',
         cls: Ext.baseCSSPrefix + 'spacer-el'
@@ -30,7 +28,7 @@ Ext.define('Ext.grid.RowBody', {
 
         me.callParent();
 
-        grid = me.row.getGrid();
+        grid = me.parent.getGrid();
 
         if (grid && grid.hasRowExpander) {
             rowExpander = grid.findPlugin('rowexpander');
@@ -42,11 +40,11 @@ Ext.define('Ext.grid.RowBody', {
     },
 
     applyWidget: function (widget) {
-        var row = this.row;
+        var row = this.parent;
 
         if (widget) {
             widget = Ext.apply({
-                ownerCmp: row
+                parent: row
             }, widget);
             widget = Ext.widget(widget);
         }

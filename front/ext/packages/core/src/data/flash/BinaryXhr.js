@@ -39,10 +39,11 @@ Ext.define('Ext.data.flash.BinaryXhr', {
          * Counts IDs for new connections.
          * @private
          */
+        
         connectionIndex: 1,
         
         /**
-         * Placeholder for active connections.
+         * Plcaeholder for active connections.
          * @private
          */
         liveConnections: {},

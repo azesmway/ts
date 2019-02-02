@@ -2,9 +2,15 @@
  *
  */
 Ext.define('Ext.field.DatePickerNative', {
-    extend: 'Ext.field.Date',
+    extend: 'Ext.field.DatePicker',
     alternateClassName: 'Ext.form.DatePickerNative',
     xtype: 'datepickernativefield',
+
+    initialize: function() {
+
+        this.callParent();
+
+    },
 
     onFocus: function(e) {
         var me = this;

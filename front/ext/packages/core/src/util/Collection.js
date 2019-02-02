@@ -166,7 +166,7 @@ Ext.define('Ext.util.Collection', {
          *
          * Individual filters can be specified as an `Ext.util.Filter` instance, a config
          * object for `Ext.util.Filter` or simply a function that will be wrapped in a
-         * instance with its {@link Ext.util.Filter#filterFn filterFn} set.
+         * instance with its {@Ext.util.Filter#filterFn filterFn} set.
          *
          * For fine grain control of the filters collection, call `getFilters` to return
          * the `Ext.util.Collection` instance that holds this collection's filters.
@@ -213,16 +213,6 @@ Ext.define('Ext.util.Collection', {
          * call `getGroups` to retrieve the collection and not `setGroups`.
          */
         groups: null,
-
-        /**
-         * @cfg {Object} groupConfig
-         * A default configuration to be passed to any groups created by the
-         * {@link Ext.util.GroupCollection}. See {@link #groups}.
-         *
-         * @private
-         * @since 6.5.0
-         */
-        groupConfig: null,
 
         /**
          * @cfg {String} rootProperty
@@ -461,11 +451,6 @@ Ext.define('Ext.util.Collection', {
      * `item` has changed. That is, the item was previously filtered out and is no longer
      * or the opposite.
      *
-     * @param {Ext.util.Group} details.group The group containing the `item`. **(since 6.5.1)**
-     *
-     * @param {Boolean} details.groupChanged This is `true` if the item is moving between
-     * groups. See also the `group` and `oldGroup` properties. **(since 6.5.1)**
-     *
      * @param {Boolean} details.keyChanged This is `true` if the item has changed keys. If
      * so, check `oldKey` for the old key. An `updatekey` event will follow.
      *
@@ -482,9 +467,6 @@ Ext.define('Ext.util.Collection', {
      * @param {Number} [details.index] The new index in the collection for the item if
      * the item is being moved (see `indexChanged`). If the item is being removed due to
      * filtering, this will be -1.
-     *
-     * @param {Ext.util.Group} details.oldGroup The group that previously contained the
-     * `item`. **(since 6.5.1)**
      *
      * @param {Number} [details.oldIndex] The old index in the collection for the item if
      * the item is being moved (see `indexChanged`). If the item was being removed due to
@@ -517,11 +499,6 @@ Ext.define('Ext.util.Collection', {
      * `item` has changed. That is, the item was previously filtered out and is no longer
      * or the opposite.
      *
-     * @param {Ext.util.Group} details.group The group containing the `item`. **(since 6.5.1)**
-     *
-     * @param {Boolean} details.groupChanged This is `true` if the item is moving between
-     * groups. See also the `group` and `oldGroup` properties. **(since 6.5.1)**
-     *
      * @param {Object} details.keyChanged This is `true` if the item has changed keys. If
      * so, check `oldKey` for the old key. An `updatekey` event will have been sent.
      *
@@ -538,9 +515,6 @@ Ext.define('Ext.util.Collection', {
      * @param {Number} [details.index] The new index in the collection for the item if
      * the item has been moved (see `indexChanged`). If the item is removed due to
      * filtering, this will be -1.
-     *
-     * @param {Ext.util.Group} details.oldGroup The group that previously contained the
-     * `item`. **(since 6.5.1)**
      *
      * @param {Number} [details.oldIndex] The old index in the collection for the item if
      * the item has been moved (see `indexChanged`). If the item was being removed due to
@@ -640,10 +614,6 @@ Ext.define('Ext.util.Collection', {
 
     constructor: function (config) {
         var me = this;
-        
-        //<debug>
-        me.callParent([config]);
-        //</debug>
 
         /**
          * @property {Object[]} items
@@ -1005,7 +975,8 @@ Ext.define('Ext.util.Collection', {
             indexName;
 
         if (generation) {
-            me.items.length = me.length = 0;
+            me.items = [];
+            me.length = 0;
             me.map = {};
             me.indices = {};
             me.generation++;
@@ -1069,8 +1040,8 @@ Ext.define('Ext.util.Collection', {
 
     /**
      * Returns true if the collection contains the passed Object as an item.
-     * @param {Object} item The item to look for in the collection.
-     * @return {Boolean} `true` if the collection contains the item.
+     * @param {Object} item The Object to look for in the collection.
+     * @return {Boolean} `true` if the collection contains the Object as an item.
      * @since 5.0.0
      */
     contains: function (item) {
@@ -1083,28 +1054,6 @@ Ext.define('Ext.util.Collection', {
         }
 
         return ret;
-    },
-
-    /**
-     * Returns true if the collection contains all the passed items. If the first argument
-     * is an array, then the items in that array are checked. Otherwise, all arguments
-     * passed to this method are checked.
-     *
-     * @param {Object.../Object[]} items The item(s) that must be in the collection.
-     * @return {Boolean} `true` if the collection contains all the items.
-     * @since 6.5.2
-     */
-    containsAll: function (items) {
-        var all = Ext.isArray(items) ? items : arguments,
-            i;
-
-        for (i = all.length; i-- > 0; ) {
-            if (!this.contains(all[i])) {
-                return false;
-            }
-        }
-
-        return true;
     },
 
     /**
@@ -1149,8 +1098,8 @@ Ext.define('Ext.util.Collection', {
      * property value. This comparison can be further tuned with the `anyMatch` and
      * `caseSensitive` (optional) arguments.
      *
-     *     // Create a new Collection containing only the items where age == 24
-     *     var middleAged = people.createFiltered('age', 24);
+     *    // Create a new Collection containing only the items where age == 24
+     *    var middleAged = people.createFiltered('age', 24);
      *
      * Alternatively you can apply `filters` to this Collection by calling `setFilters`
      * or modifying the filter collection returned by `getFilters`.
@@ -1233,7 +1182,8 @@ Ext.define('Ext.util.Collection', {
      * @param {Object} scope (optional) The scope (<code>this</code> reference) in
      * which the function is executed. Defaults to this Collection.
      * @return {Ext.util.Collection} The new filtered collection
-     * @deprecated 5.0.0 This method is deprecated.
+     * @since 5.0.0
+     * @deprecated
      */
     filterBy: function(fn, scope) {
         return this.createFiltered(fn, scope);
@@ -1569,6 +1519,7 @@ Ext.define('Ext.util.Collection', {
      * @param {String} [root] 'root' property to extract the first argument from. This is
      * used mainly when operating on fields in records, where the fields are all stored
      * inside the 'data' object.
+     * @return {Array} The values.
      * @param {Number} [start=0] The index of the first item to include.
      * @param {Number} [end] The index at which to stop getting values. The value of this
      * item is *not* included.
@@ -1657,12 +1608,11 @@ Ext.define('Ext.util.Collection', {
      * @param {Object} item The item that was modified.
      * @param {String[]} [modified] The names of the modified properties of the item.
      * @param {String/Number} [oldKey] Passed if the item's key was also modified.
-     * @param {Object} meta (private)
      * @since 5.0.0
      */
-    itemChanged: function (item, modified, oldKey, meta) {
+    itemChanged: function (item, modified, oldKey, /* private */ meta) {
         var me = this,
-            keyChanged = oldKey !== undefined,
+            keyChanged = oldKey === 0 || !!oldKey,
             filtered = me.filtered && me.getAutoFilter(),
             filterChanged = false,
             itemMovement = 0,
@@ -1681,9 +1631,7 @@ Ext.define('Ext.util.Collection', {
 
         // We are owned, we cannot react, inform owning collection.
         if (source && !source.updating) {
-            me.sourceUpdating = true;
             source.itemChanged(item, modified, oldKey, meta);
-            me.sourceUpdating = false;
         }
 
         // Root Collection has been informed.
@@ -1776,14 +1724,12 @@ Ext.define('Ext.util.Collection', {
                 details.modified = modified;
             }
 
-            ++me.generation;
-
             me.beginUpdate();
 
             me.notify('beforeitemchange', [details]);
 
             if (keyChanged) {
-                me.updateKey(item, oldKey, details);
+                me.updateKey(item, oldKey);
             }
 
             if (toAdd || toRemove) {
@@ -2310,10 +2256,9 @@ Ext.define('Ext.util.Collection', {
      * @param {Object} item The item whose key has changed. The `item` should be a member
      * of this collection.
      * @param {String} oldKey The old key for the `item`.
-     * @param details
      * @since 5.0.0
      */
-    updateKey: function (item, oldKey, details) {
+    updateKey: function (item, oldKey) {
         var me = this,
             map = me.map,
             indices = me.indices,
@@ -2343,11 +2288,11 @@ Ext.define('Ext.util.Collection', {
                     delete indices[oldKey];
                 }
 
-                me.notify('updatekey', [Ext.apply({
+                me.notify('updatekey', [{
                     item: item,
                     newKey: newKey,
                     oldKey: oldKey
-                }, details)]);
+                }]);
 
                 me.updating--;
             }
@@ -2483,12 +2428,6 @@ Ext.define('Ext.util.Collection', {
     onCollectionBeforeItemChange: function (source, details) {
         // Drop the next updatekey event
         this.onCollectionUpdateKey = null;
-        
-        // If this flag is true it means we're inside itemchanged, so this will be fired
-        // shortly, don't fire it twice
-        if (!this.sourceUpdating) {
-            this.notify('beforeitemchange', [details]);
-        }
     },
 
     /**
@@ -2532,9 +2471,9 @@ Ext.define('Ext.util.Collection', {
         this.itemChanged(details.item, details.modified, details.oldKey, details.meta);
     },
 
-    onCollectionFilteredItemChange: function() {
-        delete this.onCollectionUpdateKey;
-    },
+    // If our source collection informs us that a filtered out item has changed, we do not care
+    // We contain only the filtered in items of the source collection.
+    onCollectionFilteredItemChange: null,
 
     /**
      * This method is called when the `source` collection refreshes. This is equivalent to
@@ -2548,30 +2487,16 @@ Ext.define('Ext.util.Collection', {
         var me = this,
             map = {},
             indices = {},
-            items = me.items,
-            sourceItems = source.items,
-            filterFn = me.getFilterFn(),
-            i, item, key, length, newLength;
+            i, item, items, key, length;
 
-        // Perform a non-destructive filter of the source's items array into the
-        // *existing* items array because stores give away references to this
-        // collection's items array.
-        if (me.filtered && me.getAutoFilter()) {
-            for (i = 0, newLength = 0, length = sourceItems.length; i < length; i++) {
-                if (filterFn(sourceItems[i])) {
-                    items[newLength++] = sourceItems[i];
-                }
-            }
-            items.length = newLength;
-        } else {
-            items.length = 0;
-            items.push.apply(items, sourceItems);
-        }
+        items = source.items;
+        items = me.filtered && me.getAutoFilter() ? Ext.Array.filter(items, me.getFilterFn()) : items.slice(0);
 
         if (me.sorted) {
             me.sortData(items);
         }
 
+        me.items = items;
         me.length = length = items.length;
         me.map = map;
         me.indices = indices;
@@ -2581,8 +2506,6 @@ Ext.define('Ext.util.Collection', {
             map[key] = item;
             indices[key] = i;
         }
-
-        ++me.generation;
 
         me.notify('refresh');
     },
@@ -2622,7 +2545,7 @@ Ext.define('Ext.util.Collection', {
      * @since 5.0.0
      */
     onCollectionUpdateKey: function (source, details) {
-        this.updateKey(details.item, details.oldKey, details);
+        this.updateKey(details.item, details.oldKey);
     },
 
     //-------------------------------------------------------------------------
@@ -3005,7 +2928,7 @@ Ext.define('Ext.util.Collection', {
 
     applyGrouper: function (grouper) {
         if (grouper) {
-            grouper = this.getSorters().decodeSorter(grouper, Ext.util.Grouper);
+            grouper = this.getSorters().decodeSorter(grouper, 'Ext.util.Grouper');
         }
         return grouper;
     },
@@ -3226,14 +3149,9 @@ Ext.define('Ext.util.Collection', {
 
             me.setSource(source);
             me.autoSource = source;
-        } else {
-            if (source.destroyed) {
-                return;
-            }
-            if (source.length || me.length) {
-                // if both us and the source are empty then we can skip this
-                me.onCollectionRefresh(source);
-            }
+        } else if (source.length || me.length) {
+            // if both us and the source are empty then we can skip this
+            me.onCollectionRefresh(source);
         }
         me.notify('filter');
     },
@@ -3283,7 +3201,7 @@ Ext.define('Ext.util.Collection', {
     onEndUpdateFilters: function (filters) {
         var me = this,
             was = me.filtered,
-            is = !!filters && (filters.getFilterCount() > 0); // booleanize filters
+            is = !!filters && (filters.length > 0); // booleanize filters
 
         if (was || is) {
             me.filtered = is;
@@ -3376,18 +3294,18 @@ Ext.define('Ext.util.Collection', {
      * @param {String} [mode="replace"] Where to put new sorters in the collection. This
      * should be one the following values:
      *
-     * - **`replace`** : The new sorter(s) become the sole sorter set for this Sortable.
+     * * `**replace**` : The new sorter(s) become the sole sorter set for this Sortable.
      *   This is the most useful call mode to programmatically sort by multiple fields.
      *
-     * - **`prepend`** : The new sorters are inserted as the primary sorters. The sorter
+     * * `**prepend**` : The new sorters are inserted as the primary sorters. The sorter
      *   collection length must be controlled by the developer.
      *
-     * - **`multi`** : Similar to **`prepend`** the new sorters are inserted at the front
+     * * `**multi**` : Similar to `**prepend**` the new sorters are inserted at the front
      *   of the collection of sorters. Following the insertion, however, this mode trims
      *   the sorter collection to enforce the `multiSortLimit` config. This is useful for
      *   implementing intuitive "Sort by this" user interfaces.
      *
-     * - **`append`** : The new sorters are added at the end of the collection.
+     * * `**append**` : The new sorters are added at the end of the collection.
      * @return {Ext.util.Collection} This instance.
      */
     sort: function (property, direction, mode) {
@@ -3441,20 +3359,34 @@ Ext.define('Ext.util.Collection', {
 
     /**
      * Sorts the collection by a single sorter function
-     * @param {Function} sortFn The function to sort by
-     * @deprecated 6.5.0 This method is deprecated.
+     * @param {Function} sorterFn The function to sort by
+     * @deprecated
      */
     sortBy: function(sortFn) {
         return this.sortItems(sortFn);
     },
 
-    /**
+    /*
      * @private
      * Can be called to find the insertion index of a passed object in this collection.
      * Or can be passed an items array to search in, and may be passed a comparator
      */
     findInsertionIndex: function(item, items, comparatorFn, index) {
-        return Ext.Array.findInsertionIndex(item, items || this.items, comparatorFn || this.getSortFn(), index);
+        var beforeCheck, afterCheck, len;
+        
+        items = items || this.items;
+        comparatorFn = comparatorFn || this.getSortFn();
+        len = items.length;
+        
+        if (index < len) {
+            beforeCheck = index > 0 ? comparatorFn(items[index - 1], item) : 0;
+            afterCheck = index < len - 1 ? comparatorFn(item, items[index]) : 0;
+            if (beforeCheck < 1 && afterCheck < 1) {
+                return index;
+            }
+        }
+        
+        return Ext.Array.binarySearch(items, item, comparatorFn);
     },
 
     applySorters: function (sorters, collection) {
@@ -3505,8 +3437,7 @@ Ext.define('Ext.util.Collection', {
             if (me.getTrackGroups()) {
                 if (!groups) {
                     groups = new Ext.util.GroupCollection({
-                        itemRoot: me.getRootProperty(),
-                        groupConfig: me.getGroupConfig()
+                        itemRoot: me.getRootProperty()
                     });
                     groups.$groupable = me;
                     me.setGroups(groups);
@@ -3548,10 +3479,7 @@ Ext.define('Ext.util.Collection', {
                 scope: me,
                 priority: me.$endUpdatePriority
             });
-            
-            if (me.manageSorters) {
-                newSorters.$sortable = me;
-            }
+            newSorters.$sortable = me;
         }
 
         me.onSorterChange();
@@ -3599,7 +3527,6 @@ Ext.define('Ext.util.Collection', {
      * We take advantage of the nature of this process to generate add events as ranges.
      *
      * @param {Object[]} newItems
-     * @param {Object[]} newKeys
      * @private
      * @since 5.0.0
      */

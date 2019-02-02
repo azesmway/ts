@@ -1,6 +1,3 @@
-/**
- * @class Ext.form.field.Checkbox
- */
 Ext.define(null, {
     override: 'Ext.form.field.Checkbox',
     

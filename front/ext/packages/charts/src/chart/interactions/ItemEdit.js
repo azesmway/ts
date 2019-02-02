@@ -155,8 +155,10 @@ Ext.define('Ext.chart.interactions.ItemEdit', {
             switch (type) {
                 case 'barSeries':
                     return me.onDragBar(e);
+                    break;
                 case 'scatterSeries':
                     return me.onDragScatter(e);
+                    break;
             }
         }
     },
@@ -254,7 +256,7 @@ Ext.define('Ext.chart.interactions.ItemEdit', {
             isRtl = chart.getInherited().rtl,
             flipXY = chart.isCartesian && chart.getFlipXY(),
             item = chart.getHighlightItem(),
-            marker = item.sprite.getMarker('markers'),
+            marker = item.sprite.getMarker('items'),
             instance = marker.getMarkerFor(item.sprite.getId(), item.index),
             surface = item.sprite.getSurface(),
             surfaceRect = surface.getRect(),
@@ -263,9 +265,7 @@ Ext.define('Ext.chart.interactions.ItemEdit', {
             xAxis = item.series.getXAxis(),
             isEditableX = xAxis && xAxis.getLayout().isContinuous,
             renderer = me.getRenderer(),
-            style, changes, params,
-            positionX, positionY,
-            hintX, hintY;
+            style, changes, params, positionX, positionY;
 
         if (flipXY) {
             positionY = isRtl ? surfaceRect[2] - xy[0] : xy[0];
@@ -281,22 +281,9 @@ Ext.define('Ext.chart.interactions.ItemEdit', {
         } else {
             positionX = instance.translationX;
         }
-
-        if (isEditableX) {
-            hintX = xy[0];
-            hintY = xy[1];
-        } else {
-            if (flipXY) {
-                hintX = xy[0];
-                hintY = instance.translationY; // no change
-            } else {
-                hintX = instance.translationX;
-                hintY = xy[1]; // no change
-            }
-        }
         style = {
-            translationX: hintX,
-            translationY: hintY,
+            translationX: positionX,
+            translationY: positionY,
             scalingX: instance.scalingX,
             scalingY: instance.scalingY,
             r: instance.r,
@@ -327,8 +314,7 @@ Ext.define('Ext.chart.interactions.ItemEdit', {
         if (changes) {
             Ext.apply(style, changes);
         }
-        // This marker acts as a visual hint while dragging.
-        item.sprite.putMarker('markers', style, 'itemedit');
+        item.sprite.putMarker('items', style, 'itemedit');
 
         me.showTooltip(e, me.target, item);
         surface.renderFrame();
@@ -350,7 +336,7 @@ Ext.define('Ext.chart.interactions.ItemEdit', {
                 // to configuration. trackMouse uses the pointerEvent
                 // If aligning to an element, it uses a currentTarget
                 // flyweight which may be attached to any DOM element.
-                tooltip.realignToTarget();
+                tooltip.handleAfterShow();
             } else {
                 tooltip.show();
             }

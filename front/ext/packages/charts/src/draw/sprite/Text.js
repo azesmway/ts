@@ -195,8 +195,7 @@ return {
                 'font-family': 'fontFamily',
                 'font-weight': 'fontWeight',
                 'font-variant': 'fontVariant',
-                'text-anchor': 'textAlign',
-                'dominant-baseline': 'textBaseline'
+                'text-anchor': 'textAlign'
             },
             defaults: {
                 fontStyle: '',

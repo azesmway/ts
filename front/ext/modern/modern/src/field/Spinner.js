@@ -1,10 +1,7 @@
 /**
- * Wraps a Ext.form.Number field to provide a number input field with up/down spinner button and
- * optional step value for each spin up/down increment/decrement.
+ * Wraps an HTML5 number field. Example usage:
  *
- * Example usage:
- *
- *     @example
+ *     @example miniphone
  *     var spinner = Ext.create('Ext.field.Spinner', {
  *         label: 'Spinner Field',
  *         minValue: 0,
@@ -59,79 +56,96 @@ Ext.define('Ext.field.Spinner', {
 
     config: {
         /**
-         * @cfg {Number} stepValue
-         * Value that is added or subtracted from the current value when a spinner
-         * is tapped.
+         * @cfg {Number} [minValue=-infinity] The minimum allowed value.
+         * @accessor
          */
-        stepValue: 1,
+        minValue: Number.NEGATIVE_INFINITY,
 
         /**
-         * @cfg {Boolean} accelerateOnTapHold
-         * `true` if autorepeating should start slowly and accelerate.
+         * @cfg {Number} [maxValue=infinity] The maximum allowed value.
+         * @accessor
+         */
+        maxValue: Number.MAX_VALUE,
+
+        /**
+         * @cfg {Number} stepValue Value that is added or subtracted from the current value when a spinner is used.
+         * @accessor
+         */
+        stepValue: 0.1,
+
+        /**
+         * @cfg {Boolean} accelerateOnTapHold True if autorepeating should start slowly and accelerate.
+         * @accessor
          */
         accelerateOnTapHold: true,
-        
 
         /**
-         * @cfg {Boolean} cycle
-         * When set to `true`, it will loop the values of a minimum or maximum is
-         * reached. If the maximum value is reached, the value will be set to the
-         * minimum.
+         * @cfg {Boolean} cycle When set to `true`, it will loop the values of a minimum or maximum is reached.
+         * If the maximum value is reached, the value will be set to the minimum.
+         * @accessor
          */
         cycle: false,
 
         /**
-         * @cfg clearable
-         * @inheritdoc
+         * @cfg {Boolean} clearIcon
+         * @hide
+         * @accessor
          */
-        clearable: false,
+        clearIcon: false,
+
+        /**
+         * @cfg {Number} defaultValue The default value for this field when no value has been set.
+         * It is also used when the value is set to `NaN`.
+         */
+        defaultValue: 0,
+
+        /**
+         * @cfg {Number} tabIndex
+         * @hide
+         */
+        tabIndex: -1,
 
         /**
          * @cfg {Boolean} groupButtons
-         * `true` if you want to group the buttons to the right of the fields. `false` if
-         * you want the buttons to be at either side of the field.
+         * `true` if you want to group the buttons to the right of the fields. `false` if you want the buttons
+         * to be at either side of the field.
          * @deprecated 6.2.0 This concern should be handled by the theme.
          */
-        groupButtons: true
-    },
+        groupButtons: true,
 
-    triggers: {
-        spindown: {
-            type: 'spindown',
-            group: 'spin',
-            repeat: true
+        /**
+         * @cfg component
+         * @inheritdoc
+         */
+        component: {
+            readOnly: true
         },
-        spinup: {
-            type: 'spinup',
-            group: 'spin',
-            repeat: true
-        }
+
+        triggers: {
+            spindown: {
+                type: 'spindown',
+                group: 'spin',
+                repeat: true
+            },
+            spinup: {
+                type: 'spinup',
+                group: 'spin',
+                repeat: true
+            }
+        },
+
+        /**
+         * @cfg {Number}
+         */
+        value: undefined
     },
 
-    /**
-     * @cfg value
-     * @inheritdoc
-     */
-    value: 0,
-
-    /**
-     * @cfg decimals
-     * @inheritdoc
-     */
-    decimals: 0,
-
-    /**
-     * @property classCls
-     * @inheritdoc
-     */
     classCls: Ext.baseCSSPrefix + 'spinnerfield',
     groupedButtonsCls: Ext.baseCSSPrefix + 'grouped-buttons',
-    
-    initElement: function() {
-        this.callParent();
-        
-        this.inputElement.dom.readOnly = true;
-    },
+
+    /**
+     * Updates the {@link #component} configuration
+     */
 
     updateGroupButtons: function(groupButtons) {
         var downTrigger = this.getTriggers().spindown;
@@ -167,45 +181,16 @@ Ext.define('Ext.field.Spinner', {
         return this.callParent([triggers, oldTriggers]);
     },
 
-    onKeyDown: function(e) {
-        var limit;
-        
-        if (this.getInputType() !== 'number') {
-            switch (e.getKey()) {
-                case e.UP:
-                    e.stopEvent();
-                    this.spin(false);
-                    break;
-                
-                case e.DOWN:
-                    e.stopEvent();
-                    this.spin(true);
-                    break;
-                
-                // Home and End keys: https://www.w3.org/TR/wai-aria-practices-1.1/#spinbutton
-                case e.HOME:
-                    limit = this.getMinValue();
-                    
-                    if (limit != null) {
-                        e.stopEvent();
-                        this.setValue(limit);
-                    }
-                    
-                    break;
-                
-                case e.END:
-                    limit = this.getMaxValue();
-                    
-                    if (limit != null) {
-                        e.stopEvent();
-                        this.setValue(limit);
-                    }
-                    
-                    break;
-            }
+    applyValue: function(value) {
+        value = parseFloat(value);
+        if (isNaN(value) || value === null) {
+            value = this.getDefaultValue();
         }
-        
-        this.callParent([e]);
+
+        //round the value to 1 decimal
+        value = Math.round(value * 10) / 10;
+
+        return this.callParent([value]);
     },
 
     /**
@@ -255,27 +240,15 @@ Ext.define('Ext.field.Spinner', {
                 value = minValue;
             }
         }
-        else if (minValue != null && value < minValue) {
-            value = minValue;
-        }
-        else if (maxValue != null && value > maxValue) {
-            value = maxValue;
-        }
 
-        me.spinning = true;
         me.setValue(value);
-        me.spinning = false;
         value = me.getValue();
 
         me.fireEvent('spin', me, value, direction);
         me.fireEvent('spin' + direction, me, value);
     },
 
-    privates: {
-        spinning: false,
-
-        canSetInputValue: function() {
-            return this.spinning || this.callParent();
-        }
+    reset: function() {
+        this.setValue(this.getDefaultValue());
     }
 });

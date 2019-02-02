@@ -1,4 +1,4 @@
-topSuite("Ext.slider.Thumb", ['Ext.slider.Single'], function() {
+describe("Ext.slider.Thumb", function() {
     var slider, thumb, createSlider, createThumb;
     
     beforeEach(function() {
@@ -152,11 +152,6 @@ topSuite("Ext.slider.Thumb", ['Ext.slider.Single'], function() {
                                 var xy = slider.innerEl.getXY();
                                 jasmine.fireMouseEvent(slider.el, 'mousedown', xy[0] + 10, xy[1] + 10);
                             });
-                            
-                            afterEach(function() {
-                                var xy = slider.innerEl.getXY();
-                                jasmine.fireMouseEvent(slider.el, 'mouseup', xy[0] + 10, xy[1] + 10);
-                            });
 
                             it("should not change the thumb value", function() {
                                 expect(thumb0.value).toEqual(0);
@@ -259,11 +254,6 @@ topSuite("Ext.slider.Thumb", ['Ext.slider.Single'], function() {
                                 slider.disable();
                                 var xy = slider.innerEl.getXY();
                                 jasmine.fireMouseEvent(slider.el, 'mousedown', xy[0] + 10, xy[1] - 10);
-                            });
-                            
-                            afterEach(function() {
-                                var xy = slider.innerEl.getXY();
-                                jasmine.fireMouseEvent(slider.el, 'mouseup', xy[0] + 10, xy[1] - 10);
                             });
 
                             it("should not change the thumb value", function() {

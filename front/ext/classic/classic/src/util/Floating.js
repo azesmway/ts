@@ -200,20 +200,17 @@ Ext.define('Ext.util.Floating', {
             anchorXY,
             listeners;
 
+        // Ensure we always have an Ext.Element as our alignEl.
         // We may be aligned to a Component, an Ext.Element, or an HtmlElement
-        // In the latter case we can't create Ext.Element because that might leave
-        // orphan Element instances so we use our internal Fly instance instead.
         if (alignTarget.isComponent) {
             alignEl = alignTarget.el;
             destroyed = alignTarget.destroyed;
-        }
-        else {
-            me.alignTargetFly = me.alignTargetFly || new Ext.dom.Fly();
-            alignEl = alignTarget = me.alignTargetFly.attach(alignTarget);
+        } else {
+            // Ensure we have an Element
+            alignEl = alignTarget = Ext.get(alignTarget);
             dom = alignEl.dom;
             destroyed = !dom || Ext.isGarbage(dom);
         }
-        
         if (destroyed) {
             me._lastAlignTarget = null;
             if (me.alignListeners) {
@@ -283,18 +280,19 @@ Ext.define('Ext.util.Floating', {
     },
 
     initHierarchyEvents: function() {
-        var me = this;
+        var me = this,
+            syncHidden = this.syncHidden;
 
-        if (!me.hierarchyEventListeners) {
-            me.hierarchyEventListeners = Ext.on({
-                hide: 'syncHidden',
-                collapse: 'syncHidden',
-                show: 'syncHidden',
-                expand: 'syncHidden',
-                added: 'syncHidden',
-                scope: me,
-                destroyable: true
+        if (!me.hasHierarchyEventListeners) {
+            me.mon(Ext.GlobalEvents, {
+                hide: syncHidden,
+                collapse: syncHidden,
+                show: syncHidden,
+                expand: syncHidden,
+                added: syncHidden,
+                scope: me
             });
+            me.hasHierarchyEventListeners = true;
         }
     },
 
@@ -348,9 +346,7 @@ Ext.define('Ext.util.Floating', {
 
             // If focus is already within this floating hierarchy, then do not disturb it on mousedown.
             if (me.owns(Ext.Element.getActiveElement())) {
-                // Indicate that we want the component to be
-                // considered as a focus target but no
-                preventFocus = { ownsFocus: true };
+                preventFocus = true;
             }
 
             target = e.target;
@@ -363,7 +359,7 @@ Ext.define('Ext.util.Floating', {
             // to front anyway
             while (!preventFocus && target && target !== dom) {
                 if (Ext.fly(target).isFocusable()) {
-                    preventFocus = { ownsFocus: true };
+                    preventFocus = true;
                 }
                 target = target.parentNode;
             }
@@ -533,18 +529,31 @@ Ext.define('Ext.util.Floating', {
      * This method also fires the {@link Ext.Component#activate activate} or
      * {@link Ext.Component#deactivate deactivate} event depending on which action occurred.
      *
-     * @param {Boolean} [isTopMost=false] True to activate the Component, false to deactivate it.
+     * @param {Boolean} [active=false] True to activate the Component, false to deactivate it.
+     * @param {Boolean} [doFocus] When activating, set to true to focus the component;
+     * when deactivating, set to false to avoid returning focus to previous element.
+     * 
      */
-    onZIndexChange: function(isTopMost) {
-        var me = this;
+    setActive: function(active, doFocus) {
+        var me = this,
+            activeCmp;
 
-        if (isTopMost) {
+        if (active) {
             // Check the element's visible state. Might be clipped to hide but
             // be accessible. Do not show a shadow.
             if (me.el.shadow && me.el.getData().isVisible !== false && !me.maximized) {
                 me.el.enableShadow(null, true);
             }
 
+            // We only do focus processing upon activate, which means this component
+            // has been brought to the front by its ZIndexManager
+            if (doFocus) {
+                activeCmp = Ext.ComponentManager.getActiveComponent();
+                // Skip focusing if we already contain focused element
+                if (!activeCmp || !activeCmp.up(me)) {
+                    me.focus();
+                }
+            }            
             me.fireEvent('activate', me);
         }
         // Deactivate carries no operations. It may be that this component has just moved down and another
@@ -552,20 +561,6 @@ Ext.define('Ext.util.Floating', {
         // If we have been hidden, Component#onHide handles reverting focus to the previousExternalFocus element.
         else {
             me.fireEvent('deactivate', me);
-        }
-    },
-
-    /**
-     * @private
-     * This method is called internally by {@link Ext.ZIndexManager} to signal that a
-     * focusable floating Component has become the topost focusable in its zIndex stack.
-     */
-    onFocusTopmost: function() {
-        var activeCmp = Ext.ComponentManager.getActiveComponent();
-
-        // Skip focusing if we already contain focused element
-        if (!activeCmp || !activeCmp.up(this)) {
-            this.focus();
         }
     },
 
@@ -584,11 +579,10 @@ Ext.define('Ext.util.Floating', {
      */
     center: function() {
         var me = this,
-            parent = me.floatParent,
             xy;
 
         if (me.isVisible()) {
-            xy = me.getAlignToXY(parent ? parent.getTargetEl() : me.container, 'c-c');
+            xy = me.getAlignToXY(me.container, 'c-c');
             me.setPagePosition(xy);
         } else {
             me.needsCenter = true;
@@ -597,22 +591,15 @@ Ext.define('Ext.util.Floating', {
     },
     
     onFloatShow: function() {
-        var me = this,
-            target = me._lastAlignTarget;
+        var me = this;
 
         if (me.needsCenter) {
             me.center();    
         }
-        else if (target) {
-            if (target.destroyed) {
-                me._lastAlignTarget = null;
-            }
-            else {
-                // Anchor to the target. Do not track scroll if we are position:fixed
-                me.alignTo(target, me._lastAlignToPos, me._lastAlignToOffsets, false, !me.fixed);
-            }
+        else if (me._lastAlignTarget) {
+            // Anchor to the target. Do not track scroll if we are position:fixed
+            me.alignTo(me._lastAlignTarget, me._lastAlignToPos, me._lastAlignToOffsets, false, !me.fixed);
         }
-        
         me.needsCenter = false;
     },
 
@@ -637,21 +624,7 @@ Ext.define('Ext.util.Floating', {
 
     privates: {
         onFloatDestroy: function() {
-            var me = this,
-                fly = me.alignTargetFly;
-
-            if (me.hierarchyEventListeners) {
-                me.hierarchyEventListeners.destroy();
-                me.hierarchyEventListeners = null;
-            }
-
-            me.clearAlignEl();
-
-            if (fly) {
-                // We only want to destroy the instance, but leave the element intact
-                fly.detach();
-                fly.destroy();
-            }
+            this.clearAlignEl();
         },
 
         /**

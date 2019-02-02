@@ -72,7 +72,9 @@ Ext.define('Ext.util.XTemplateCompiler', {
 
         // Free up the arrays.
         me.definitions.length = me.body.length = me.switches.length = 0;
-        me.definitions = me.body = me.switches = 0;
+        delete me.definitions;
+        delete me.body;
+        delete me.switches;
 
         return code;
     },
@@ -96,12 +98,12 @@ Ext.define('Ext.util.XTemplateCompiler', {
         var out = this.body;
         out.push('if ((v=' + expr + ') != null) out');
 
-        // Do not coerce individual values in the buffer.
-        // The final Array#join('') will coerce to strings.
+        // Coerce value to string using concatenation of an empty string literal.
+        // See http://jsperf.com/tostringvscoercion/5
         if (this.useIndex) {
-             out.push('[out.length]=v\n');
+             out.push('[out.length]=v+\'\'\n');
         } else {
-             out.push('.push(v)\n');
+             out.push('.push(v+\'\')\n');
         }
     },
 

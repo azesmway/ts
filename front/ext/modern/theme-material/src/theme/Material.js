@@ -300,7 +300,7 @@ Ext.define('Ext.theme.Material', {
     },
 
     hasFashion: function() {
-        return !!window.Fashion && !!Fashion.css && Fashion.css.setVariables;
+        return !!Fashion.css && Fashion.css.setVariables;
     },
 
     setAutoUpdateMeta: function(value) {
@@ -348,8 +348,9 @@ Ext.define('Ext.theme.Material', {
             accentColor = this._colors[colorsConfig.accent], obj = {};
 
         if (baseColor) {
-            if (baseColor[colorsConfig.baseWeight]) {
-                obj['base-color-name'] = colorsConfig.base;
+            baseColor = baseColor[colorsConfig.baseWeight];
+            if (baseColor) {
+                obj['base-color'] = baseColor;
                 if (this.getAutoUpdateMeta()) {
                     this.updateMetaThemeColor(colorsConfig.base, colorsConfig.baseWeight);
                 }
@@ -361,8 +362,9 @@ Ext.define('Ext.theme.Material', {
         }
 
         if (accentColor) {
-            if (accentColor[colorsConfig.accentWeight]) {
-                obj['accent-color-name'] = colorsConfig.accent;
+            accentColor = accentColor[colorsConfig.accentWeight];
+            if (accentColor) {
+                obj['accent-color'] = accentColor;
             } else {
                 Ext.Logger.warn("Accent color weight: " + colorsConfig.accentWeight + " is not a valid weight", this);
             }

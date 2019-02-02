@@ -7,9 +7,12 @@ Ext.define('Ext.layout.wrapper.BoxDock', {
         element: {
             className: Ext.baseCSSPrefix + 'dock'
         },
+        bodyElement: {
+            className: Ext.baseCSSPrefix + 'dock-body'
+        },
         innerWrapper: null,
-        container: null,
-        manageBorders: null
+        sizeState: false,
+        container: null
     },
 
     positionMap: {
@@ -18,8 +21,6 @@ Ext.define('Ext.layout.wrapper.BoxDock', {
         bottom: 'end',
         right: 'end'
     },
-
-    managedBordersCls: Ext.baseCSSPrefix + 'managed-borders',
 
     constructor: function(config) {
         this.items = {
@@ -73,7 +74,7 @@ Ext.define('Ext.layout.wrapper.BoxDock', {
 
         if (!referenceElement) {
             sideItems.push(item);
-            referenceElement = this.getInnerWrapper().getElement();
+            referenceElement = this.getBodyElement();
         }
 
         this.itemsCount++;
@@ -133,26 +134,36 @@ Ext.define('Ext.layout.wrapper.BoxDock', {
         element.addCls(Ext.baseCSSPrefix + 'dock-' + this.getDirection());
     },
 
-    updateInnerWrapper: function(innerWrapper, oldInnerWrapper) {
-        if (oldInnerWrapper) {
-            innerWrapper.getElement().replace(oldInnerWrapper.getElement(), false);
-            oldInnerWrapper.$outerWrapper = null;
-        } else {
-            this.getElement().append(innerWrapper.getElement());
-        }
-
-        innerWrapper.setManageBorders(this.getManageBorders());
-        innerWrapper.$outerWrapper = this;
+    applyBodyElement: function(bodyElement) {
+        return Ext.Element.create(bodyElement);
     },
 
-    updateManageBorders: function(manageBorders) {
-        var me = this,
-            innerWrapper = me.getInnerWrapper();
+    updateBodyElement: function(bodyElement) {
+        this.getElement().append(bodyElement);
+    },
 
-        me.getElement().toggleCls(me.managedBordersCls, manageBorders);
+    updateInnerWrapper: function(innerWrapper, oldInnerWrapper) {
+        var bodyElement = this.getBodyElement();
+
+        if (oldInnerWrapper && oldInnerWrapper.$outerWrapper === this) {
+            oldInnerWrapper.getElement().detach();
+            delete oldInnerWrapper.$outerWrapper;
+        }
 
         if (innerWrapper) {
-            innerWrapper.setManageBorders(manageBorders);
+            innerWrapper.setSizeState(this.getSizeState());
+            innerWrapper.$outerWrapper = this;
+            bodyElement.append(innerWrapper.getElement());
+        }
+    },
+
+    updateSizeState: function(state) {
+        var innerWrapper = this.getInnerWrapper();
+
+        this.getElement().setSizeState(state);
+
+        if (innerWrapper) {
+            innerWrapper.setSizeState(state);
         }
     },
 
@@ -176,7 +187,9 @@ Ext.define('Ext.layout.wrapper.BoxDock', {
 
         delete me.$outerWrapper;
 
-        me.unlink(['_element']);
+        me.setInnerWrapper(null);
+
+        me.unlink(['_bodyElement', '_element']);
 
         me.callParent();
     }

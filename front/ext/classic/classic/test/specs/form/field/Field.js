@@ -1,11 +1,5 @@
-/* global expect, jasmine, it, spyOn */
-
-topSuite('Ext.form.field.Field',
-    ['Ext.form.field.*', 'Ext.data.validator.*', 'Ext.form.Panel',
-     'Ext.app.ViewController', 'Ext.app.ViewModel'],
-function () {
-    var itNotTouch = jasmine.supportsTouch ? xit : it,
-        ajaxRequestCfg, ct, action, form;
+describe('Ext.form.field.Field', function () {
+    var ajaxRequestCfg, ct, action, form;
 
     function makeContainer(items) {
         ct = new Ext.container.Container({
@@ -64,7 +58,8 @@ function () {
         });
 
         it("should create a validation error icon to the right of the field", function() {
-            createForm();
+            createForm(); 
+            //debugger
             tf.validate();
             expect(tf.errorEl.dom.firstChild).toBeNull();
             tf.allowBlank = false;
@@ -72,7 +67,7 @@ function () {
             expect(tf.errorEl.dom.firstChild).not.toBeNull();
         });
 
-        itNotTouch("should show a quicktip if mouse over the invalid icon", function() {
+        it("should show a quicktip if mouse over the invalid icon", function() {
             createForm(true, {
                 title: 'quicktip'
             });
@@ -145,7 +140,7 @@ function () {
                 makeField({
                     renderTo: Ext.getBody(),
                     bind: '{theValue}'
-                });
+                })
                 field.getErrors = function() {
                     return [];
                 };
@@ -158,7 +153,7 @@ function () {
                 makeField({
                     renderTo: Ext.getBody(),
                     bind: '{theValue}'
-                });
+                })
                 field.getErrors = function() {
                     var v = this.getValue();
                     return v === 'abc' ? ['Invalid'] : [];
@@ -276,7 +271,7 @@ function () {
                         result.push('Fail');
                         return result;
                     }
-                });
+                })
                 field.setValue('');
                 expect(field.getErrors()).toEqual(['Must be present', 'Fail']);
             });

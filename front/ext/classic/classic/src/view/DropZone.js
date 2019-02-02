@@ -29,8 +29,8 @@ Ext.define('Ext.view.DropZone', {
         me.callParent([me.view.el]);
     },
 
-    //  Fire an event through the client DataView. Lock this DropZone during the event processing so that
-    //  its data does not become corrupted by processing mouse events.
+//  Fire an event through the client DataView. Lock this DropZone during the event processing so that
+//  its data does not become corrupted by processing mouse events.
     fireViewEvent: function() {
         var me = this,
             result;
@@ -45,8 +45,8 @@ Ext.define('Ext.view.DropZone', {
         var node = e.getTarget(this.view.getItemSelector()),
             mouseY, nodeList, testNode, i, len, box;
 
-        // Not over a row node: The content may be narrower than the View's encapsulating element, so return the closest.
-        // If we fall through because the mouse is below the nodes (or there are no nodes), we'll get an onContainerOver call.
+//      Not over a row node: The content may be narrower than the View's encapsulating element, so return the closest.
+//      If we fall through because the mouse is below the nodes (or there are no nodes), we'll get an onContainerOver call.
         if (!node) {
             mouseY = e.getY();
             for (i = 0, nodeList = this.view.getNodes(), len = nodeList.length; i < len; i++) {
@@ -117,7 +117,7 @@ Ext.define('Ext.view.DropZone', {
             pos = me.getPosition(e, node),
             overRecord = view.getRecord(node),
             draggingRecords = data.records,
-            indicatorY, scrollable, scrollableEl, container, containerY;
+            indicatorY;
 
         if (!Ext.Array.contains(draggingRecords, overRecord) && (
             pos === 'before' && !me.containsRecordAtOffset(draggingRecords, overRecord, -1) ||
@@ -126,12 +126,8 @@ Ext.define('Ext.view.DropZone', {
             me.valid = true;
 
             if (me.overRecord !== overRecord || me.currentPosition !== pos) {
-                scrollable = me.view.getScrollable();
-                scrollableEl = scrollable && scrollable.getElement();
 
-                container = (scrollableEl && scrollableEl.isScrollable()) ? scrollableEl : Ext.fly(view.getNodeContainer());
-                containerY = container.getY();
-                indicatorY = Ext.fly(node).getY() - containerY - 1;
+                indicatorY = Ext.fly(node).getY() - view.el.getY() - 1;
                 if (pos === 'after') {
                     indicatorY += Ext.fly(node).getHeight();
                 }
@@ -169,7 +165,7 @@ Ext.define('Ext.view.DropZone', {
     notifyOut: function(node, dragZone, e, data) {
         var me = this;
 
-        me.callParent([node, dragZone, e, data]);
+        me.callParent(arguments);
         me.overRecord = me.currentPosition = null;
         me.valid = false;
         if (me.indicator) {
@@ -204,8 +200,6 @@ Ext.define('Ext.view.DropZone', {
     onNodeDrop: function(targetNode, dragZone, e, data) {
         var me = this,
             dropHandled = false,
-            overRecord = me.overRecord,
-            currentPosition = me.currentPosition,
  
             // Create a closure to perform the operation which the event handler may use.
             // Users may now set the wait parameter in the beforedrop handler, and perform any kind
@@ -216,9 +210,9 @@ Ext.define('Ext.view.DropZone', {
                 wait: false,
                 processDrop: function () {
                     me.invalidateDrop();
-                    me.handleNodeDrop(data, overRecord, currentPosition);
+                    me.handleNodeDrop(data, me.overRecord, me.currentPosition);
                     dropHandled = true;
-                    me.fireViewEvent('drop', targetNode, data, overRecord, currentPosition);
+                    me.fireViewEvent('drop', targetNode, data, me.overRecord, me.currentPosition);
                 },
  
                 cancelDrop: function() {
@@ -229,7 +223,7 @@ Ext.define('Ext.view.DropZone', {
             performOperation = false;
  
         if (me.valid) {
-            performOperation = me.fireViewEvent('beforedrop', targetNode, data, overRecord, currentPosition, dropHandlers);
+            performOperation = me.fireViewEvent('beforedrop', targetNode, data, me.overRecord, me.currentPosition, dropHandlers);
             if (dropHandlers.wait) {
                 return;
             }

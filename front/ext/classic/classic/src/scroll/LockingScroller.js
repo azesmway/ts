@@ -8,22 +8,17 @@ Ext.define('Ext.scroll.LockingScroller', {
     },
 
     scrollTo: function(x, y, animate) {
-        var lockedX, lockedPromise, ret;
+        var lockedX;
 
         if (Ext.isObject(x)) {
             lockedX = x.lockedX;
 
             if (lockedX) {
-                lockedPromise = this.getLockedScroller().scrollTo(lockedX, null, animate);
+                this.getLockedScroller().scrollTo(lockedX, null, animate);
             }
         }
 
-        ret = this.callParent([x, y, animate]);
-        if (lockedPromise) {
-            ret = Ext.Promise.all([ret, lockedPromise]);
-        }
-
-        return ret;
+        this.callParent([x, y, animate]);
     },
 
     updateLockedScroller: function(lockedScroller) {
@@ -36,18 +31,12 @@ Ext.define('Ext.scroll.LockingScroller', {
         normalScroller.setLockingScroller(this);
     },
 
-    updateTouchAction: function(touchAction, oldTouchAction) {
-        this.callParent([touchAction, oldTouchAction]);
-
-        this.getLockedScroller().setTouchAction(touchAction);
-        this.getNormalScroller().setTouchAction(touchAction);
-    },
-
     getPosition: function() {
-        var position = this.callParent();
+        var me = this,
+            position = me.callParent();
 
-        position.x = this.getNormalScroller().getPosition().x;
-        position.lockedX = this.getLockedScroller().getPosition().x;
+        position.x = me.getNormalScroller().getPosition().x;
+        position.lockedX = me.getLockedScroller().getPosition().x;
 
         return position;
     },
@@ -63,23 +52,16 @@ Ext.define('Ext.scroll.LockingScroller', {
 
             normalView.stretchHeight(height);
             lockedView.stretchHeight(height);
-            me.callParent([pos]);
+            this.callParent([pos]);
         },
 
         doScrollTo: function(x, y, animate) {
-            var ret,
-                normalPromise;
-
             if (x != null) {
-                normalPromise = this.getNormalScroller().scrollTo(x, null, animate);
+                this.getNormalScroller().scrollTo(x, null, animate);
                 x = null;
             }
 
-            ret = this.callParent([x, y, animate]);
-            if (normalPromise) {
-                ret = Ext.Promise.all([ret, normalPromise]);
-            }
-            return ret;
+            this.callParent([x, y, animate]);
         },
 
         onLockedScroll: function(lockedScroller, x, y) {
@@ -88,19 +70,6 @@ Ext.define('Ext.scroll.LockingScroller', {
 
         onNormalScroll: function(normalScroller, x, y) {
             this.position.x = x;
-        },
-
-        readPosition: function (position) {
-            var me = this;
-            
-            position = me.callParent([position]);
-            position = position || {};
-
-            // read position should consider the normal view for the x axis
-            position.x = me.getNormalScroller().getPosition().x;
-
-
-            return position;
         }
     }
 });

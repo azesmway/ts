@@ -1,4 +1,5 @@
-topSuite("Ext.chart.axis.layout.Continuous", ['Ext.chart.*', 'Ext.data.ArrayStore'], function() {
+describe('Ext.chart.axis.layout.Continuous', function () {
+
     var proto = Ext.chart.axis.layout.Continuous.prototype;
 
     describe('snapEnds', function () {

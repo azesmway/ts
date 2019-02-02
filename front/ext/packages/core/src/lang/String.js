@@ -38,7 +38,6 @@ Ext.String = (function() {
     return ExtString = {
 
         /**
-         * @method
          * Creates a string created by using the specified sequence of code points.
          * @param {Number...} codePoint Codepoints from which to build the string.
          * @return {String} A string built from the sequence of code points passed.
@@ -484,6 +483,8 @@ Ext.String = (function() {
 Ext.String.resetCharacterEntities();
 
 /**
+ * Old alias to {@link Ext.String#htmlEncode}
+ * @deprecated Use {@link Ext.String#htmlEncode} instead
  * @method htmlEncode
  * @member Ext
  * @inheritdoc Ext.String#htmlEncode
@@ -492,6 +493,8 @@ Ext.htmlEncode = Ext.String.htmlEncode;
 
 
 /**
+ * Old alias to {@link Ext.String#htmlDecode}
+ * @deprecated Use {@link Ext.String#htmlDecode} instead
  * @method htmlDecode
  * @member Ext
  * @inheritdoc Ext.String#htmlDecode
@@ -499,6 +502,8 @@ Ext.htmlEncode = Ext.String.htmlEncode;
 Ext.htmlDecode = Ext.String.htmlDecode;
 
 /**
+ * Old alias to {@link Ext.String#urlAppend}
+ * @deprecated Use {@link Ext.String#urlAppend} instead
  * @method urlAppend
  * @member Ext
  * @inheritdoc Ext.String#urlAppend

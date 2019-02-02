@@ -1,6 +1,4 @@
-/* global Ext, expect, jasmine */
-
-topSuite("Ext.event.gesture.Drag", function() {
+describe("Ext.event.gesture.Drag", function() {
     var helper = Ext.testHelper,
         recognizer = Ext.event.gesture.Drag.instance,
         minDistance = recognizer.getMinDistance(),
@@ -33,13 +31,13 @@ topSuite("Ext.event.gesture.Drag", function() {
 
     beforeEach(function() {
         targetEl = Ext.getBody().createChild({
+            id: 'target',
             style: 'width: 200px; height: 200px; border: 1px solid red;'
         });
         dragstartHandler = jasmine.createSpy();
         dragHandler = jasmine.createSpy();
         dragendHandler = jasmine.createSpy();
         dragcancelHandler = jasmine.createSpy();
-        dragstartEvent = dragEvent = dragendEvent = dragcancelEvent = null;
 
         dragstartHandler.andCallFake(function(event) {
             dragstartEvent = event;
@@ -210,7 +208,7 @@ topSuite("Ext.event.gesture.Drag", function() {
         expect(dragstartHandler).not.toHaveBeenCalled();
     });
 
-    if (jasmine.supportsTouch) {
+    if (Ext.supports.Touch) {
         it("should fire dragcancel and not dragend if the touch is canceled after dragstart", function() {
             runs(function() {
                 start({ id: 1, x: 100, y: 101 });
@@ -302,8 +300,6 @@ topSuite("Ext.event.gesture.Drag", function() {
                     previousDeltaY: -minDistance,
                     longpress: false
                 });
-                end({ id: 1, x: 100, y: 101 });
-                end({ id: 2, x: 200, y: 300 });
             });
         });
     }
@@ -326,28 +322,40 @@ topSuite("Ext.event.gesture.Drag", function() {
 
     describe("longpress to drag", function() {
         it("should not initiate drag with longpress by default", function() {
+            var longpressed = false;
+
+            targetEl.on('longpress', function() {
+                longpressed = true;
+            });
+
             runs(function() {
                 start({ id: 1, x: 100, y: 101 });
             });
 
-            waitsForEvent(targetEl, 'longpress', "longpress handler to be called", 5000);
+            waitsFor(function() {
+                return longpressed;
+            }, "longpress handler was never called", 3000);
 
             runs(function() {
-                end({ id: 1, x: 100, y: 101 });
                 expect(dragstartHandler).not.toHaveBeenCalled();
             });
         });
 
         it("should initiate drag with longpress when e.startDrag() is invoked", function() {
+            var longpressed = false;
+
             targetEl.on('longpress', function(e) {
                 e.startDrag();
+                longpressed = true;
             });
 
             runs(function() {
                 start({ id: 1, x: 100, y: 101 });
             });
 
-            waitsForEvent(targetEl, 'longpress', "longpress handler to be called", 5000);
+            waitsFor(function() {
+                return longpressed;
+            }, "longpress handler was never called", 3000);
 
             runs(function() {
                 expect(dragstartHandler).toHaveBeenCalled();
@@ -453,13 +461,18 @@ topSuite("Ext.event.gesture.Drag", function() {
         });
 
         it("should claim the drag gesture when startDrag is called", function() {
+            var longpressHandled = false;
+
             targetEl.on('longpress', function(e) {
                 e.startDrag();
+                longpressHandled = true;
             });
 
             helper.touchStart(targetEl, {id: 1, x: 10, y: 15});
 
-            waitsForEvent(targetEl, 'longpress', 'longpress to fire', 5000);
+            waitsFor(function() {
+                return longpressHandled;
+            });
 
             runs(function() {
                 expect(Ext.event.gesture.Drag.instance.isActive).toBe(true);
@@ -471,7 +484,6 @@ topSuite("Ext.event.gesture.Drag", function() {
                 expect(Ext.event.gesture.Rotate.instance.isActive).toBe(false);
                 expect(Ext.event.gesture.Swipe.instance.isActive).toBe(false);
                 expect(Ext.event.gesture.Tap.instance.isActive).toBe(false);
-                helper.touchEnd(targetEl, {id: 1, x: 10, y: 15});
             });
         });
     });

@@ -1,9 +1,7 @@
 /* global expect, Ext, spyOn */
 
-topSuite("Ext.tree.TreeGrid",
-    [false, 'Ext.tree.Panel', 'Ext.grid.Panel', 'Ext.grid.column.Action',
-     'Ext.layout.container.Border'],
-function() {
+describe("Ext.tree.TreeGrid", function() {
+
     function spyOnEvent(object, eventName, fn) {
         var obj = {
             fn: fn || Ext.emptyFn
@@ -198,43 +196,13 @@ function() {
 
         Ext.destroy(tree);
     });
-
-    describe('tabbability', function() {
-        it('should keep all elements untabbable when not in actionable mode', function() {
-            makeTreeGrid({
-                width: 300,
-                columns: [{
-                    xtype: 'treecolumn',
-                    text: 'F1',
-                    dataIndex: 'f1',
-                    width: 100
-                }, {
-                    text: 'F2',
-                    dataIndex: 'f2',
-                    flex: 1
-                }, {
-                    xtype: 'actioncolumn'
-                }]
-            });
-
-            tree.getNavigationModel().setPosition(0, 0);
-            waitsFor(function() {
-                return tree.view.containsFocus;
-            });
-            runs(function() {
-                expect(tree.view.el.findTabbableElements({skipSelf: true}).length).toBe(0);
-                tree.store.first().expand();
-                expect(tree.view.el.findTabbableElements({skipSelf: true}).length).toBe(0);
-            });
-        });
-    });
     
     describe('Model mutation', function() {
         it('should not have to render a whole row, it should update innerHTML of cell', function() {
             makeTreeGrid();
 
             // Test cls config
-            expect(view.getCellByPosition({row:0, column: 0}, true)).toHaveCls('test-EXTJS-16367');
+            expect(view.getCellByPosition({row:0, column: 0}).hasCls('test-EXTJS-16367')).toBe(true);
 
             var createRowSpy = spyOn(view, 'createRowElement').andCallThrough();
             store.getAt(0).set({
@@ -246,76 +214,7 @@ function() {
             expect(createRowSpy).not.toHaveBeenCalled();
         });
     });
-    
-    describe('locking and variableRowHeight', function () {
-        beforeEach(function () {
-            makeTreeGrid({
-                preciseHeight: true,
-                rootVisible: false,
-                lockedGridConfig: {
-                    syncRowHeight: true
-                },
-                width: 500,
-                height: 250,
-                columns: [{
-                    xtype: 'treecolumn',
-                    text: 'F1',
-                    dataIndex: 'f1',
-                    locked: true
-                }, {
-                    locked: true,
-                    variableRowHeight: true,
-                    dataIndex: 'f1',
-                    renderer: function(v) {
-                        return "<img height='24' width='24' src='resources/images/foo.gif' />" + v;
-                    }
-                },{
-                    text: 'F2',
-                    dataIndex: 'f2',
-                    variableRowHeight: true
-                }]
-            });
-            tree.expandAll();
-        });
-        
-        it('should synchronize row heights', function () {
-            function getRectHeight(el) {
-                var rect = el.getBoundingClientRect();
-                return rect.height || (rect.bottom - rect.top);
-            }
-            
-            var lockedTree = tree.lockedGrid,
-                normalGrid = tree.normalGrid,
-                lockedView = lockedTree.view,
-                normalView = normalGrid.view,
-                scrollable = lockedView.getScrollable().getLockingScroller(),
-                store = tree.getStore(),
-                record, regNode, lockedNode,
-                regNodeHeight, lockedNodeHeight;
-                
-            record = store.findRecord('f1', '3.3');
-            regNode = normalView.getNode(record);
-            lockedNode = lockedView.getNode(record);
 
-            scrollable.ensureVisible(regNode);
-
-            waits(50);
-            runs(function () {
-                regNodeHeight = getRectHeight(regNode);
-                lockedNodeHeight = getRectHeight(lockedNode);
-    
-                // This may be calculated differently between different rows that are
-                // actually the "same height" despite deviation of a few thousandths
-                // of a pixel, specifically in IE/Edge. Fix the value so it's within
-                // 1/10th of a pixel.
-                regNodeHeight = Ext.Number.toFixed(regNodeHeight, 1);
-                lockedNodeHeight = Ext.Number.toFixed(lockedNodeHeight, 1);
-                
-                expect(regNodeHeight).toBe(lockedNodeHeight);
-            });
-        });
-    });
-    
     describe('autoloading', function() {
         it('should not autoload the store if the root is visible', function() {
             var loadCount = 0;
@@ -433,30 +332,24 @@ function() {
             rootNode.expand();
             tree.view.setScrollY(40);
 
-            // We must wait until the Scroller knows about the scroll position
-            // at which point it fires a scrollend event
-            waitsForEvent(tree.getView().getScrollable(), 'scrollend', 'Tree scrollend');
-
             // Wait for scroll position to be read
-            runs(function() {
-                expect(tree.view.getScrollable().getPosition().y).toBe(40);
+            waitsFor(function() {
+                return tree.view.getScrollable().getPosition().y === 40;
             });
             
             runs(function() {
                 tree.getRootNode().childNodes[1].expand();
             });
 
-            // Nothing should happen. The bug was that expansion caused focus-scroll.
-            // No scrolling, and no event firing sohuld take place, scroll position
-            // and application state should remain unchanged.
-            waits(200);
+            // We must wait until the Scroller knows about the scroll position
+            // at which point it fires a scrollend event
+            waitsForEvent(tree.getView().getScrollable(), 'scrollend', 'Tree scrollend');
 
             // Expanding a node should not scroll.
             runs(function() {
                 expect(tree.view.getScrollY()).toEqual(40);
             });
         });
-        
         it("should not not scroll horizontally upon node toggle", function() {
             // MUST be no scroll so that the non buffered rendering pathway is used
             // and the row count changes and a layout is triggered.
@@ -468,21 +361,18 @@ function() {
             rootNode.expand();
             tree.view.setScrollX(40);
 
-            // We must wait until the Scroller knows about the scroll position
-            // at which point it fires a scrollend event
-            waitsForEvent(tree.getView().getScrollable(), 'scrollend', 'Tree scrollend');
-
-            // Wait for scroll position to be read
-            runs(function() {
-                expect(tree.view.getScrollable().getPosition().x).toBe(40);
+            // Wait for scroll syncing to complete
+            waitsFor(function() {
+                return tree.headerCt.getScrollable().getPosition().x === 40;
             });
-            
+
             runs(function() {
                 tree.getRootNode().childNodes[1].expand();
             });
 
-            // Wait for possible (but incorrect) scroll
-            waits(100);
+            // We must wait until the Scroller knows about the scroll position
+            // at which point it fires a scrollend event
+            waitsForEvent(tree.getView().getScrollable(), 'scrollend', 'Tree scrollend');
 
             // Expanding a node should not scroll.
             runs(function() {
@@ -495,8 +385,9 @@ function() {
                 tree.getRootNode().childNodes[1].collapse();
             });
 
-            // Wait for possible (but incorrect) scroll
-            waits(100);
+            // We must wait until the Scroller knows about the scroll position
+            // at which point it fires a scrollend event
+            waitsForEvent(tree.getView().getScrollable(), 'scrollend', 'Tree scrollend');
 
             // Expanding a node should not scroll.
             runs(function() {
@@ -640,7 +531,7 @@ function() {
             });
         });
     });
-
+    
     describe('reconfigure', function() {
         it('should allow reconfigure', function() {
             var cols = [{
@@ -840,7 +731,7 @@ function() {
         });
     });
 
-    describe('auto hide headers, then headers arriving from a bind', function() {
+    describe('auto hide headers, then headers arriging from a bind', function() {
         var store = Ext.create('Ext.data.TreeStore', {
             autoDestroy: true,
             root: {
@@ -869,6 +760,7 @@ function() {
             tree = Ext.create('Ext.tree.Panel', {
                 title: 'Simple Tree',
                 width: 300,
+                hideHeaders: null,
                 viewModel: {
                     data: {
                         headerText: 'A header'

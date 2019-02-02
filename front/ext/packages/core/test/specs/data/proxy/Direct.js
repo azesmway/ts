@@ -1,4 +1,4 @@
-topSuite("Ext.data.proxy.Direct", ['Ext.data.ArrayStore', 'Ext.direct.RemotingProvider'], function() {
+describe("Ext.data.proxy.Direct", function() {
     var proxy, provider, spies, Writer, writer, Model,
         readSpy, createSpy, updateSpy, destroySpy, directSpy, namedSpy, orderedSpy;
     
@@ -140,7 +140,6 @@ topSuite("Ext.data.proxy.Direct", ['Ext.data.ArrayStore', 'Ext.direct.RemotingPr
         
         if (provider) {
             Ext.direct.Manager.removeProvider(provider);
-            provider.destroy();
         }
         
         provider = proxy = Writer = writer = Model = null;
@@ -1154,7 +1153,7 @@ topSuite("Ext.data.proxy.Direct", ['Ext.data.ArrayStore', 'Ext.direct.RemotingPr
                     
                     it("should pass correct params to the fn", function() {
                         expectArgs(destroySpy, [
-                            { id: 8 }, { id: 7 }
+                            { id: 7 }, { id: 8 }
                         ]);
                     });
                 });
@@ -1167,7 +1166,7 @@ topSuite("Ext.data.proxy.Direct", ['Ext.data.ArrayStore', 'Ext.direct.RemotingPr
                     });
                     
                     it("should pass correct params to the fn", function() {
-                        expectArgs(destroySpy, [8, 7]);
+                        expectArgs(destroySpy, [7, 8]);
                     });
                 });
             });

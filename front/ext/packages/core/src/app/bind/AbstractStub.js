@@ -110,7 +110,7 @@ Ext.define('Ext.app.bind.AbstractStub', {
     },
 
     getValue: function () {
-        return this.isAvailable() ? this.getRawValue() : null;
+        return this.isLoading() ? null : this.getRawValue();
     },
 
     graft: function (replacement) {
@@ -146,14 +146,6 @@ Ext.define('Ext.app.bind.AbstractStub', {
                 return true;
             }
         }
-        return false;
-    },
-
-    isAvailable: function() {
-        return true;
-    },
-
-    isLoading: function() {
         return false;
     },
 

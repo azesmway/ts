@@ -1,4 +1,5 @@
-topSuite("Ext.draw.sprite.Text", function() {
+describe('Ext.draw.sprite.Text', function () {
+
     var proto = Ext.draw.sprite.Text.prototype;
 
     describe('makeFontShorthand', function () {
@@ -139,7 +140,7 @@ topSuite("Ext.draw.sprite.Text", function() {
         var def = Ext.draw.sprite.Text.def,
             fontWeight = def.getProcessors().fontWeight;
 
-        fontWeight = fontWeight.bind(def);
+        fontWeight = Ext.Function.bind(fontWeight, def);
 
         it('should return an empty string for unrecognized values', function () {
             var a = fontWeight(Infinity),

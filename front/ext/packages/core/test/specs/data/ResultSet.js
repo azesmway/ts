@@ -1,4 +1,4 @@
-topSuite("Ext.data.ResultSet", ['Ext.data.Model'], function() {
+describe("Ext.data.ResultSet", function() {
     var resultset,
         ModelManager = Ext.data.ModelManager,
         ResultSet = Ext.data.ResultSet;

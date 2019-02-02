@@ -1,4 +1,2 @@
-# theme-neptune-touch
-
-Neptune-Based Touch Theme.
+# theme-neptune-touch - Read Me
 

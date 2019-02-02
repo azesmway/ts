@@ -84,52 +84,28 @@
     @return parsebox($position, 2);
 }
 
-@function top($box, $fallbackBox) {
-    @if $box == null {
-        $box: $fallbackBox;
-    }
+@function top($box) {
     @return parsebox($box, 1);
 }
-@function right($box, $fallbackBox) {
-    @if $box == null {
-        $box: $fallbackBox;
-    }
+@function right($box) {
     @return parsebox($box, 2);
 }
-@function bottom($box, $fallbackBox) {
-    @if $box == null {
-        $box: $fallbackBox;
-    }
+@function bottom($box) {
     @return parsebox($box, 3);
 }
-@function left($box, $fallbackBox) {
-    @if $box == null {
-        $box: $fallbackBox;
-    }
+@function left($box) {
     @return parsebox($box, 4);
 }
-@function vertical($box, $fallbackBox) {
-    @if $box == null {
-        $box: $fallbackBox;
-    }
+@function vertical($box) {
     @return top($box) + bottom($box);
 }
-@function horizontal($box, $fallbackBox) {
-    @if $box == null {
-        $box: $fallbackBox;
-    }
+@function horizontal($box) {
     @return left($box) + right($box);
 }
-@function boxmax($box, $fallbackBox) {
-    @if $box == null {
-        $box: $fallbackBox;
-    }
+@function boxmax($box) {
     @return max(max(top($box), right($box)), max(bottom($box), left($box)));
 }
-@function boxmin($box, $fallbackBox) {
-    @if $box == null {
-        $box: $fallbackBox;
-    }
+@function boxmin($box) {
     @return min(min(top($box), right($box)), min(bottom($box), left($box)));
 }
 @function rotate90($box) {

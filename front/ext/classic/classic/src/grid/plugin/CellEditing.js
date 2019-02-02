@@ -11,7 +11,7 @@
  * to edit a date, it would be useful to specify {@link Ext.form.field.Date} as the editor.
  *
  * If the `editor` config on a column contains a `field` property, then the `editor` config is used to create
- * the wrapping {@link Ext.grid.CellEditor CellEditor}, and the `field` property is used to create the editing 
+ * the wrapping {@link Ext.grid.CellEditorCellEditor}, and the `field` property is used to create the editing 
  * input field.
  *
  * ## Example
@@ -52,9 +52,8 @@
  *         ],
  *         selModel: 'cellmodel',
  *         plugins: {
- *             cellediting: {
- *                 clicksToEdit: 1
- *             }
+ *             ptype: 'cellediting',
+ *             clicksToEdit: 1
  *         },
  *         height: 200,
  *         width: 400,
@@ -295,9 +294,13 @@ Ext.define('Ext.grid.plugin.CellEditing', {
         var me = this,
             record = position.record,
             column = position.column,
+            context,
+            contextGeneration,
+            cell,
+            editor,
             prevEditor = me.getActiveEditor(),
-            view = me.view,
-            context, contextGeneration, cell, editor, p, editValue, abortEdit;
+            p,
+            editValue;
 
         context = me.getEditingContext(record, column);
         if (!context || !column.getEditor(record)) {
@@ -309,7 +312,7 @@ Ext.define('Ext.grid.plugin.CellEditing', {
         if (prevEditor && prevEditor.editing) {
             // Silently drop actionPosition in case completion of edit causes
             // and view refreshing which would attempt to restore actionable mode
-            view.actionPosition = null;
+            me.view.actionPosition = null;
 
             contextGeneration = context.generation;
             if (prevEditor.completeEdit() === false) {
@@ -326,19 +329,7 @@ Ext.define('Ext.grid.plugin.CellEditing', {
         if (!skipBeforeCheck) {
             // Allow vetoing, or setting a new editor *before* we call getEditor
             contextGeneration = context.generation;
-
-            // Disable focus restoration in any of the before edit handling.
-            // We are going to be doing that below
-            if (view.actionableMode) {
-                view.skipSaveFocusState = true;
-            }
-
-            abortEdit = me.beforeEdit(context) === false || me.fireEvent('beforeedit', me, context) === false || context.cancel;
-
-            // Clear temporary flag
-            view.skipSaveFocusState = false;
-
-            if (abortEdit) {
+            if (me.beforeEdit(context) === false || me.fireEvent('beforeedit', me, context) === false || context.cancel) {
                 return;
             }
 
@@ -355,7 +346,7 @@ Ext.define('Ext.grid.plugin.CellEditing', {
         // If the events fired above ('beforeedit' and potentially 'edit') triggered any destructive operations
         // regather the context using the ordinal position.
         if (context.cell !== context.getCell(true)) {
-            context = me.getEditingContext(context.rowIdx, context.colIdx, null, context.view);
+            context = me.getEditingContext(context.rowIdx, context.colIdx);
             position.setPosition(context);
         }
 
@@ -367,10 +358,8 @@ Ext.define('Ext.grid.plugin.CellEditing', {
             if (!editor.rendered) {
                 editor.hidden = true;
                 editor.render(cell);
-            }
-            else {
+            } else {
                 p = editor.el.dom.parentNode;
-                
                 if (p !== cell.dom) {
                     // This can sometimes throw an error
                     // https://code.google.com/p/chromium/issues/detail?id=432392
@@ -379,11 +368,6 @@ Ext.define('Ext.grid.plugin.CellEditing', {
                     } catch (e) {
                         
                     }
-                    
-                    if (editor.container && editor.container.dom !== cell.dom) {
-                        editor.container.collect();
-                    }
-                    
                     editor.container = cell;
                     cell.dom.appendChild(editor.el.dom, cell.dom.firstChild);
                 }
@@ -535,27 +519,23 @@ Ext.define('Ext.grid.plugin.CellEditing', {
     },
 
     getEditor: function(record, column) {
-        return this.getCachedEditor(column.getItemId(), record, column);
-    },
-    
-    getCachedEditor: function (editorId, record, column) {
         var me = this,
             editors = me.editors,
+            editorId = column.getItemId(),
             editor = editors.getByKey(editorId);
-        
+
         if (!editor) {
             editor = column.getEditor(record);
             if (!editor) {
                 return false;
             }
-            
+
             // Allow them to specify a CellEditor in the Column
             if (!(editor instanceof Ext.grid.CellEditor)) {
                 // Apply the field's editorCfg to the CellEditor config.
                 // See Editor#createColumnField. A Column's editor config may
                 // be used to specify the CellEditor config if it contains a field property.
-                editor = Ext.widget(Ext.apply({
-                    xtype: 'celleditor',
+                editor = new Ext.grid.CellEditor(Ext.apply({
                     floating: true,
                     editorId: editorId,
                     field: editor
@@ -566,7 +546,7 @@ Ext.define('Ext.grid.plugin.CellEditing', {
             // Prevent this field from being included in an Ext.form.Basic
             // collection, if the grid happens to be used inside a form
             editor.field.excludeForm = true;
-            
+
             // If the editor is new to this grid, then add it to the grid, and ensure it tells us about its life cycle.
             if (editor.column !== column) {
                 editor.column = column;
@@ -574,24 +554,22 @@ Ext.define('Ext.grid.plugin.CellEditing', {
             }
             editors.add(editor);
         }
-        
+
         // Inject an upward link to its owning grid even though it is not an added child.
         editor.ownerCmp = me.grid.ownerGrid;
-        
+
         if (column.isTreeColumn) {
             editor.isForTree = column.isTreeColumn;
             editor.addCls(Ext.baseCSSPrefix + 'tree-cell-editor');
         }
-        
+
         // Set the owning grid.
         // This needs to be kept up to date because in a Lockable assembly, an editor
         // needs to swap sides if the column is moved across.
         editor.setGrid(me.grid);
-        
+
         // Keep upward pointer correct for each use - editors are shared between locking sides
         editor.editingPlugin = me;
-        editor.collectContainerElement = true;
-        
         return editor;
     },
 
@@ -619,11 +597,10 @@ Ext.define('Ext.grid.plugin.CellEditing', {
      * Gets the cell (td) for a particular record and column.
      * @param {Ext.data.Model} record
      * @param {Ext.grid.column.Column} column
-     * @param {Boolean} [returnElement=false] `true` to return an Ext.Element, else a raw `<td>` is returned.
      * @private
      */
-    getCell: function(record, column, returnElement) {
-        return this.grid.getView().getCell(record, column, returnElement);
+    getCell: function(record, column) {
+        return this.grid.getView().getCell(record, column);
     },
 
     onEditComplete: function(ed, value, startValue) {
@@ -638,9 +615,7 @@ Ext.define('Ext.grid.plugin.CellEditing', {
         // Only update the record if the new value is different than the
         // startValue. When the view refreshes its el will gain focus
         if (!record.isEqual(value, startValue)) {
-            view.skipSaveFocusState = true;
             record.set(context.column.dataIndex, value);
-            view.skipSaveFocusState = false;
             // Changing the record may impact the position
             context.rowIdx = view.indexOf(record);
         }

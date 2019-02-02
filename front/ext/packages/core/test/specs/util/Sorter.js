@@ -1,4 +1,4 @@
-topSuite("Ext.util.Sorter", ['Ext.data.SortTypes', 'Ext.data.Model'], function() {
+describe("Ext.util.Sorter", function() {
     var sorter;
 
     describe("instantiation", function() {
@@ -135,18 +135,15 @@ topSuite("Ext.util.Sorter", ['Ext.data.SortTypes', 'Ext.data.Model'], function()
             };
         }
 
-        function nullFirstComparator(nullFirst, transform) {
+        function nullFirstComparator(nullFirst) {
             return function (v1, v2) {
                 if (v1 === null) {
                     return nullFirst ? -1 : 1;
                 } else if (v2 === null) {
                     return nullFirst ? 1 : -1;
-                } else if (transform) {
-                    v1 = transform(v1);
-                    v2 = transform(v2);
+                } else {
+                    return v1 > v2 ? 1 : (v1 < v2 ? -1 : 0);
                 }
-                
-                return v1 > v2 ? 1 : (v1 < v2 ? -1 : 0);
             };
         }
 
@@ -154,7 +151,7 @@ topSuite("Ext.util.Sorter", ['Ext.data.SortTypes', 'Ext.data.Model'], function()
         // had to do this b/c we're testing simple arrays and didn't need to specify a `property` value.
         function defaultSorterFn(v1, v2) {
             var me = this,
-                transform = me._transform;
+                transform = me.transform;
 
             if (v1 === v2) {
                 return 0;
@@ -198,11 +195,11 @@ topSuite("Ext.util.Sorter", ['Ext.data.SortTypes', 'Ext.data.Model'], function()
         function sortIt(method, nullFirst) {
             var candidate = candidates[method],
                 testArr = candidate.test,
-                compare = createComparator(candidate, nullFirst);
+                compare = createComparator(candidates[method], nullFirst);
 
             describe(method + (nullFirst ? ' first' : ' last'), function () {
                 it('should sort null values ' + (nullFirst ? 'first' : 'last'), function () {
-                    expect(testArr.concat().sort(nullFirstComparator(nullFirst, candidate.transform))).toEqual(testArr.concat().sort(compare));
+                    expect(testArr.concat().sort(nullFirstComparator(nullFirst))).toEqual(testArr.concat().sort(compare));
                 });
             });
         }

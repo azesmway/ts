@@ -4,8 +4,7 @@
 
 function makeObservableSuite(isMixin) {
 
-    topSuite(isMixin ? "Ext.mixin.Observable" : "Ext.util.Observable", ['Ext.Container'], function() {
-        // @define Observable
+    describe(isMixin ? "Ext.mixin.Observable" : "Ext.util.Observable", function() {
         var Observable = isMixin ? Ext.mixin.Observable : Ext.util.Observable,
             Boss,
             boss,
@@ -831,23 +830,30 @@ function makeObservableSuite(isMixin) {
 
                     it("should not call handler immediately", function() {
                         expect(bufferFn).not.toHaveBeenCalled();
-                        waitsForSpy(bufferFn);
                     });
 
                     it("should call the handler only one times after a certain amount of time", function() {
-                        waitsForSpy(bufferFn, "bufferFn to be called");
+                        waitsFor(function() {
+                            return bufferFn.callCount === 1;
+                        }, "bufferFn wasn't called");
                     });
 
                     it("should call the handler function with passed arguments coming from the last event firing", function() {
-                        waitsForSpy(bufferFn, "bufferFn to be called");
+                        waitsFor(function() {
+                            return bufferFn.callCount === 1;
+                        }, "bufferFn wasn't called");
 
                         runs(function() {
-                            expect(bufferFn.calls[0].args[0]).toBe("buffer 3");
+                            expect(bufferFn).toHaveBeenCalledWith("buffer 3", {
+                                buffer: 5
+                            });
                         });
                     });
 
                     it("should call the handler function with the correct scope", function() {
-                        waitsForSpy(bufferFn, "bufferFn to be called");
+                        waitsFor(function() {
+                            return bufferFn.callCount === 1;
+                        }, "bufferFn wasn't called");
 
                         runs(function() {
                             expect(bufferFn.calls[0].object).toBe(fakeScope);
@@ -855,7 +861,9 @@ function makeObservableSuite(isMixin) {
                     });
 
                     it("should not remove the listener", function() {
-                        waitsForSpy(bufferFn, "bufferFn to be called");
+                        waitsFor(function() {
+                            return bufferFn.callCount === 1;
+                        }, "bufferFn wasn't called");
 
                         runs(function() {
                             expect(boss.hasListener("bufferevent")).toBe(true);
@@ -875,7 +883,9 @@ function makeObservableSuite(isMixin) {
                         boss.fireEvent("bufferevent", "buffer 2");
                         boss.fireEvent("bufferevent", "buffer 3");
 
-                        waitsForSpy(spy, "spy to be called");
+                        waitsFor(function() {
+                            return spy.callCount === 1;
+                        }, "spy wasn't called");
 
                         runs(function() {
                             expect(spy.callCount).toBe(1);
@@ -897,23 +907,30 @@ function makeObservableSuite(isMixin) {
 
                     it("should not call handler immediately", function() {
                         expect(delayFn).not.toHaveBeenCalled();
-                        waitsForSpy(delayFn);
                     });
 
                     it("should call the handler only one times after a certain amount of time", function() {
-                        waitsForSpy(delayFn, "delayFn to be called");
+                        waitsFor(function() {
+                            return delayFn.callCount === 1;
+                        }, "delayFn wasn't called");
                     });
 
                     it("should call the handler function with passed arguments", function() {
-                        waitsForSpy(delayFn, "delayFn to be called");
+                        waitsFor(function() {
+                            return delayFn.callCount === 1;
+                        }, "delayFn wasn't called");
 
                         runs(function() {
-                            expect(delayFn.calls[0].args[0]).toBe("delay");
+                            expect(delayFn).toHaveBeenCalledWith("delay", {
+                                delay: 5
+                            });
                         });
                     });
 
                     it("should call the handler function with the correct scope", function() {
-                        waitsForSpy(delayFn, "delayFn to be called");
+                        waitsFor(function() {
+                            return delayFn.callCount === 1;
+                        }, "delayFn wasn't called");
 
                         runs(function() {
                             expect(delayFn.calls[0].object).toBe(fakeScope);
@@ -931,7 +948,9 @@ function makeObservableSuite(isMixin) {
 
                         boss.fireEvent("delayevent", "buffer 1");
 
-                        waitsForSpy(delayFn, "delayFn to be called");
+                        waitsFor(function() {
+                            return spy.callCount === 1;
+                        }, "spy wasn't called");
 
                         runs(function() {
                             expect(spy).toHaveBeenCalled();
@@ -3870,13 +3889,10 @@ function makeObservableSuite(isMixin) {
                 // Does not call handler immediately
                 expect(spy).not.toHaveBeenCalled();
 
-                waitsForSpy(spy);
-
                 // Multiple calls before the animation frame.
                 // Only the last one wins, as documented.
-                runs(function() {
-                    expect(spy.callCount).toBe(1);
-                    expect(spy.mostRecentCall.args[0]).toBe(2);
+                waitsFor(function() {
+                    return spy.callCount === 1 && spy.mostRecentCall.args[0] === 2;
                 });
             });
         });

@@ -20,9 +20,7 @@
  *           height: 250,
  *           width: 250,
  *           store: shows,
- *           plugins: {
- *               gridfilters: true
- *           },
+ *           plugins: 'gridfilters',
  *           columns: [{
  *               dataIndex: 'id',
  *               text: 'ID',
@@ -77,12 +75,13 @@ Ext.define('Ext.grid.filters.filter.Number', {
         }
     },
 
+    //<locale>
     /**
      * @cfg {String} emptyText
      * The empty text to show for each field.
-     * @locale
      */
     emptyText: 'Enter Number...',
+    //</locale>
 
     itemDefaults: {
         xtype: 'numberfield',

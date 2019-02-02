@@ -88,21 +88,21 @@ Ext.define('Ext.grid.filters.filter.Base', {
     filterIdPrefix: Ext.baseCSSPrefix + 'gridfilter',
 
     /**
-     * @event filteractivate
+     * @event activate
      * Fires when an inactive filter becomes active
      * @param {Ext.grid.filters.Filters} this
-     * @param {Ext.grid.column.Column} column This filter's assigned column
-     * @since 6.5.0
-     * @member Ext.panel.Table
      */
 
     /**
-     * @event filterdeactivate
+     * @event deactivate
      * Fires when an active filter becomes inactive
      * @param {Ext.grid.filters.Filters} this
-     * @param {Ext.grid.column.Column} column This filter's assigned column
-     * @since 6.5.0
-     * @member Ext.panel.Table
+     */
+
+    /**
+     * @event update
+     * Fires when a filter configuration has changed
+     * @param {Ext.grid.filters.Filters} this The filter object.
      */
 
     /**
@@ -146,8 +146,8 @@ Ext.define('Ext.grid.filters.filter.Base', {
 
     addStoreFilter: function (filter) {
         var filters = this.getGridStore().getFilters(),
-            idx = filters.indexOf(filter),
-            existing = idx !== -1 ? filters.getAt(idx) : null;
+        idx = filters.indexOf(filter),
+        existing = idx !== -1 ? filters.getAt(idx) : null;
 
         // If the filter being added doesn't exist in the collection we should add it.
         // But if there is a filter with the same id (indexOf tests for the same id), we should
@@ -291,7 +291,7 @@ Ext.define('Ext.grid.filters.filter.Base', {
      * @private
      * @method setValue
      * Template method to be implemented by all subclasses that is to
-     * set the value of the filter and fire the grid's 'filterchange' event.
+     * set the value of the filter and fire the 'update' event.
      * @param {Object} data The value to set the filter
      * @template
      */
@@ -299,6 +299,7 @@ Ext.define('Ext.grid.filters.filter.Base', {
     /**
      * Sets the status of the filter and fires the appropriate events.
      * @param {Boolean} active The new filter state.
+     * @param {String} key The filter key for columns that support multiple filters.
      */
     setActive: function (active) {
         var me = this,
@@ -324,7 +325,7 @@ Ext.define('Ext.grid.filters.filter.Base', {
             }
 
             me.setColumnActive(active);
-            me.grid.fireEventArgs(active ? 'filteractivate' : 'filterdeactivate', [me, me.column]);
+            // TODO: fire activate/deactivate
         }
     },
 

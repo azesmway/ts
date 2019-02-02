@@ -1,11 +1,4 @@
-/* global Ext, xdescribe, expect, spyOn, jasmine */
-
-var deps = Ext.isModern ? ['Ext.direct.*', 'Ext.form.Panel']
-         : ['Ext.direct.*', 'Ext.form.Panel', 'Ext.layout.container.Form',
-            'Ext.form.field.Hidden', 'Ext.form.action.DirectSubmit',
-            'Ext.form.action.DirectLoad'];
-
-topSuite("Ext.direct.RemotingProvider", deps, function() {
+describe("Ext.direct.RemotingProvider", function() {
     var RP = Ext.direct.RemotingProvider,
         provider,
         responseText,
@@ -15,7 +8,7 @@ topSuite("Ext.direct.RemotingProvider", deps, function() {
                 "TestAction": [{
                     len:  1,
                     name: "echo"
-                }, {
+                },{
                     len:  1,
                     name: "directFail"
                 }, {
@@ -98,14 +91,14 @@ topSuite("Ext.direct.RemotingProvider", deps, function() {
                 return {
                     data: data,
                     metadata: metadata
-                };
+                }
             },
             
             directMetaOrdered: function(data, metadata) {
                 return {
                     data: data,
                     metadata: metadata
-                };
+                }
             },
             
             directMetaFormNamed: function(form, metadata) {
@@ -113,7 +106,7 @@ topSuite("Ext.direct.RemotingProvider", deps, function() {
                     success: true,
                     data: form,
                     metadata: metadata
-                };
+                }
             },
             
             directMetaFormOrdered: function(form, metadata) {
@@ -121,7 +114,7 @@ topSuite("Ext.direct.RemotingProvider", deps, function() {
                     success: true,
                     data: form,
                     metadata: metadata
-                };
+                }
             },
             
             foo: function() {
@@ -384,7 +377,7 @@ topSuite("Ext.direct.RemotingProvider", deps, function() {
         function waitForEcho(fn, desc, timeout) {
             fn      = fn   || checkEcho;
             desc    = desc || 'callback never fired';
-            timeout = timeout != null ? timeout : 1000;
+            timeout = timeout != null ? timeout : 100;
             
             waitsFor(fn, desc, timeout);
         }
@@ -460,7 +453,7 @@ topSuite("Ext.direct.RemotingProvider", deps, function() {
                         ns.TestAction.echo('bar', Ext.emptyFn);
                     });
                 
-                    waitsFor(function() { return !!options; }, 'options never modified', Ext.isIE9m ? 100: 20);
+                    waitsFor(function() { return !!options }, 'options never modified', 20);
                 
                     runs(function() {
                         expect(options.jsonData).toEqual([{
@@ -495,7 +488,7 @@ topSuite("Ext.direct.RemotingProvider", deps, function() {
                         ns.TestAction.echo('qux', Ext.emptyFn, this, { timeout: 1 });
                     });
                 
-                    waitsFor(function() { return !!options; }, 'options never modified', 20);
+                    waitsFor(function() { return !!options }, 'options never modified', 20);
                 
                     runs(function() {
                         expect(options.length).toBe(1);
@@ -528,7 +521,7 @@ topSuite("Ext.direct.RemotingProvider", deps, function() {
                         ns.TestAction.echo('qux', Ext.emptyFn);
                     });
                 
-                    waitsFor(function() { return !!options; }, 'options never modified', 20);
+                    waitsFor(function() { return !!options }, 'options never modified', 20);
                 
                     runs(function() {
                         expect(options.length).toBe(1);
@@ -1170,9 +1163,8 @@ topSuite("Ext.direct.RemotingProvider", deps, function() {
                             ns.TestAction.echo('blerg', cb);
                             ns.TestAction.echo('throbbe', cb2);
                         });
-
+                        
                         waitForSpy(cb);
-                        waitForSpy(cb2);
                         
                         runs(function() {
                             expect(cb).toHaveBeenCalled();
@@ -1209,7 +1201,7 @@ topSuite("Ext.direct.RemotingProvider", deps, function() {
                     // Metadata len === 2, so 3rd argument should be cut off
                     expectEcho({ data: 'bar', metadata: ['blerg', 'blam'] });
                 });
-            });
+            })
         });
         
         // Modern specific tests are in Ext.form.Panel
@@ -1391,7 +1383,6 @@ topSuite("Ext.direct.RemotingProvider", deps, function() {
                         provider.timeout = 42;
                         ajaxSpy = Ext.Ajax.request;
                         ajaxSpy.andCallFake(Ext.emptyFn);
-                        ajaxSpy.callCount = 0;
                     });
                     
                     afterEach(function() {

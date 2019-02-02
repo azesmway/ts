@@ -1,8 +1,5 @@
-/* global expect, Ext, jasmine */
+describe("Ext.layout.container.Accordion", function() {
 
-topSuite("Ext.layout.container.Accordion",
-    ['Ext.panel.Panel', 'Ext.button.Button', 'Ext.form.field.Text', 'Ext.layout.container.Fit'],
-function() {
     describe("single item", function() {
         var panel, child;
         function makePanel(multi, fill) {
@@ -14,9 +11,6 @@ function() {
                     animate: false,
                     multi: multi,
                     fill: fill === false ? false : true
-                },
-                defaults: {
-                    animCollapseDuration: 100
                 },
                 items: [{
                     title: 'Child Panel'
@@ -54,10 +48,10 @@ function() {
 
     });
     
-    describe("dynamic items", function() {
+    describe("dynamic items", function(){
         var ct, makeCt, expectCollapsed, expectExpanded;
         
-        beforeEach(function() {
+        beforeEach(function(){
             makeCt = function(items, isMulti) {
                 ct = new Ext.container.Container({
                     renderTo: document.body,
@@ -72,22 +66,22 @@ function() {
                 });    
             };
             
-            expectCollapsed = function(index) {
+            expectCollapsed = function(index){
                 expect(ct.items.getAt(index).collapsed).toBeTruthy();    
             };
             
-            expectExpanded = function(index) {
+            expectExpanded = function(index){
                 expect(ct.items.getAt(index).collapsed).toBeFalsy();    
             };
         });
         
-        afterEach(function() {
+        afterEach(function(){
             Ext.destroy(ct);
             makeCt = ct = expectExpanded = expectCollapsed = null;
         });
         
         describe("single", function() {
-            it("should collapse a dynamic item by default", function() {
+            it("should collapse a dynamic item by default", function(){
                 makeCt([{
                     title: 'Default'
                 }]);
@@ -126,8 +120,8 @@ function() {
             });
         });
         
-        describe("multi", function() {
-            it("should leave an item expanded by default", function() {
+        describe("multi", function(){
+            it("should leave an item expanded by default", function(){
                 makeCt([{
                     title: 'Default'
                 }], true);
@@ -138,7 +132,7 @@ function() {
                 expectExpanded(1);
             });
             
-            it("should collapse the item if we specify it explicitly", function() {
+            it("should collapse the item if we specify it explicitly", function(){
                 makeCt([{
                     title: 'Default'
                 }], true);
@@ -181,11 +175,11 @@ function() {
         });
     });
     
-    describe("expand/collapse", function() {
+    describe("expand/collapse", function(){
         
         var ct, makeCt, expectCollapsed, expectExpanded;
         
-        beforeEach(function() {
+        beforeEach(function(){
             makeCt = function(items, multi, fill) {
                 ct = new Ext.container.Container({
                     renderTo: document.body,
@@ -201,25 +195,25 @@ function() {
                 });    
             };
             
-            expectCollapsed = function(index) {
+            expectCollapsed = function(index){
                 var item = ct.items.getAt(index);
                 expect(item.collapsed).toBeTruthy();
             };
             
-            expectExpanded = function(index) {
+            expectExpanded = function(index){
                 var item = ct.items.getAt(index);
                 expect(item.collapsed).toBeFalsy();
             };
         });
         
-        afterEach(function() {
+        afterEach(function(){
             Ext.destroy(ct);
             makeCt = ct = expectExpanded = expectCollapsed = null;
         });
         
         var tests = function(fill) {
-            describe("single", function() {
-                it("should expand the first item by default if none are collapsed: false", function() {
+            describe("single", function(){
+                it("should expand the first item by default if none are collapsed: false", function(){
                     makeCt([{
                         title: 'P1'
                     }, {
@@ -230,7 +224,7 @@ function() {
                     expectExpanded(0);
                 });
             
-                it("should expand a collapsed: false item by default", function() {
+                it("should expand a collapsed: false item by default", function(){
                     makeCt([{
                         title: 'P1'
                     }, {
@@ -242,7 +236,7 @@ function() {
                     expectExpanded(1);
                 });
             
-                it("should expand the first collapsed: false item by default", function() {
+                it("should expand the first collapsed: false item by default", function(){
                     makeCt([{
                         title: 'P1'
                     }, {
@@ -255,7 +249,7 @@ function() {
                     expectCollapsed(2);
                 });
             
-                it("should expand the next item when collapsing an item", function() {
+                it("should expand the next item when collapsing an item", function(){
                     makeCt([{
                         title: 'P1'
                     }, {
@@ -268,7 +262,7 @@ function() {
                     expectExpanded(1);
                 });
             
-                it("should expand the previous item when collapsing an item and next is not available", function() {
+                it("should expand the previous item when collapsing an item and next is not available", function(){
                     makeCt([{
                         title: 'P1'
                     }, {
@@ -282,7 +276,7 @@ function() {
                     expectExpanded(1);
                 });
             
-                it("should collapse the expanded item when expanding an item", function() {
+                it("should collapse the expanded item when expanding an item", function(){
                     makeCt([{
                         title: 'P1'
                     }, {
@@ -296,8 +290,8 @@ function() {
                 });
             });
         
-            describe("multi", function() {
-                it("should have each item expanded unless specified as collapsed", function() {
+            describe("multi", function(){
+                it("should have each item expanded unless specified as collapsed", function(){
                     makeCt([{
                         title: 'P1'
                     }, {
@@ -310,7 +304,7 @@ function() {
                     expectExpanded(2);
                 });
             
-                it("should collapse any items with collapsed: true", function() {
+                it("should collapse any items with collapsed: true", function(){
                     makeCt([{
                         title: 'P1',
                         collapsed: true
@@ -323,7 +317,7 @@ function() {
                     expectExpanded(1);
                 });
             
-                it("should not modify other items when collapsing an item", function() {
+                it("should not modify other items when collapsing an item", function(){
                     makeCt([{
                         title: 'P1'
                     }, {
@@ -337,7 +331,7 @@ function() {
                     expectExpanded(2);
                 });
             
-                it("should not modify other items when expanding an item", function() {
+                it("should not modify other items when expanding an item", function(){
                     makeCt([{
                         title: 'P1',
                         collapsed: true
@@ -360,15 +354,15 @@ function() {
            tests(true); 
         });
         
-        describe("fill: false", function() {
+        describe("fill: false", function(){
             tests(false);
         });
     });
 
-    describe("show/hide", function() {
+    describe("show/hide", function(){
         var ct, makeCt, expectCollapsed, expectExpanded;
         
-        beforeEach(function() {
+        beforeEach(function(){
             makeCt = function(items) {
                 ct = new Ext.container.Container({
                     renderTo: document.body,
@@ -382,14 +376,14 @@ function() {
                 });    
             };
             
-            expectCollapsed = function(index) {
+            expectCollapsed = function(index){
                 var item = ct.items.getAt(index);
 
                 expect(item.collapsed).toBeTruthy();    
                 expect(item.getInherited().collapsed).toBeTruthy();
             };
             
-            expectExpanded = function(index) {
+            expectExpanded = function(index){
                 var item = ct.items.getAt(index);
 
                 expect(item.collapsed).toBeFalsy();    
@@ -397,12 +391,12 @@ function() {
             };
         });
         
-        afterEach(function() {
+        afterEach(function(){
             Ext.destroy(ct);
             makeCt = ct = expectExpanded = expectCollapsed = null;
         });
 
-        it("should retain the same state when hidden", function() {
+        it("should retain the same state when hidden", function(){
             makeCt([{
                 title: 'P1'
             }, {
@@ -419,7 +413,7 @@ function() {
             expectCollapsed(2);
         });
     
-        it("should not expand when shown when not the first item", function() {
+        it("should not expand when shown when not the first item", function(){
             makeCt([{
                 title: 'P1',
                 collapsed: true,
@@ -439,7 +433,8 @@ function() {
         });
     });  
 
-    describe("filling", function() {
+    describe("filling", function(){
+        
         var ct, h = 300;
         function makeCt(items, multi, fill) {
             ct = new Ext.container.Container({
@@ -461,9 +456,9 @@ function() {
             ct = null;
         });
         
-        describe("fill: true", function() {
-            describe("single", function() {
-                it("should stretch the item to the height", function() {
+        describe("fill: true", function(){
+            describe("single", function(){
+                it("should stretch the item to the height", function(){
                     makeCt([{
                         title: 'Item 1',
                         html: 'I1'
@@ -471,7 +466,7 @@ function() {
                     expect(ct.items.first().getHeight()).toBe(h);    
                 });
             
-                it("should stretch the item to the height - the other panel headers", function() {
+                it("should stretch the item to the height - the other panel headers", function(){
                     makeCt([{
                         title: 'Item 1',
                         html: 'I1'
@@ -484,8 +479,8 @@ function() {
                 });  
             });
             
-            describe("multi", function() {
-                it("should stretch the item to the height", function() {
+            describe("multi", function(){
+                it("should stretch the item to the height", function(){
                     makeCt([{
                         title: 'Item 1',
                         html: 'I1'
@@ -493,7 +488,7 @@ function() {
                     expect(ct.items.first().getHeight()).toBe(h);    
                 });
                 
-                it("should stretch the item to the height - the other panel headers", function() {
+                it("should stretch the item to the height - the other panel headers", function(){
                     makeCt([{
                         title: 'Item 1',
                         html: 'I1'
@@ -505,7 +500,7 @@ function() {
                     expect(ct.items.first().getHeight()).toBe(h - left);
                 }); 
                 
-                it("should stretch the both items evenly", function() {
+                it("should stretch the both items evenly", function(){
                     makeCt([{
                         title: 'Item 1',
                         html: 'I1',
@@ -521,9 +516,9 @@ function() {
             });
         });
         
-        describe("fill: false", function() {
-            describe("single", function() {
-                it("should not stretch the item to the height", function() {
+        describe("fill: false", function(){
+            describe("single", function(){
+                it("should not stretch the item to the height", function(){
                     makeCt([{
                         title: 'Item 1',
                         html: 'I1'
@@ -532,7 +527,7 @@ function() {
                     expect(ct.items.first().getHeight()).toBeLessThan(100);    
                 });
             
-                it("should not stretch either item height", function() {
+                it("should not stretch either item height", function(){
                     makeCt([{
                         title: 'Item 1',
                         html: 'I1'
@@ -546,8 +541,8 @@ function() {
                 });  
             });
             
-            describe("multi", function() {
-                it("should not stretch the item to the height", function() {
+            describe("multi", function(){
+                it("should not stretch the item to the height", function(){
                     makeCt([{
                         title: 'Item 1',
                         html: 'I1'
@@ -556,7 +551,7 @@ function() {
                     expect(ct.items.first().getHeight()).toBeLessThan(100);    
                 });
                 
-                it("should not stretch either item height", function() {
+                it("should not stretch either item height", function(){
                     makeCt([{
                         title: 'Item 1',
                         html: 'I1'
@@ -569,7 +564,7 @@ function() {
                     expect(ct.items.last().getHeight()).toBeLessThan(100);
                 }); 
                 
-                it("should not stretch either item", function() {
+                it("should not stretch either item", function(){
                     makeCt([{
                         title: 'Item 1',
                         html: 'I1',
@@ -586,13 +581,13 @@ function() {
         });
     });
     
-    describe("collapseFirst", function() {
+    describe("collapseFirst", function(){
         var makePanel, panel, tools = [{
             type: 'print'    
         }, {
             type: 'refresh'
         }];
-        beforeEach(function() {
+        beforeEach(function(){
             makePanel = function(items, collapseFirst) {
                 panel = new Ext.panel.Panel({
                     width: 100,
@@ -608,12 +603,12 @@ function() {
             };
         }); 
         
-        afterEach(function() {
+        afterEach(function(){
             Ext.destroy(panel);
             makePanel = panel = null;
         });   
         
-        it("should use the collapseFirst option on the child items as a default", function() {
+        it("should use the collapseFirst option on the child items as a default", function(){
             makePanel([{
                 collapseFirst: true,
                 title: 'A',
@@ -635,7 +630,7 @@ function() {
             expect(p2.tools[2].type).toBe('expand-bottom');
         });
         
-        it("should use the collapseFirst: false on the layout", function() {
+        it("should use the collapseFirst: false on the layout", function(){
              makePanel([{
                 title: 'A',
                 tools: tools
@@ -656,7 +651,7 @@ function() {
             expect(p2.tools[2].type).toBe('expand-bottom');
         });
         
-        it("should use the collapseFirst: true on the layout", function() {
+        it("should use the collapseFirst: true on the layout", function(){
              makePanel([{
                 title: 'A',
                 tools: tools
@@ -679,11 +674,11 @@ function() {
         
     });
     
-    describe("activeOnTop", function() {
+    describe("activeOnTop", function(){
         
         var makePanel, panel;
         
-        beforeEach(function() {
+        beforeEach(function(){
             makePanel = function(items, collapseFirst) {
                 panel = new Ext.panel.Panel({
                     width: 100,
@@ -699,12 +694,12 @@ function() {
             };
         }); 
         
-        afterEach(function() {
+        afterEach(function(){
             Ext.destroy(panel);
             makePanel = panel = null;
         });  
         
-        it("should move initial active item to the top", function() {
+        it("should move initial active item to the top", function(){
             var c1 = new Ext.panel.Panel({
                     title: 'A'
                 }),
@@ -720,7 +715,7 @@ function() {
             expect(panel.items.indexOf(c3)).toBe(0);
         });
         
-        it("should move the item to the top when expanded", function() {
+        it("should move the item to the top when expanded", function(){
             var c1 = new Ext.panel.Panel({
                     title: 'A'
                 }),
@@ -736,7 +731,7 @@ function() {
             expect(panel.items.indexOf(c3)).toBe(0);
         });
         
-        it("should move the active item to the top when a new item is inserted above it", function() {
+        it("should move the active item to the top when a new item is inserted above it", function(){
             var c1 = new Ext.panel.Panel({
                     title: 'A'
                 }),
@@ -755,8 +750,8 @@ function() {
             
     });
     
-    describe("removing items", function() {
-        it("should expand the first item with multi: false & removing the expanded item", function() {
+    describe("removing items", function(){
+        it("should expand the first item with multi: false & removing the expanded item", function(){
             var ct = new Ext.container.Container({
                 width: 200,
                 height: 200,
@@ -798,7 +793,7 @@ function() {
             ct.items.each(function(item) {
                 item.on('expand', function() {
                     ++count;
-                });
+                })
             });
             
             ct.destroy();
@@ -840,9 +835,13 @@ function() {
     describe("ARIA attributes", function() {
         function makeSuite(name, animate, options) {
             describe(name + ", animate: " + !!animate, function() {
-                var ct, foo, bar, pinTool, closeTool;
+                var ct, foo, bar, pinTool, closeTool,
+                    collapseSpy, expandSpy;
                 
-                beforeAll(function(done) {
+                beforeEach(function() {
+                    collapseSpy = jasmine.createSpy('collapse');
+                    expandSpy = jasmine.createSpy('expand');
+                    
                     ct = new Ext.container.Container({
                         renderTo: Ext.getBody(),
                         width: 400,
@@ -856,16 +855,17 @@ function() {
                             type: 'accordion',
                             animate: !!animate
                         },
-                        defaults: {
-                            animCollapseDuration: 100
-                        },
                         items: [{
                             title: 'foo',
                             collapsible: true,
                             animCollapse: animate,
                             tools: [{
                                 type: 'pin'
-                            }]
+                            }],
+                            listeners: {
+                                collapse: collapseSpy,
+                                expand: expandSpy
+                            }
                         }, {
                             title: 'bar',
                             collapsible: true,
@@ -880,33 +880,27 @@ function() {
                     pinTool = foo.down('tool[type=pin]');
                     closeTool = bar.down('tool[type=close]');
                     
-                    if (options.collapse) {
-                        var cb = function() {
-                            // Let the stack unwind!
-                            var setTimeout = jasmine._setTimeout;
-                            setTimeout(done, 1);
-                        };
+                    if (options && options.collapse) {
+                        runs(function() {
+                            foo.collapse();
+                        });
                         
-                        if (!options.expand) {
-                            foo.on('collapse', cb, null, { single: true });
-                        }
-                        else {
-                            foo.on('collapse', function() {
-                                foo.on('expand', cb, null, { single: true });
-                                foo.expand();
-                            }, null, { single: true });
-                        }
-                        
-                        foo.collapse();
+                        waitsForSpy(collapseSpy, 'collapse', 1000);
                     }
-                    else {
-                        done();
+                    
+                    if (options && options.expand) {
+                        runs(function() {
+                            foo.expand();
+                        });
+                        
+                        waitsForSpy(expandSpy, 'expand', 1000);
                     }
                 });
                 
-                afterAll(function() {
+                afterEach(function() {
                     Ext.destroy(ct);
                     ct = foo = bar = pinTool = closeTool = null;
+                    collapseSpy = expandSpy = null;
                 });
                 
                 describe("container", function() {
@@ -966,7 +960,7 @@ function() {
                             
                             it("should be tabbable", function() {
                                 expect(pinTool.el.isTabbable()).toBe(true);
-                            });
+                            })
                         });
                     });
                     
@@ -1059,7 +1053,7 @@ function() {
             });
         }
         
-        makeSuite('rendered', false,  {});
+        makeSuite('rendered', false);
         makeSuite('collapsed', 100,   { collapse: true });
         makeSuite('collapsed', false, { collapse: true });
         makeSuite('expanded',  100,   { collapse: true, expand: true });
@@ -1067,9 +1061,14 @@ function() {
     });
     
     describe("interaction", function() {
+        var focusAndWait = jasmine.focusAndWait,
+            expectFocused = jasmine.expectFocused,
+            asyncPressKey = jasmine.asyncPressKey,
+            asyncPressTab = jasmine.asyncPressTabKey;
+        
         function makeSuite(animate) {
             describe("animate: " + !!animate, function() {
-                var ct, foo, bar, fooHdr, barHdr, pinTool, closeTool, okBtn,
+                var ct, foo, bar, fooHdr, barHdr, pinTool, closeTool,
                     beforeInput, afterInput, fooInnerInput, barInnerInput,
                     collapseSpy, expandSpy;
                 
@@ -1095,9 +1094,6 @@ function() {
                             type: 'accordion',
                             animate: animate
                         },
-                        defaults: {
-                            animCollapseDuration: 100
-                        },
                         items: [{
                             title: 'foo',
                             collapsible: true,
@@ -1112,9 +1108,6 @@ function() {
                             items: [{
                                 xtype: 'textfield',
                                 fieldLabel: 'foo inner'
-                            }],
-                            buttons: [{
-                                text: 'OK'
                             }]
                         }, {
                             title: 'bar',
@@ -1143,13 +1136,12 @@ function() {
                     closeTool = bar.down('tool[type=close]');
                     
                     fooInnerInput = foo.down('textfield');
-                    okBtn = foo.down('button[text=OK]');
                     barInnerInput = bar.down('textfield');
                 });
                 
                 afterEach(function() {
                     Ext.destroy(beforeInput, ct, afterInput);
-                    ct = foo = bar = pinTool = closeTool = okBtn = null;
+                    ct = foo = bar = pinTool = closeTool = null;
                     beforeInput = afterInput = fooInnerInput = barInnerInput = null;
                     collapseSpy = expandSpy = null;
                 });
@@ -1157,9 +1149,11 @@ function() {
                 describe("pointer", function() {
                     describe("title collapse", function() {
                         beforeEach(function() {
-                            jasmine.fireMouseEvent(barHdr, 'click');
+                            runs(function() {
+                                jasmine.fireMouseEvent(barHdr, 'click');
+                            });
                         
-                            waitsForSpy(collapseSpy, 'collapse');
+                            waitsForSpy(collapseSpy, 'collapse', 1000);
                         });
                         
                         it("should collapse foo", function() {
@@ -1172,9 +1166,11 @@ function() {
                         
                         describe("expand", function() {
                             beforeEach(function() {
-                                jasmine.fireMouseEvent(barHdr, 'click');
+                                runs(function() {
+                                    jasmine.fireMouseEvent(barHdr, 'click');
+                                });
                                 
-                                waitsForSpy(expandSpy, 'expand');
+                                waitsForSpy(expandSpy, 'expand', 1000);
                             });
                             
                             it("should expand foo", function() {
@@ -1189,9 +1185,11 @@ function() {
                     
                     describe("tool collapse", function() {
                         beforeEach(function() {
-                            jasmine.fireMouseEvent(foo.collapseTool, 'click');
+                            runs(function() {
+                                jasmine.fireMouseEvent(foo.collapseTool, 'click');
+                            });
                             
-                            waitsForSpy(collapseSpy, 'collapse');
+                            waitsForSpy(collapseSpy, 'collapse', 1000);
                         });
                         
                         it("should collapse foo", function() {
@@ -1227,13 +1225,13 @@ function() {
                     describe("arrow keys", function() {
                         describe("down arrow", function() {
                             it("should go from foo to bar", function() {
-                                pressKey(fooTitle, 'down');
+                                asyncPressKey(fooTitle, 'down');
                                 
                                 expectFocused(barTitle);
                             });
                             
                             it("should wrap over from bar to foo", function() {
-                                pressKey(barTitle, "down");
+                                asyncPressKey(barTitle, "down");
                                 
                                 expectFocused(fooTitle);
                             });
@@ -1241,7 +1239,7 @@ function() {
                             it("should not wrap over when accordionWrapOver == false", function() {
                                 bar.accordionWrapOver = false;
                                 
-                                pressKey(barTitle, 'down');
+                                asyncPressKey(barTitle, 'down');
                                 
                                 expectFocused(barTitle);
                             });
@@ -1249,13 +1247,13 @@ function() {
 
                         describe("right arrow", function() {
                             it("should go from foo to bar", function() {
-                                pressKey(fooTitle, 'right');
+                                asyncPressKey(fooTitle, 'right');
                                 
                                 expectFocused(barTitle);
                             });
                             
                             it("should wrap over from bar to foo", function() {
-                                pressKey(barTitle, "right");
+                                asyncPressKey(barTitle, "right");
                                 
                                 expectFocused(fooTitle);
                             });
@@ -1263,7 +1261,7 @@ function() {
                             it("should not wrap over when accordionWrapOver == false", function() {
                                 bar.accordionWrapOver = false;
                                 
-                                pressKey(barTitle, 'right');
+                                asyncPressKey(barTitle, 'right');
                                 
                                 expectFocused(barTitle);
                             });
@@ -1271,13 +1269,13 @@ function() {
                         
                         describe("up arrow", function() {
                             it("should go from bar to foo", function() {
-                                pressKey(barTitle, 'up');
+                                asyncPressKey(barTitle, 'up');
                                 
                                 expectFocused(fooTitle);
                             });
                             
                             it("should wrap over from foo to bar", function() {
-                                pressKey(fooTitle, 'up');
+                                asyncPressKey(fooTitle, 'up');
                                 
                                 expectFocused(barTitle);
                             });
@@ -1285,7 +1283,7 @@ function() {
                             it("should not wrap over when accordionWrapOver == false", function() {
                                 foo.accordionWrapOver = false;
                                 
-                                pressKey(fooTitle, 'up');
+                                asyncPressKey(fooTitle, 'up');
                                 
                                 expectFocused(fooTitle);
                             });
@@ -1293,13 +1291,13 @@ function() {
 
                         describe("left arrow", function() {
                             it("should go from bar to foo", function() {
-                                pressKey(barTitle, 'left');
+                                asyncPressKey(barTitle, 'left');
                                 
                                 expectFocused(fooTitle);
                             });
                             
                             it("should wrap over from foo to bar", function() {
-                                pressKey(fooTitle, 'left');
+                                asyncPressKey(fooTitle, 'left');
                                 
                                 expectFocused(barTitle);
                             });
@@ -1307,7 +1305,7 @@ function() {
                             it("should not wrap over when accordionWrapOver == false", function() {
                                 foo.accordionWrapOver = false;
                                 
-                                pressKey(fooTitle, 'up');
+                                asyncPressKey(fooTitle, 'up');
                                 
                                 expectFocused(fooTitle);
                             });
@@ -1316,25 +1314,25 @@ function() {
                     
                     describe("home/end keys", function() {
                         it("should go to foo", function() {
-                            pressKey(barTitle, 'home');
+                            asyncPressKey(barTitle, 'home');
                             
                             expectFocused(fooTitle);
                         });
                         
                         it("should stay on foo", function() {
-                            pressKey(fooTitle, 'home');
+                            asyncPressKey(fooTitle, 'home');
                             
                             expectFocused(fooTitle);
                         });
                         
                         it("should go to bar", function() {
-                            pressKey(fooTitle, 'end');
+                            asyncPressKey(fooTitle, 'end');
                             
                             expectFocused(barTitle);
                         });
                         
                         it("should stay on bar", function() {
-                            pressKey(barTitle, 'end');
+                            asyncPressKey(barTitle, 'end');
                             
                             expectFocused(barTitle);
                         });
@@ -1344,7 +1342,7 @@ function() {
                         // Del with no modifiers should be ignored
                         describe("no modifiers", function() {
                             it("should not close foo", function() {
-                                pressKey(fooTitle, 'delete');
+                                asyncPressKey(fooTitle, 'delete');
                                 
                                 runs(function() {
                                     expect(ct.items.length).toBe(2);
@@ -1353,7 +1351,7 @@ function() {
                             });
                             
                             it("should not close bar", function() {
-                                pressKey(barTitle, 'delete');
+                                asyncPressKey(barTitle, 'delete');
                                 
                                 runs(function() {
                                     expect(ct.items.length).toBe(2);
@@ -1364,7 +1362,7 @@ function() {
                         
                         describe("alt-del", function() {
                             it("should not close foo", function() {
-                                pressKey(fooTitle, 'delete', { alt: true });
+                                asyncPressKey(fooTitle, 'delete', { alt: true });
                             
                                 // foo is not closable, so ignore alt-del
                                 runs(function() {
@@ -1374,7 +1372,7 @@ function() {
                             });
                             
                             it("should close bar", function() {
-                                pressKey(barTitle, 'delete', { alt: true });
+                                asyncPressKey(barTitle, 'delete', { alt: true });
                                 
                                 runs(function() {
                                     expect(ct.items.length).toBe(1);
@@ -1387,23 +1385,19 @@ function() {
                     describe("within panel body", function() {
                         describe("Ctrl-Up", function() {
                             it("should go to foo title from foo input", function() {
-                                pressKey(fooInnerInput, 'up', { ctrl: true });
-                                
-                                expectFocused(fooTitle);
-                            });
-                            
-                            it("should go to foo title from ok button", function() {
-                                pressKey(okBtn, 'up', { ctrl: true });
+                                asyncPressKey(fooInnerInput, 'up', { ctrl: true });
                                 
                                 expectFocused(fooTitle);
                             });
                             
                             it("should go to bar title from bar input", function() {
-                                foo.collapse();
+                                runs(function() {
+                                    foo.collapse();
+                                });
                                 
                                 waitForSpy(collapseSpy);
                                 
-                                pressKey(barInnerInput, 'up', { ctrl: true });
+                                asyncPressKey(barInnerInput, 'up', { ctrl: true });
                                 
                                 expectFocused(barTitle);
                             });
@@ -1414,37 +1408,31 @@ function() {
                         describe("forward", function() {
                             describe("foo expanded", function() {
                                 it("should go from before input to foo title", function() {
-                                    pressTabKey(beforeInput, true);
+                                    asyncPressTab(beforeInput, true);
                                     
                                     expectFocused(fooTitle);
                                 });
                                 
                                 it("should go from foo title to pin tool", function() {
-                                    pressTabKey(fooTitle, true);
+                                    asyncPressTab(fooTitle, true);
                                     
                                     expectFocused(pinTool);
                                 });
                                 
                                 it("should go from pin tool to foo inner input", function() {
-                                    pressTabKey(pinTool, true);
+                                    asyncPressTab(pinTool, true);
                                     
                                     expectFocused(fooInnerInput);
                                 });
                                 
-                                it("should go from foo inner input to ok button", function() {
-                                    pressTabKey(fooInnerInput, true);
-                                    
-                                    expectFocused(okBtn);
-                                });
-                                
-                                it("should go from ok button to bar title", function() {
-                                    pressTabKey(okBtn, true);
+                                it("should go from foo inner input to bar title", function() {
+                                    asyncPressTab(fooInnerInput, true);
                                     
                                     expectFocused(barTitle);
                                 });
                                 
                                 it("should go from bar title to after input", function() {
-                                    pressTabKey(barTitle, true);
+                                    asyncPressTab(barTitle, true);
                                     
                                     expectFocused(afterInput);
                                 });
@@ -1452,37 +1440,39 @@ function() {
                             
                             describe("foo collapsed", function() {
                                 beforeEach(function() {
-                                    foo.collapse();
+                                    runs(function() {
+                                        foo.collapse();
+                                    });
                                     
-                                    waitForSpy(collapseSpy, 'collapse');
+                                    waitForSpy(collapseSpy, 'collapse', 1000);
                                 });
                                 
                                 it("should go from before input to foo title", function() {
-                                    pressTabKey(beforeInput, true);
+                                    asyncPressTab(beforeInput, true);
                                     
                                     expectFocused(fooTitle);
                                 });
                                 
                                 it("should go from foo title to pin tool", function() {
-                                    pressTabKey(fooTitle, true);
+                                    asyncPressTab(fooTitle, true);
                                     
                                     expectFocused(pinTool);
                                 });
                                 
                                 it("should go from pin tool to bar title", function() {
-                                    pressTabKey(pinTool, true);
+                                    asyncPressTab(pinTool, true);
                                     
                                     expectFocused(barTitle);
                                 });
                                 
                                 it("should go from bar title to bar inner input", function() {
-                                    pressTabKey(barTitle, true);
+                                    asyncPressTab(barTitle, true);
                                     
                                     expectFocused(barInnerInput);
                                 });
                                 
                                 it("should go from bar inner input to after input", function() {
-                                    pressTabKey(barInnerInput, true);
+                                    asyncPressTab(barInnerInput, true);
                                     
                                     expectFocused(afterInput);
                                 });
@@ -1492,37 +1482,31 @@ function() {
                         describe("backward", function() {
                             describe("foo expanded", function() {
                                 it("should go from after input to bar title", function() {
-                                    pressTabKey(afterInput, false);
+                                    asyncPressTab(afterInput, false);
                                     
                                     expectFocused(barTitle);
                                 });
                                 
-                                it("should go from bar title to ok button", function() {
-                                    pressTabKey(barTitle, false);
-                                    
-                                    expectFocused(okBtn);
-                                });
-                                
-                                it("should go from ok button to foo inner input", function() {
-                                    pressTabKey(okBtn, false);
+                                it("should go from bar title to foo inner input", function() {
+                                    asyncPressTab(barTitle, false);
                                     
                                     expectFocused(fooInnerInput);
                                 });
                                 
                                 it("should go from foo inner input to pin tool", function() {
-                                    pressTabKey(fooInnerInput, false);
+                                    asyncPressTab(fooInnerInput, false);
                                     
                                     expectFocused(pinTool);
                                 });
                                 
                                 it("should go from pin tool to foo title", function() {
-                                    pressTabKey(pinTool, false);
+                                    asyncPressTab(pinTool, false);
                                     
                                     expectFocused(fooTitle);
                                 });
                                 
                                 it("should go from foo title to before input", function() {
-                                    pressTabKey(fooTitle, false);
+                                    asyncPressTab(fooTitle, false);
                                     
                                     expectFocused(beforeInput);
                                 });
@@ -1530,37 +1514,39 @@ function() {
                             
                             describe("foo collapsed", function() {
                                 beforeEach(function() {
-                                    foo.collapse();
+                                    runs(function() {
+                                        foo.collapse();
+                                    });
                                     
-                                    waitForSpy(collapseSpy, 'collapse');
+                                    waitForSpy(collapseSpy, 'collapse', 1000);
                                 });
                                 
                                 it("should go from after input to bar inner input", function() {
-                                    pressTabKey(afterInput, false);
+                                    asyncPressTab(afterInput, false);
                                     
                                     expectFocused(barInnerInput);
                                 });
                                 
                                 it("should go from bar inner input to bar title", function() {
-                                    pressTabKey(barInnerInput, false);
+                                    asyncPressTab(barInnerInput, false);
                                     
                                     expectFocused(barTitle);
                                 });
                                 
                                 it("should go from bar title to pin tool", function() {
-                                    pressTabKey(barTitle, false);
+                                    asyncPressTab(barTitle, false);
                                     
                                     expectFocused(pinTool);
                                 });
                                 
                                 it("should go from pin tool to foo title", function() {
-                                    pressTabKey(pinTool, false);
+                                    asyncPressTab(pinTool, false);
                                     
                                     expectFocused(fooTitle);
                                 });
                                 
                                 it("should go from foo title to before input", function() {
-                                    pressTabKey(fooTitle, false);
+                                    asyncPressTab(fooTitle, false);
                                     
                                     expectFocused(beforeInput);
                                 });

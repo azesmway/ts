@@ -1,4 +1,4 @@
-topSuite("Ext.data.operation.Read", ['Ext.data.ArrayStore'], function() {
+describe("Ext.data.operation.Read", function() {
     
     var op;
     

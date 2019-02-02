@@ -1,6 +1,6 @@
 /* global expect, Ext, spyOn */
 
-topSuite('Ext.util.Scheduler', 'Ext.util.Schedulable', function () {
+describe('Ext.util.Scheduler', function () {
     var scheduler,
         Item,
         log,
@@ -12,7 +12,7 @@ topSuite('Ext.util.Scheduler', 'Ext.util.Schedulable', function () {
         setup = Ext.emptyFn;
 
         Item = Ext.define(null, {
-            extend: 'Ext.util.Schedulable',
+            extend: Ext.util.Schedulable,
 
             constructor: function (name) {
                 this.name = name;

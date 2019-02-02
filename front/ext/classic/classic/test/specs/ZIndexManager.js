@@ -1,8 +1,6 @@
 /* global expect, Ext, jasmine */
 
-topSuite("Ext.ZIndexManager",
-    ['Ext.window.*', 'Ext.grid.Panel', 'Ext.form.field.*', 'Ext.Button', 'Ext.grid.plugin.CellEditing'],
-function() {
+describe("Ext.ZIndexManager", function() {
     function cancelFocus() {
         var task = Ext.focusTask;
         if (task) {
@@ -188,31 +186,6 @@ function() {
             c1.destroy();
 
             expect(c4.zIndexManager.mask.getZIndex()).toBeLessThan(c4.el.getZIndex());
-        });
-
-        it('should maintain stacking order upon close os topmost window', function() {
-            c1.showAt(0, 0);
-            c2.showAt(20, 20);
-            c3.showAt(40, 40);
-            c4.showAt(60, 60);
-
-            jasmine.fireMouseEvent(c4.tools.close.el, 'mousedown');
-
-            expect(c2.el.getZIndex()).toBeGreaterThan(c1.el.getZIndex());
-            expect(c3.el.getZIndex()).toBeGreaterThan(c2.el.getZIndex());
-            expect(c4.el.getZIndex()).toBeGreaterThan(c3.el.getZIndex());
-
-            jasmine.fireMouseEvent(c4.tools.close.el, 'mouseup');
-            jasmine.fireMouseEvent(c4.tools.close.el, 'click');
-
-            waitsFor(function() {
-                return c4.destroyed;
-            });
-
-            runs(function() {
-                expect(c2.el.getZIndex()).toBeGreaterThan(c1.el.getZIndex());
-                expect(c3.el.getZIndex()).toBeGreaterThan(c2.el.getZIndex());
-            });
         });
     });
 
@@ -588,7 +561,9 @@ function() {
 
             jasmine.fireMouseEvent(cell, 'dblclick');
 
-            waitsForFocus(plugin.activeEditor.field, 'plugin to edit');
+            waitsFor(function() {
+                return plugin.editing;
+            }, 'plugin to edit');
 
             runs(function(){
                 jasmine.fireKeyEvent(Ext.Element.getActiveElement(), 'keydown', Ext.event.Event.ENTER);
@@ -596,7 +571,7 @@ function() {
 
             waitsFor(function() {
                 return Ext.MessageBox.isVisible();
-            }, 'message box to become visible');
+            }, 'become visible');
 
             runs(function() {
                 expect(Ext.MessageBox.el.getZIndex()).toBeGreaterThan(win.el.getZIndex());
@@ -861,119 +836,54 @@ function() {
         });
         
         it("should restore focus after showing", function() {
-            var xy, headerXY, x, y, child, text;
+            var xy, x, child, text;
             
             win = new Ext.window.Window({
                 title: 'Test Window',
                 width: 410,
-                height: 400,
-                x: 0, y: 0,
-                items: child = new Ext.window.Window({
-                    width: 200,
-                    height: 100,
-                    items: {
-                        xtype: 'textfield'
-                    }
-                })
+                height: 400
             });
-
-            text = child.items.first();
 
             win.show();
 
-            jasmine.waitForFocus(win, 'top window to focus');
+            xy = win.getXY();
+            x = win.header.getX();
 
-            runs(function() {
-                child.show();
+            child = new Ext.window.Window({
+                width: 200,
+                height: 100,
+                items: {
+                    xtype: 'textfield'
+                }
             });
 
-            jasmine.waitForFocus(child, 'child window to focus');
+            win.add(child);
+            child.show();
 
-            jasmine.focusAndWait(text, text, 'text field within child window to focus');
+            text = child.items.first();
+
+            text.focus();
+
+            jasmine.waitForFocus(text);
 
             runs(function() {
-                xy = win.getXY();
-                headerXY = win.header.el.getAnchorXY('c'),
-                x = headerXY[0];
-                y = headerXY[1];
-
                 expect(text.hasFocus).toBe(true);
                 // Drag the Window by the header
-                jasmine.fireMouseEvent(win.header.el, 'mousedown', x, y);
-                jasmine.fireMouseEvent(Ext.getBody(), 'mousemove', x + 100, y);
-            });
+                jasmine.fireMouseEvent(win.header.el, 'mousedown', x);
+                jasmine.fireMouseEvent(win.header.el, 'mousemove', x + 100);
 
-            waits(100);
-
-            runs(function() {
                 expect(child.isVisible()).toBe(false);
 
-                jasmine.fireMouseEvent(Ext.getBody(), 'mouseup', x + 100, y);
-            });
+                jasmine.fireMouseEvent(Ext.getBody(), 'mouseup');
 
-            runs(function() {
                 // Window should have moved 100px right
                 xy[0] += 100;
                 expect(win.getXY()).toEqual(xy);
+            });
+
+            jasmine.waitForFocus(text);
+            runs(function() {
                 expect(text.hasFocus).toBe(true);
-            });
-        });
-    });
-    
-    describe("Menu with modal window and MessageBox", function () {
-        it("should render the menu after the MessageBox has been closed", function () {
-            var container = Ext.create('Ext.Container', {
-                    items: [{
-                        xtype: 'button',
-                        itemId: 'menu-button',
-                        text: 'Menu',
-                        menu: {
-                            xtype : 'menu',
-                            items : [{
-                                text : 'Foo'
-                            }]
-                        }
-                    }, {
-                        xtype: 'button',
-                        itemId: 'modal-button',
-                        text: 'Open modal',
-                        handler: function () {
-                            msg = Ext.Msg.alert('Foo', 'Bar');
-                        }
-                    }],
-                    
-                    renderTo: document.body,
-                    width: 300
-                }),
-                msg, menuBtn, modalBtn;
-            
-            menuBtn = container.getComponent('menu-button');
-            modalBtn = container.getComponent('modal-button');
-    
-            // necessary for having another ZIndex'd component in the stack
-            var win = Ext.create('Ext.window.Window', {
-                title: 'MyWindow',
-                width: 100,
-                height: 100
-            }).show();
-            
-            // click the menu to expand and then button to display the MessageBox,
-            // then click the first visible button to close
-            runs(function () {
-                jasmine.fireMouseEvent(menuBtn.el, 'click');
-                jasmine.fireMouseEvent(modalBtn.el, 'click');
-                
-                var btn = Ext.Array.findBy(msg.msgButtons, function (btn) { return btn.isVisible(); });
-                jasmine.fireMouseEvent(btn.el, 'click');
-            });
-            waits(500);
-            
-            // clicking the menu again should make it visible in the stack
-            runs(function () {
-                jasmine.fireMouseEvent(menuBtn.el, 'click');
-                expect(menuBtn.menu.isVisible()).toBe(true);
-                
-                container = win = Ext.destroy(container, win);
             });
         });
     });

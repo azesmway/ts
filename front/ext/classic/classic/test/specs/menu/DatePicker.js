@@ -1,9 +1,11 @@
-topSuite("Ext.menu.DatePicker", function() {
-    var menu;
+describe("Ext.menu.DatePicker", function() {
+    var expectFocused = jasmine.expectFocused,
+        pressKey = jasmine.asyncPressKey,
+        menu;
     
     function makeMenu(cfg) {
         cfg = Ext.apply({
-            floating: true
+            floating: true,
         }, cfg);
         
         menu = new Ext.menu.DatePicker(cfg);
@@ -48,8 +50,8 @@ topSuite("Ext.menu.DatePicker", function() {
             expect(menu.picker.frobbe).toBe('gurgle');
         });
     });
-
-    describe("interaction", function() {
+    
+    describe("keyboard interaction", function() {
         var button, dateItem;
         
         beforeEach(function() {
@@ -83,34 +85,27 @@ topSuite("Ext.menu.DatePicker", function() {
             
             button = null;
         });
-
-        describe("keyboard interaction", function() {
-            it("should focus the picker eventEl on open", function () {
-                expectFocused(menu.picker.eventEl, false);
-            });
-
-            it("should close the date menu on Esc key", function () {
-                pressKey(menu.picker.eventEl, 'esc');
-
-                waitForFocus(dateItem);
-
-                runs(function () {
-                    expect(menu.isVisible()).toBeFalsy();
-                });
-            });
-
-            it("should focus the owner menu item on Esc key", function () {
-                pressKey(menu.picker.eventEl, 'esc');
-
-                expectFocused(dateItem);
+        
+        it("should focus the picker eventEl on open", function() {
+            expectFocused(menu.picker.eventEl, false);
+        });
+        
+        it("should close the date menu on Esc key", function() {
+            pressKey(menu.picker.eventEl, 'esc');
+            
+            waitsFor(function() {
+                return !menu.isVisible();
+            }, 'Date menu to hide', 1000);
+            
+            runs(function() {
+                expect(menu.isVisible()).toBeFalsy();
             });
         });
-
-        describe('clicking', function() {
-            it('should not hide on click of monthButton', function () {
-                Ext.testHelper.tap(menu.items.items[0].monthBtn.el);
-                expect(menu.isVisible()).toBe(true);
-            });
+        
+        it("should focus the owner menu item on Esc key", function() {
+            pressKey(menu.picker.eventEl, 'esc');
+            
+            expectFocused(dateItem);
         });
     });
 });

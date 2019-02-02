@@ -117,6 +117,7 @@ Ext.define('Ext.tree.Column', {
      * 
      * @return {String}
      * The HTML string to be rendered into the text portion of the tree node.
+     * @declarativeHandler
      */
 
     cellTpl: [
@@ -275,7 +276,7 @@ Ext.define('Ext.tree.Column', {
             // expander, elbow, checkbox).  This is used by the rtl override to add the
             // "x-rtl" class to these elements.
             childCls: me.getChildCls ? me.getChildCls() + ' ' : '',
-            value: value || store.defaultRootText
+            value: value
         };
     },
 

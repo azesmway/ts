@@ -1,4 +1,4 @@
-topSuite("Ext.util.Filter", function () {
+describe("Ext.util.Filter", function () {
     var filter;
 
     describe("construction", function() {

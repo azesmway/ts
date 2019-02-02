@@ -241,14 +241,10 @@ Ext.define('Ext.draw.engine.Canvas', {
      */
     toSave: ['fillGradient', 'strokeGradient'],
 
-    /**
-     * @property element
-     * @inheritdoc
-     */
     element: {
         reference: 'element',
         children: [{
-            reference: 'bodyElement',
+            reference: 'innerElement',
             style: {
                 width: '100%',
                 height: '100%',
@@ -297,7 +293,7 @@ Ext.define('Ext.draw.engine.Canvas', {
             this.disablePrecisionCompensation(ctx);
         }
 
-        this.bodyElement.appendChild(canvas);
+        this.innerElement.appendChild(canvas);
         this.canvases.push(canvas);
         this.contexts.push(ctx);
     },
@@ -380,7 +376,7 @@ Ext.define('Ext.draw.engine.Canvas', {
             originalCtx = ctx.constructor.prototype;
 
         /**
-         * @cfg {Object} precisionOverrides
+         * @class CanvasRenderingContext2D
          * @ignore
          */
         var precisionOverrides = {
@@ -787,7 +783,6 @@ Ext.define('Ext.draw.engine.Canvas', {
     },
 
     /**
-     * @method clearTransform
      * @inheritdoc
      */
     clearTransform: function () {
@@ -823,7 +818,7 @@ Ext.define('Ext.draw.engine.Canvas', {
     },
 
     /**
-     * @method renderSprite
+     * @private
      * @inheritdoc
      */
     renderSprite: function (sprite) {
@@ -848,7 +843,6 @@ Ext.define('Ext.draw.engine.Canvas', {
             parent = parent.getParent();
         }
         matrix.prependMatrix(surfaceMatrix);
-
         bbox = sprite.getBBox();
         if (bbox) {
             bbox = matrix.transformBBox(bbox);
@@ -939,7 +933,6 @@ Ext.define('Ext.draw.engine.Canvas', {
     },
 
     /**
-     * @method clear
      * @inheritdoc
      */
     clear: function () {

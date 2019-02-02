@@ -101,14 +101,6 @@ Ext.define('Ext.fx.Queue', {
         }
         return me.fxQueue[targetId];
     },
-    
-    /**
-     * @private
-     * Clears the fx queue of any pending animations
-     */
-    clearFxQueue: function () {
-        Ext.Object.clear(this.fxQueue);
-    },
 
     /**
      * @private

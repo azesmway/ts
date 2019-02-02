@@ -210,25 +210,36 @@ Ext.define('Ext.data.schema.ManyToOne', {
         createSetter: null, // no setter for an isMany side
 
         onAddToMany: function (store, leftRecords) {
-            var rightRecord = store.getAssociatedEntity();
-
-            if (this.association.field) {
-                this.syncFK(leftRecords, rightRecord, false);
-            } else {
-                this.setInstances(rightRecord, leftRecords);
-            }
+            this.syncFK(leftRecords, store.getAssociatedEntity(), false);
         },
 
         onLoadMany: function(rightRecord, leftRecords, session) {
-            this.setInstances(rightRecord, leftRecords, session);
+            var instanceName = this.inverse.getInstanceName(),
+                id = rightRecord.getId(),
+                field = this.association.field,
+                i, len, leftRecord, oldId, data, name;
+
+            if (field) {
+                for (i = 0, len = leftRecords.length; i < len; ++i) {
+                    leftRecord = leftRecords[i];
+                    leftRecord[instanceName] = rightRecord;
+                    if (field) {
+                        name = field.name;
+                        data = leftRecord.data;
+                        oldId = data[name];
+                        if (oldId !== id) {
+                            data[name] = id;
+                            if (session) {
+                                session.updateReference(leftRecord, field, id, oldId);
+                            }
+                        }
+                    }
+                }
+            }
         },
 
         onRemoveFromMany: function (store, leftRecords) {
-            if (this.association.field) {
-                this.syncFK(leftRecords, store.getAssociatedEntity(), true);
-            } else {
-                this.setInstances(null, leftRecords);
-            }
+            this.syncFK(leftRecords, store.getAssociatedEntity(), true);
         },
 
         read: function(rightRecord, node, fromReader, readOptions) {
@@ -249,30 +260,6 @@ Ext.define('Ext.data.schema.ManyToOne', {
 
                 for (i = 0, len = leftRecords.length; i < len; ++i) {
                     leftRecords[i][instanceName] = rightRecord;
-                }
-            }
-        },
-
-        setInstances: function(rightRecord, leftRecords, session) {
-            var instanceName = this.inverse.getInstanceName(),
-                id = rightRecord ? rightRecord.getId() : null,
-                field = this.association.field,
-                len = leftRecords.length,
-                i, leftRecord, oldId, data, name;
-
-            for (i = 0; i < len; ++i) {
-                leftRecord = leftRecords[i];
-                leftRecord[instanceName] = rightRecord;
-                if (field) {
-                    name = field.name;
-                    data = leftRecord.data;
-                    oldId = data[name];
-                    if (oldId !== id) {
-                        data[name] = id;
-                        if (session) {
-                            session.updateReference(leftRecord, field, id, oldId);
-                        }
-                    }
                 }
             }
         },

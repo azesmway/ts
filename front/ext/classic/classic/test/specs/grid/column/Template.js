@@ -1,16 +1,17 @@
-topSuite("Ext.grid.column.Template", ['Ext.grid.Panel'], function() {
+describe("Ext.grid.column.Template", function() {
+    
     var grid, store, colRef;
     
     function getCell(rowIdx, colIdx) {
         return grid.getView().getCellInclusive({
             row: rowIdx,
             column: colIdx
-        }, true);
+        });
     }
     
     function getCellText(rowIdx, colIdx) {
         var cell = getCell(rowIdx, colIdx);
-        return cell.querySelector(grid.getView().innerSelector).innerHTML;
+        return Ext.fly(cell).down(grid.getView().innerSelector).dom.innerHTML;
     }
     
     function makeGrid(value) {
@@ -66,4 +67,5 @@ topSuite("Ext.grid.column.Template", ['Ext.grid.Panel'], function() {
             expect(getCellText(0, 0)).toBe('Hello Foo');
         });
     });
+    
 });

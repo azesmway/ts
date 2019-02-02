@@ -1,8 +1,5 @@
-topSuite("Ext.grid.column.Number",
-    ['Ext.grid.Grid', 'Ext.data.ArrayStore', 'Ext.layout.Fit',
-     'Ext.app.ViewModel', 'Ext.app.ViewController'],
-function() {
-    var panel, store,
+describe('Ext.grid.column.Number', function () {
+    var panel, container, store,
         synchronousLoad = true,
         proxyStoreLoad = Ext.data.ProxyStore.prototype.load,
         loadStore, Controller;
@@ -30,6 +27,8 @@ function() {
             height: 200,
             width: 400
         }, gridCfg));
+        container = panel.container;
+        panel.onContainerResize(container, { height: container.element.getHeight() });
     }
 
     function getCell(row, column) {
@@ -73,10 +72,10 @@ function() {
                 renderTo: Ext.getBody()
             });
 
-            expect(getCell(0, 0).el.down('.x-body-el', true).innerHTML).toBe('1,244.25');
-            expect(getCell(1, 0).el.down('.x-body-el', true).innerHTML).toBe('3,444.99');
-            expect(getCell(2, 0).el.down('.x-body-el', true).innerHTML).toBe('2,474.45');
-            expect(getCell(3, 0).el.down('.x-body-el', true).innerHTML).toBe('244.75');
+            expect(getCell(0, 0).el.down('.x-inner-el', true).innerHTML).toBe('1,244.25');
+            expect(getCell(1, 0).el.down('.x-inner-el', true).innerHTML).toBe('3,444.99');
+            expect(getCell(2, 0).el.down('.x-inner-el', true).innerHTML).toBe('2,474.45');
+            expect(getCell(3, 0).el.down('.x-inner-el', true).innerHTML).toBe('244.75');
         });
 
         it('should apply the format correctly', function () {
@@ -88,10 +87,10 @@ function() {
                 renderTo: Ext.getBody()
             });
 
-            expect(getCell(0, 0).el.down('.x-body-el', true).innerHTML).toBe('1244.25');
-            expect(getCell(1, 0).el.down('.x-body-el', true).innerHTML).toBe('3444.99');
-            expect(getCell(2, 0).el.down('.x-body-el', true).innerHTML).toBe('2474.45');
-            expect(getCell(3, 0).el.down('.x-body-el', true).innerHTML).toBe('244.75');
+            expect(getCell(0, 0).el.down('.x-inner-el', true).innerHTML).toBe('1244.25');
+            expect(getCell(1, 0).el.down('.x-inner-el', true).innerHTML).toBe('3444.99');
+            expect(getCell(2, 0).el.down('.x-inner-el', true).innerHTML).toBe('2474.45');
+            expect(getCell(3, 0).el.down('.x-inner-el', true).innerHTML).toBe('244.75');
         });
 
         it('should apply the cell format correctly from a VM', function () {
@@ -115,10 +114,10 @@ function() {
             });
 
             vm.notify();
-            expect(getCell(0, 0).el.down('.x-body-el', true).innerHTML).toBe('1,244');
-            expect(getCell(1, 0).el.down('.x-body-el', true).innerHTML).toBe('3,445');
-            expect(getCell(2, 0).el.down('.x-body-el', true).innerHTML).toBe('2,474');
-            expect(getCell(3, 0).el.down('.x-body-el', true).innerHTML).toBe('245');
+            expect(getCell(0, 0).el.down('.x-inner-el', true).innerHTML).toBe('1,244');
+            expect(getCell(1, 0).el.down('.x-inner-el', true).innerHTML).toBe('3,445');
+            expect(getCell(2, 0).el.down('.x-inner-el', true).innerHTML).toBe('2,474');
+            expect(getCell(3, 0).el.down('.x-inner-el', true).innerHTML).toBe('245');
         });
 
     });

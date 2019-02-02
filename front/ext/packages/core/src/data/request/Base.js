@@ -65,19 +65,7 @@ Ext.define('Ext.data.request.Base', {
     },
 
     createDeferred: function() {
-        var me = this,
-            result = me.result,
-            d = new Ext.Deferred();
-
-        if (me.completed) {
-            if (me.success) {
-                d.resolve(result);
-            } else {
-                d.reject(result);
-            }
-        }
-        me.deferred = d;
-        return d;
+        return (this.deferred = new Ext.Deferred());  // deliberate assignment
     },
 
     getDeferred: function() {
@@ -88,13 +76,6 @@ Ext.define('Ext.data.request.Base', {
         return this.getDeferred().promise;
     },
 
-    /**
-     * @method then
-     * Returns a new promise resolving to the value of the called method.
-     * @param {Function} success Called when the Promise is fulfilled.
-     * @param {Function} failure Called when the Promise is rejected.
-     * @returns {Ext.promise.Promise}
-     */
     then: function() {
         var promise = this.getPromise();
         
@@ -123,7 +104,6 @@ Ext.define('Ext.data.request.Base', {
                 deferred.reject(result);
             }
         }
-        me.completed = true;
     },
 
     onTimeout: function() {
@@ -140,7 +120,12 @@ Ext.define('Ext.data.request.Base', {
     },
 
     clearTimer: function() {
-        this.timer = Ext.undefer(this.timer);
+        var timer = this.timer;
+
+        if (timer) {
+            clearTimeout(timer);
+            this.timer = null;
+        }
     },
 
     destroy: function() {

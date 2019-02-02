@@ -1,4 +1,5 @@
-topSuite("Ext.data.validator.Presence", function() {
+describe("Ext.data.validator.Presence", function() {
+    
     var v;
     
     function validate(value, cfg) {

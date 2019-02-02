@@ -1,4 +1,4 @@
-topSuite("Ext.dom.Layer", function() {
+describe("Ext.dom.Layer", function() {
     var layer;
 
     afterEach(function() {

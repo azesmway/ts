@@ -1,4 +1,2 @@
-# theme-triton 
-
-Modern flat, borderless theme.
+# theme-triton - Read Me
 

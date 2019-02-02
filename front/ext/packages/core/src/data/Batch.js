@@ -200,13 +200,13 @@ Ext.define('Ext.data.Batch', {
      * because you explicitly handled the operation's exception), call {@link #retry} instead.
      * 
      * Note that if the batch is already running any call to start will be ignored.
-     * @param {Number} [index] (private)
+     * 
      * @return {Ext.data.Batch} this
      */
-    start: function(index) {
+    start: function(/* private */ index) {
         var me = this;
         
-        if (me.destroyed || !me.operations.length || me.running) {
+        if (!me.operations.length || me.running) {
             return me;
         }
         
@@ -215,23 +215,6 @@ Ext.define('Ext.data.Batch', {
         me.running = true;
 
         return me.runOperation(Ext.isDefined(index) ? index : me.current + 1);
-    },
-    
-    abort: function() {
-        var me = this,
-            op;
-        
-        if (me.running) {
-            op = me.getCurrent();
-            
-            if (!op.destroyed) {
-                op.abort();
-            }
-        }
-        
-        me.running = false;
-        me.aborted = true;
-        me.current = undefined;
     },
     
     /**
@@ -375,32 +358,5 @@ Ext.define('Ext.data.Batch', {
             me.fireEvent('operationcomplete', me, operation);
             me.runNextOperation();
         }
-    },
-    
-    destroy: function() {
-        var me = this,
-            operations = me.operations,
-            op, i, len;
-        
-        if (me.running) {
-            me.abort();
-        }
-        
-        for (i = 0, len = me.operations.length; i < len; i++) {
-            op = operations[i];
-            
-            if (op) {
-                if (!op.destroyed && !op.$destroyOwner) {
-                    op.destroy();
-                }
-                
-                op[i] = null;
-            }
-        }
-        
-        // Global cleanup can be turned off
-        me.operations = me.exceptions = null;
-        
-        me.callParent();
     }
 });

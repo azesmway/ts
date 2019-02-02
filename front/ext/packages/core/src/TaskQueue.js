@@ -9,159 +9,43 @@ Ext.define('Ext.TaskQueue', {
 
     pending: false,
 
-    mode: true, // true for 'read', false for 'write'
-    
-    //<debug>
-    protectedReadQueue: [],
-    protectedWriteQueue: [],
-    //</debug>
-    
-    readQueue: [],
-    writeQueue: [],
-    readRequestId: 0,
-    writeRequestId: 0,
-
-    timer: null,
+    mode: true,
 
     constructor: function() {
-        var me = this;
+        this.readQueue = [];
+        this.writeQueue = [];
 
-        me.run = me.run.bind(me);
-        
-        // Some global things like floated wrapper are persistent and will add tasks/
-        // add timers all the time, spoiling resource checks in our unit test suite.
-        // To work around that we're implementing a parallel queue where only trusted
-        // tasks will go, and fly under the radar of resource checker.
-        //<debug>
-        me.runProtected = Ext.Function.bind(
-            me.run, me, [me.protectedReadQueue, me.protectedWriteQueue, 'runProtected']
-        );
-        me.runProtected.$skipTimerCheck = true;
-        //</debug>
-        
+        this.run = Ext.Function.bind(this.run, this);
         // iOS has a nasty bug which causes pending requestAnimationFrame to not release
         // the callback when the WebView is switched back and forth from / to being background process
         // We use a watchdog timer to workaround this, and restore the pending state correctly if this happens
         // This timer has to be set as an interval from the very beginning and we have to keep it running for
-        // as long as the app lives, setting it later doesn't seem to work.
-        // The watchdog timer must be accessible for environments to cancel.
+        // as long as the app lives, setting it later doesn't seem to work
         if (Ext.os.is.iOS) {
-            //<debug>
-            me.watch.$skipTimerCheck = true;
-            //</debug>
-            me.watchdogTimer = Ext.interval(this.watch, 500, this);
+            Ext.interval(this.watch, 500, this);
         }
     },
 
     requestRead: function(fn, scope, args) {
-        var request = {
-                id: ++this.readRequestId,
-                fn: fn,
-                scope: scope,
-                args: args
-            };
-
-        //<debug>
-        if (arguments[3] === true) {
-            this.protectedReadQueue.push(request);
-            this.request(true, 'runProtected');
-        }
-        else {
-        //</debug>
-            this.readQueue.push(request);
-            this.request(true);
-        //<debug>
-        }
-        //</debug>
-        
-        
-        return request.id;
-    },
-    
-    cancelRead: function(id) {
-        this.cancelRequest(this.readQueue, id, true);
+        this.request(true);
+        this.readQueue.push(arguments);
     },
 
     requestWrite: function(fn, scope, args) {
-        var me = this,
-            request = {
-                id: ++me.writeRequestId,
-                fn: fn,
-                scope: scope,
-                args: args
-            };
-        
-        //<debug>
-        if (arguments[3] === true) {
-            me.protectedWriteQueue.push(request);
-            me.request(false, 'runProtected');
-        }
-        else {
-        //</debug>
-            me.writeQueue.push(request);
-            me.request(false);
-        //<debug>
-        }
-        //</debug>
-        
-        return request.id;
-    },
-    
-    cancelWrite: function(id) {
-        this.cancelRequest(this.writeQueue, id, false);
+        this.request(false);
+        this.writeQueue.push(arguments);
     },
 
-    request: function(mode, method) {
-        var me = this;
-
-        //<debug>
-        // Used below to cancel the correct timer.
-        var oldMode = me.mode;
-        //</debug>
-
-        if (!me.pending) {
-            me.pendingTime = Date.now();
-            me.pending = true;
-            me.mode = mode;
-            
+    request: function(mode) {
+        if (!this.pending) {
+            this.pendingTime = Date.now();
+            this.pending = true;
+            this.mode = mode;
             if (mode) {
-                me.timer = Ext.defer(me[method] || me.run, 1);
-            }
-            else {
-                me.timer = Ext.raf(me[method] || me.run);
-            }
-        }
-        
-        //<debug>
-        // Last one should win
-        if (me.mode === mode && me.timer) {
-            if (oldMode) {
-                Ext.undefer(me.timer);
+                Ext.defer(this.run, 1, this);
             } else {
-                Ext.unraf(me.timer);
+                Ext.Function.requestAnimationFrame(this.run);
             }
-
-            if (mode) {
-                me.timer = Ext.defer(me[method] || me.run, 1);
-            }
-            else {
-                me.timer = Ext.raf(me[method] || me.run);
-            }
-        }
-        //</debug>
-    },
-    
-    cancelRequest: function(queue, id, mode) {
-        for (var i = 0; i < queue.length; i++) {
-            if (queue[i].id === id) {
-                queue.splice(i, 1);
-                
-                break;
-            }
-        }
-        
-        if (!queue.length && this.mode === mode && this.timer) {
-            Ext.undefer(this.timer);
         }
     },
 
@@ -171,53 +55,49 @@ Ext.define('Ext.TaskQueue', {
         }
     },
 
-    run: function(readQueue, writeQueue, method) {
-        var me = this,
-            mode = null,
-            queue, tasks, task, fn, scope, args, i, len;
-        
-        readQueue = readQueue || me.readQueue;
-        writeQueue = writeQueue || me.writeQueue;
+    run: function() {
+        this.pending = false;
 
-        me.pending = false;
+        var readQueue = this.readQueue,
+            writeQueue = this.writeQueue,
+            request = null,
+            queue;
 
-        me.pending = me.timer = false;
-        
-        if (me.mode) {
+        if (this.mode) {
             queue = readQueue;
 
             if (writeQueue.length > 0) {
-                mode = false;
+                request = false;
             }
         }
         else {
             queue = writeQueue;
 
             if (readQueue.length > 0) {
-                mode = true;
+                request = true;
             }
         }
 
-        tasks = queue.slice();
+        var tasks = queue.slice(),
+            i, ln, task, fn, scope;
+
         queue.length = 0;
 
-        for (i = 0, len = tasks.length; i < len; i++) {
+        for (i = 0, ln = tasks.length; i < ln; i++) {
             task = tasks[i];
-            
-            fn = task.fn;
-            scope = task.scope;
-            args = task.args;
+            fn = task[0];
+            scope = task[1];
             
             if (scope && (scope.destroying || scope.destroyed)) {
                 continue;
             }
-            
+
             if (typeof fn === 'string') {
                 fn = scope[fn];
             }
 
-            if (args) {
-                fn.apply(scope, args);
+            if (task.length > 2) {
+                fn.apply(scope, task[2]);
             }
             else {
                 fn.call(scope);
@@ -226,45 +106,17 @@ Ext.define('Ext.TaskQueue', {
 
         tasks.length = 0;
 
-        if (mode !== null) {
-            me.request(mode, method);
+        if (request !== null) {
+            this.request(request);
         }
-    },
-    
-    clear: function() {
-        var me = this,
-            timer = me.timer;
-
-        if (timer) {
-            if (me.mode) {
-                Ext.undefer(timer);
-            } else {
-                Ext.unraf(timer);
-            }
-        }
-
-        me.readQueue.length = me.writeQueue.length = 0;
-        me.pending = me.timer = false;
-        me.mode = true;
     }
 
     //<debug>
     ,privates: {
         flush: function() {
-            var me = this,
-                mode = me.mode;
-
-            while (me.readQueue.length || me.writeQueue.length) {
-                if (mode) {
-                    Ext.undefer(me.timer);
-                } else {
-                    Ext.unraf(me.timer);
-                }
-
-                me.run();
+            while (this.readQueue.length || this.writeQueue.length) {
+                this.run();
             }
-
-            me.mode = true;
         }
     }
     //</debug>

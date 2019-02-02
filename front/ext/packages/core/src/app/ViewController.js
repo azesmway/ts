@@ -3,35 +3,110 @@
  * instance so it can manage the view and its child components. Each instance of the view
  * will have a new view controller, so the instances are isolated.
  * 
- * When a view controller is specified on a view, events and other handlers that use strings as
- * values will be automatically connected with the appropriate methods in the controller's class.
- *
- * Sample usage:
+ * When a controller is specified on a view, the view automatically becomes a {@link Ext.container.Container#referenceHolder},
+ * so it will receive inline events declared on the view. Sample usage:
  * 
  *     @example
- *     Ext.define('MyViewController', {
+ *     Ext.define('User', {
+ *        extend: 'Ext.data.Model',
+ *        fields: ['name', 'phone']    
+ *     });
+ *
+ *     Ext.define('UserListController', {
  *         extend : 'Ext.app.ViewController',
- *         alias: 'controller.myview',
+ *         alias: 'controller.userlist',
  *       
- *         // This method is called as a "handler" for the Add button in our view
+ *         init: function(view) {
+ *             this.userCount = 0;
+ *             var users = [],
+ *                 i;
+ *                 
+ *             for (i = 0; i < 5; ++i) {
+ *                 users.push(this.getUser());
+ *             }  
+ *             view.getStore().add(users);
+ *         },
+ *       
  *         onAddClick: function() {
- *             Ext.Msg.alert('Add', 'The Add button was clicked');
+ *             this.addUser();
+ *         },
+ *             
+ *         onDeleteClick: function() {
+ *             var view = this.getView(),
+ *                 selected = view.getSelectionModel().getSelection()[0],
+ *                 store = view.getStore();
+ *               
+ *             store.remove(selected);
+ *         },
+ *       
+ *         onSelectionChange: function(selModel, selections) {
+ *             this.lookupReference('delete').setDisabled(selections.length === 0);
+ *         },
+ *       
+ *         getUser: function() {
+ *             ++this.userCount;
+ *             return {
+ *                 name: 'User ' + this.userCount,
+ *                 phone: this.generatePhone()
+ *             };
+ *         },
+ *       
+ *         addUser: function() {
+ *             this.getView().getStore().add(this.getUser());    
+ *         },
+ *       
+ *         generatePhone: function() {
+ *             var num = '',
+ *                 i;
+ *               
+ *             for (i = 0; i < 7; ++i) {
+ *                 num += Ext.Number.randomInt(0, 9);
+ *                 if (num.length === 3) {
+ *                     num += '-';
+ *                 }
+ *             }    
+ *             return num;
  *         }
  *     });
  *   
- *     Ext.define('MyView', {
- *         extend: 'Ext.Panel',
- *         controller: 'myview',
- *
- *         items: [{
- *             xtype: 'button',
+ *     Ext.define('UserList', {
+ *         extend: 'Ext.grid.Panel',
+ *         controller: 'userlist',
+ *       
+ *         tbar: [{
  *             text: 'Add',
- *             handler: 'onAddClick',  // calls MyViewController's onAddClick method
+ *             listeners: {
+ *                 click: 'onAddClick'
+ *             }    
+ *         }, {
+ *             text: 'Delete',
+ *             reference: 'delete',
+ *             listeners: {
+ *                 click: 'onDeleteClick'
+ *             }
+ *         }],
+ *         store: {
+ *             model: 'User'
+ *         },
+ *         selModel: {
+ *             type: 'rowmodel',
+ *             listeners: {
+ *                 selectionchange: 'onSelectionChange'
+ *             }    
+ *         },
+ *         columns: [{
+ *             flex: 1,
+ *             dataIndex: 'name',
+ *             text: 'Name'
+ *         }, {
+ *             flex: 1,
+ *             dataIndex: 'phone',
+ *             text: 'Phone'
  *         }]
  *     });
  *   
  *     Ext.onReady(function() {
- *         new MyView({
+ *         new UserList({
  *             renderTo: Ext.getBody(),
  *             width: 400,
  *             height: 200
@@ -52,64 +127,23 @@ Ext.define('Ext.app.ViewController', {
     
     isViewController: true,
 
-    /**
-     * @property factoryConfig
-     * @inheritdoc
-     */
     factoryConfig: { // configure Factoryable
         type: 'controller'
     },
 
     config: {
-        /**
-         * @cfg {Object} bindings
-         * A declarative set of bindings to the {@link #getViewModel} for this
-         * controller. The key should be the method, the value should be
-         * the bind statement:
-         *
-         *     Ext.define('MyApp.TestController', {
-         *         extend: 'Ext.app.ViewController',
-         *
-         *         bindings: {
-         *             onTotalChange: '{total}',
-         *             onCoordsChange: '({x}, {y})',
-         *             onProductChange: {
-         *                 amount: '{qty}',
-         *                 rating: '{rating}'
-         *             }
-         *         },
-         *
-         *          onTotalChange: function(total) {
-         *              console.log(total);
-         *          },
-         *
-         *          onCoordsChange: function(coords) {
-         *              console.log('The coordinates are: ', coords);
-         *          },
-         *
-         *          onProductChange: function(productInfo) {
-         *              console.log('Amount: ', productInfo.amount, ' Rating: ', productInfo.rating);
-         *          }
-         *     });
-         *
-         * @since 6.5.0
-         */
-        bindings: {
-            $value: null,
-            lazy: true
-        },
         closeViewAction: 'destroy'
     },
 
     view: null,
 
-    constructor: function(config) {
+    constructor: function() {
         this.compDomain = new Ext.app.domain.View(this);
-        this.callParent([config]);
+        this.callParent(arguments);
     },
 
     /**
-     * @method beforeInit
+     * @method
      *
      * Called before the view initializes. This is called before the view's
      * initComponent method has been called.
@@ -119,7 +153,7 @@ Ext.define('Ext.app.ViewController', {
     beforeInit: Ext.emptyFn,
 
     /**
-     * @method init
+     * @method
      *
      * Called when the view initializes. This is called after the view's initComponent
      * method has been called.
@@ -129,7 +163,7 @@ Ext.define('Ext.app.ViewController', {
     init: Ext.emptyFn,
 
     /**
-     * @method initViewModel
+     * @method
      *
      * Called when the view model instance for an attached view is first created.
      * @param {Ext.app.ViewModel} viewModel The ViewModel
@@ -142,18 +176,7 @@ Ext.define('Ext.app.ViewController', {
      */
     destroy: function() {
         var me = this,
-            domain = me.compDomain,
-            bind, b, key;
-
-        if (me.$hasBinds) {
-            bind = me.getBindings();
-            for (key in bind) {
-                b = bind[key];
-                if (b) {
-                    b.destroy();
-                }
-            }
-        }
+            domain = me.compDomain;
 
         if (domain) {
             domain.unlisten(me);
@@ -208,8 +231,7 @@ Ext.define('Ext.app.ViewController', {
     },
 
     /**
-     * @method getReferences
-     * @inheritdoc Ext.mixin.Container#method!getReferences
+     * @inheritdoc Ext.container.Container#getReferences
      * @since 5.0.0
      */
     getReferences: function () {
@@ -301,58 +323,22 @@ Ext.define('Ext.app.ViewController', {
      * @return {Boolean} returns false if any of the handlers return false otherwise it returns true.
      * @protected
      */
-    fireViewEvent: function (eventName, args) {
+    fireViewEvent: function(eventName, firstArg) {
         var view = this.view,
             result = false,
-            a = arguments;
+            args = arguments;
 
         if (view) {
-            if (view !== args) {
-                a = Ext.Array.slice(a);
+            if (view !== firstArg) {
+                args = Ext.Array.slice(args);
 
-                a.splice(1, 0, view); // insert view at [1]
+                args.splice(1, 0, view);
             }
 
-            result = view.fireEvent.apply(view, a);
+            result = view.fireEvent.apply(view, args);
         }
 
         return result;
-    },
-
-    /**
-     * @method setBind
-     * @hide
-     */
-
-    applyBindings: function(bindings) {
-        if (!bindings) {
-            return null;
-        }
-
-        var me = this,
-            viewModel = me.getViewModel(),
-            getBindTemplateScope = me.getBindTemplateScope(),
-            b, fn, descriptor;
-
-        me.$hasBinds = true;
-        //<debug>
-        if (!viewModel) {
-            Ext.raise('Cannot use bind config without a viewModel');
-        }
-        //</debug>
-
-        for (fn in bindings) {
-            descriptor = bindings[fn];
-            b = null;
-
-            if (descriptor) {
-                b = viewModel.bind(descriptor, fn, me);
-                b.getTemplateScope = getBindTemplateScope;
-            }
-            bindings[fn] = b;
-        }
-
-        return bindings;
     },
 
     //=========================================================================
@@ -370,16 +356,32 @@ Ext.define('Ext.app.ViewController', {
                 view.attachReference(component);
             }
         },
-
-        getBindTemplateScope: function() {
-            // This method is called as a method on a Binding instance, so the "this" pointer
-            // is that of the Binding. The "scope" of the Binding is the controller.
-            return this.scope;
+        
+        /**
+         * Clear a reference to a component
+         * @param {Ext.Component} ref The component to reference
+         * 
+         * @private
+         */
+        clearReference: function(ref) {
+            var view = this.view;
+            if (view) {
+                view.clearReference(ref);
+            }
         },
 
-        initBindings: function() {
-            // Force bind creation
-            this.getBindings();
+        /**
+         * Invalidates the references collection. Typically called when
+         * removing a container from this container, since it's difficult
+         * to know what references got removed.
+         *
+         * @private
+         */
+        clearReferences: function () {
+            var view = this.view;
+            if (view) {
+                view.clearReferences();
+            }
         },
 
         /**

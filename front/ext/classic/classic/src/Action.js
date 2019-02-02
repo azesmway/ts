@@ -115,12 +115,12 @@ Ext.define('Ext.Action', {
      * The text to set for all components configured by this Action.
      */
     /**
-     * @cfg glyph
-     * @inheritdoc Ext.panel.Header#cfg-glyph
+     * @cfg {Number/String} glyph
+     * @inheritdoc Ext.panel.Header#glyph
      * @since 6.2.0
      */
     /**
-     * @cfg iconCls
+     * @cfg {String} [iconCls='']
      * @localdoc **Note:** The CSS class(es) specifying the background image will apply 
      * to all components configured by this Action.
      * @inheritdoc Ext.panel.Header#cfg-iconCls
@@ -193,7 +193,7 @@ Ext.define('Ext.Action', {
     },
 
     /**
-     * Sets the {@link #glyph glyph} for all components configured by this 
+     * Sets the {@link #Glyph glyph} for all components configured by this 
      * Action.
      * @param {String} glyph The CSS class supplying the icon image
      */

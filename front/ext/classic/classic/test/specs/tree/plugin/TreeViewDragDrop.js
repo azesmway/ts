@@ -1,8 +1,5 @@
-topSuite("Ext.tree.plugin.TreeViewDragDrop",
-    ['Ext.tree.Panel', 'Ext.grid.column.Widget', 'Ext.form.field.*', 'Ext.Button'],
-function() {
-    var itNotTouch = jasmine.supportsTouch ? xit : it,
-        TreeItem = Ext.define(null, {
+describe("Ext.tree.plugin.TreeViewDragDrop", function() {
+    var TreeItem = Ext.define(null, {
         extend: 'Ext.data.TreeModel',
         fields: ['id', 'text', 'secondaryId'],
         proxy: {
@@ -137,59 +134,10 @@ function() {
             // Disable fx to avoid animation errors while destroying the treepanel
             Ext.enableFx = false;
             jasmine.fireMouseEvent(cell, 'mousedown');
-
-            // Longpress to trigger drag on touch
-            if (jasmine.supportsTouch) {
-                waits(1500);
-            }
-            
-            runs(function() {
-                jasmine.fireMouseEvent(cell, 'mousemove', 5, 20);
-                expect(Ext.fly(dragZone.dragData.item).contains(cell)).toBe(true);
-                jasmine.fireMouseEvent(cell, 'mouseup');
-                Ext.enableFx = true;
-            });
-        });
-    });
-
-    describe("with checkbox selModel", function() {
-        it("should be able to select a row by clicking on the row and select another by clicking on the checkbox", function() {
-            var cell, checkbox;
-
-            makeTree([{
-                text: 'Child 1',
-                leaf: true
-            }, {
-                text: 'Child 2',
-                leaf: true
-            }, {
-                text: 'Child 3',
-                expanded: true,
-                children: [{
-                    text: 'Grandchild',
-                    leaf: true
-                }]
-            }],{
-                selModel: {
-                    type: 'checkboxmodel'
-                }
-            });
-
-            cell = view.getCell(store.getAt(3), tree.down('treecolumn'));
-            checkbox = view.getCell(store.getAt(4), tree.down('checkcolumn')).querySelector('.x-grid-checkcolumn');
-
-            jasmine.fireMouseEvent(cell, 'click');
-
-            jasmine.fireMouseEvent(checkbox, 'click');
-
-            // we must use waits here instead of waitsFor because
-            // the BUG fixed here would check and then uncheck the checkbox.
-            // So we are waiting for something NOT to happen.
-            waits(300);
-
-            runs(function() {
-                expect(tree.getSelection().length).toBe(2);
-            });
+            jasmine.fireMouseEvent(cell, 'mousemove', 5, 20);
+            expect(Ext.fly(dragZone.dragData.item).contains(cell)).toBe(true);
+            jasmine.fireMouseEvent(cell, 'mouseup');
+            Ext.enableFx = true;
         });
     });
 
@@ -209,7 +157,7 @@ function() {
             });
         });
 
-        itNotTouch("should be able to focus the widget with a mouse click", function() {
+        it("should be able to focus the widget with a mouse click", function() {
             jasmine.fireMouseEvent(getWidget(0).el.dom, 'click');
 
             expect(getWidget(0).hasFocus).toBe(true);

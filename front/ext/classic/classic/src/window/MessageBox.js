@@ -58,37 +58,6 @@
  *     });
  *     
  *     Ext.Msg.alert('Overlapping', 'Ext.Msg instance');
- *
- * ## Static Values
- *
- * The following values can be utilized by Ext.window.MessageBox and Ext.Msg:
- *
- *     OK    : {text: 'OK',     itemId: 'ok'}
- *     YES   : {text: 'Yes',    itemId: 'yes'}
- *     NO    : {text: 'No',     itemId: 'no'}
- *     CANCEL: {text: 'Cancel', itemId: 'cancel'}
- *
- *     INFO    : Ext.baseCSSPrefix + 'msgbox-info'
- *     WARNING : Ext.baseCSSPrefix + 'msgbox-warning'
- *     QUESTION: Ext.baseCSSPrefix + 'msgbox-question'
- *     ERROR   : Ext.baseCSSPrefix + 'msgbox-error'
- *
- *     OKCANCEL: [
- *         {text: 'Cancel', itemId: 'cancel'},
- *         {text: 'OK',     itemId: 'ok'}
- *     ]
- *
- *     YESNOCANCEL: [
- *         {text: 'Cancel', itemId: 'cancel'},
- *         {text: 'No',     itemId: 'no'},
- *         {text: 'Yes',    itemId: 'yes'}
- *     ]
- *
- *     YESNO: [
- *         {text: 'No',  itemId: 'no'},
- *         {text: 'Yes', itemId: 'yes'}
- *     ]
- *
  */
 Ext.define('Ext.window.MessageBox', {
     extend: 'Ext.window.Window',
@@ -208,7 +177,7 @@ Ext.define('Ext.window.MessageBox', {
      * for setting a different minimum width than text-only dialogs may need.
      */
     minPromptWidth: 250,
-
+    //<locale type="object">
     /**
      * @property
      * An object containing the default button text strings that can be overriden for localized language support.
@@ -217,7 +186,6 @@ Ext.define('Ext.window.MessageBox', {
      * Customize the default text like so:
      *
      *     Ext.window.MessageBox.buttonText.yes = "oui"; //french
-     * @locale
      */
     buttonText: {
         ok: 'OK',
@@ -225,10 +193,20 @@ Ext.define('Ext.window.MessageBox', {
         no: 'No',
         cancel: 'Cancel'
     },
+    //</locale>
 
     buttonIds: [
         'ok', 'yes', 'no', 'cancel'
     ],
+
+    //<locale type="object">
+    titleText: {
+        confirm: 'Confirm',
+        prompt: 'Prompt',
+        wait: 'Loading...',
+        alert: 'Attention'
+    },
+    //</locale>
 
     baseIconCls: Ext.baseCSSPrefix + 'message-box-icon',
     
@@ -377,7 +355,7 @@ Ext.define('Ext.window.MessageBox', {
             id: baseId + '-toolbar',
             ui: 'footer',
             dock: 'bottom',
-            focusableContainer: false,
+            enableFocusableContainer: false,
             ariaRole: null,
             layout: {
                 pack: 'center'
@@ -694,7 +672,7 @@ Ext.define('Ext.window.MessageBox', {
     },
 
     /**
-     * Displays a new message box, or re-initializes an existing message box, based on the config options passed in. All
+     * Displays a new message box, or reinitializes an existing message box, based on the config options passed in. All
      * display functions (e.g. prompt, alert, etc.) on MessageBox call this function internally, although those calls
      * are basic shortcuts and do not support all of the config options allowed here.
      *
@@ -711,12 +689,12 @@ Ext.define('Ext.window.MessageBox', {
      *         icon: Ext.window.MessageBox.INFO
      *     });
      *
-     * @param {Object} cfg The following config options are supported:
+     * @param {Object} config The following config options are supported:
      *
-     * @param {String/Ext.dom.Element} [cfg.animateTarget]
+     * @param {String/Ext.dom.Element} [config.animateTarget]
      * An id or Element from which the message box should animate as it opens and closes.
      *
-     * @param {Number} [cfg.buttons=false]
+     * @param {Number} [config.buttons=false]
      * A bitwise button specifier consisting of the sum of any of the following constants:
      *
      *  - Ext.MessageBox.OK
@@ -735,17 +713,17 @@ Ext.define('Ext.window.MessageBox', {
      * This may also be specified as an object hash containing custom button text in the same format as the
      * {@link #buttonText} config. Button IDs present as property names will be made visible.
      *
-     * @param {Boolean} [cfg.closable]
+     * @param {Boolean} [config.closable]
      * False to hide the top-right close button (defaults to true). Note that progress and wait dialogs will ignore this
      * property and always hide the close button as they can only be closed programmatically.
      *
-     * @param {String} [cfg.cls]
+     * @param {String} [config.cls]
      * A custom CSS class to apply to the message box's container element
      *
-     * @param {Number} [cfg.defaultTextHeight=75]
+     * @param {Number} [config.defaultTextHeight=75]
      * The default height in pixels of the message box's multiline textarea if displayed.
      *
-     * @param {Function} [cfg.fn]
+     * @param {Function} [config.fn]
      * A callback function which is called when the dialog is dismissed either by clicking on the configured buttons, or
      * on the dialog close button, or by pressing the return button to enter input.
      *
@@ -753,17 +731,17 @@ Ext.define('Ext.window.MessageBox', {
      * closed programmatically, so any required function should be called by the same code after it closes the dialog.
      * Parameters passed:
      *
-     *  @param {String} cfg.fn.buttonId The ID of the button pressed, one of:
+     *  @param {String} config.fn.buttonId The ID of the button pressed, one of:
      *
      * - ok
      * - yes
      * - no
      * - cancel
      *
-     *  @param {String} cfg.fn.text Value of the input field if either `prompt` or `multiline` is true
-     *  @param {Object} cfg.fn.opt The config object passed to show.
+     *  @param {String} config.fn.text Value of the input field if either `prompt` or `multiline` is true
+     *  @param {Object} config.fn.opt The config object passed to show.
      *
-     * @param {Object} [cfg.buttonText]
+     * @param {Object} [config.buttonText]
      * An object containing string properties which override the system-supplied button text values just for this
      * invocation. The property names are:
      *
@@ -772,7 +750,7 @@ Ext.define('Ext.window.MessageBox', {
      * - no
      * - cancel
      *
-     * @param {Object} [cfg.buttonTips] An object keyed by the button ids containing
+     * @param {Object} [config.buttonTips] An object keyed by the button ids containing
      * {@link Ext.button.Button#tooltip tooltip} configurations for each button. eg:
      *
      *     {
@@ -780,10 +758,10 @@ Ext.define('Ext.window.MessageBox', {
      *         cancel: 'Discard the record'
      *     }
      *
-     * @param {Object} [cfg.scope]
+     * @param {Object} [config.scope]
      * The scope (`this` reference) in which the function will be executed.
      *
-     * @param {String} [cfg.icon]
+     * @param {String} [config.icon]
      * A CSS class that provides a background image to be used as the body icon for the dialog.
      * One can use a predefined icon class:
      *
@@ -794,57 +772,57 @@ Ext.define('Ext.window.MessageBox', {
      *
      * or use just any `'custom-class'`. Defaults to empty string.
      *
-     * @param {String} [cfg.iconCls]
+     * @param {String} [config.iconCls]
      * The standard {@link Ext.window.Window#iconCls} to add an optional header icon (defaults to '')
      * 
-     * @param {String} [cfg.defaultFocus]
+     * @param {String} [config.defaultFocus]
      * The button to focus when showing the dialog. If not specified, defaults to
      * the first visible button.
      *
-     * @param {Number} [cfg.maxWidth]
+     * @param {Number} [config.maxWidth]
      * The maximum width in pixels of the message box (defaults to 600)
      *
-     * @param {Number} [cfg.minWidth]
+     * @param {Number} [config.minWidth]
      * The minimum width in pixels of the message box (defaults to 100)
      *
-     * @param {Boolean} [cfg.modal]
+     * @param {Boolean} [config.modal]
      * False to allow user interaction with the page while the message box is displayed (defaults to true)
      *
-     * @param {String} [cfg.message]
+     * @param {String} [config.message]
      * A string that will replace the existing message box body text (defaults to the XHTML-compliant non-breaking space
      * character '&#160;')
      *
-     * @param {Boolean} [cfg.multiline]
+     * @param {Boolean} [config.multiline]
      * True to prompt the user to enter multi-line text (defaults to false)
      *
-     * @param {Boolean} [cfg.progress]
+     * @param {Boolean} [config.progress]
      * True to display a progress bar (defaults to false)
      *
-     * @param {String} [cfg.progressText]
+     * @param {String} [config.progressText]
      * The text to display inside the progress bar if progress = true (defaults to '')
      *
-     * @param {Boolean} [cfg.prompt]
+     * @param {Boolean} [config.prompt]
      * True to prompt the user to enter single-line text (defaults to false)
      *
-     * @param {Boolean} [cfg.proxyDrag]
+     * @param {Boolean} [config.proxyDrag]
      * True to display a lightweight proxy while dragging (defaults to false)
      *
-     * @param {String} cfg.title
+     * @param {String} config.title
      * The title text
      *
-     * @param {String} [cfg.value]
+     * @param {String} [config.value]
      * The string value to set into the active textbox element if displayed
      *
-     * @param {Object/Boolean} [cfg.wait=false]
+     * @param {Object/Boolean} [config.wait=false]
      * `true` to display a progress bar, or a configuration for {@link Ext.ProgressBar#wait}.
      *
-     * @param {Object} [cfg.waitConfig]
+     * @param {Object} [config.waitConfig]
      * A {@link Ext.ProgressBar#wait} config object (applies only if wait = true)
      *
-     * @param {Number} [cfg.width]
+     * @param {Number} [config.width]
      * The width of the dialog in pixels
      *
-     * @param {String} [cfg.maskClickAction=focus]
+     * @cfg {String} [config.maskClickAction=focus]
      * The method to call when the window's modal mask is clicked or tapped:
      *
      * - **`'{@link #method-focus}'`** :
@@ -975,10 +953,10 @@ Ext.define('Ext.window.MessageBox', {
      * @param {Object} [scope=window] The scope (`this` reference) in which the callback is executed.
      * @return {Ext.window.MessageBox} this
      */
-    confirm: function(title, message, fn, scope) {
-        if (Ext.isString(title)) {
-            title = {
-                title: title,
+    confirm: function(cfg, message, fn, scope) {
+        if (Ext.isString(cfg)) {
+            cfg = {
+                title: cfg,
                 icon: this.QUESTION,
                 message: message,
                 buttons: this.YESNO,
@@ -986,7 +964,7 @@ Ext.define('Ext.window.MessageBox', {
                 scope: scope
             };
         }
-        return this.show(title);
+        return this.show(cfg);
     },
 
     /**
@@ -1095,10 +1073,6 @@ Ext.define('Ext.window.MessageBox', {
             };
         }
         return this.show(title);
-    },
-    
-    privates: {
-        syncHeaderConfigs: Ext.privateFn
     }
 }, function(MessageBox) {
     /**

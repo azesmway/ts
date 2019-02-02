@@ -11,6 +11,12 @@ use Zend\Mvc\Controller\AbstractActionController;
 
 class IndexController extends AbstractActionController
 {
+
+  /**
+   * Стартовый экшен
+   *
+   * @return array|\Zend\Stdlib\ResponseInterface
+   */
   public function indexAction()
   {
     $requestGet = $this->getRequest()->getQuery()->toArray();

@@ -40,21 +40,19 @@ Ext.define('Ext.field.Url', {
 
     config: {
         /**
-         * @cfg autoCapitalize
+         * @cfg
          * @inheritdoc
          */
-        autoCapitalize: false
-    },
-    
-    /**
-     * @cfg inputType
-     * @inheritdoc
-     */
-    inputType: 'url',
+        autoCapitalize: false,
 
-    /**
-     * @property classCls
-     * @inheritdoc
-     */
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        component: {
+	        type: 'url'
+	    }
+    },
+
     classCls: Ext.baseCSSPrefix + 'urlfield'
 });

@@ -1,8 +1,13 @@
-topSuite("Ext.viewport.Default", function() {
+describe("Ext.viewport.Default", function() {
     var addWindowListenerSpy,
         Viewport = Ext.viewport.Default;
 
     Viewport.override({
+        addWindowListener: function() {
+            if (!addWindowListenerSpy) return this.callOverridden(arguments);
+            addWindowListenerSpy.apply(this, arguments);
+        },
+
         getWindowOrientation: function() {
             return 0;
         },
@@ -12,32 +17,17 @@ topSuite("Ext.viewport.Default", function() {
         }
     });
 
-    beforeAll(function() {
-        Viewport.override({
-            addWindowListener: function() {
-                if (!addWindowListenerSpy) return this.callOverridden(arguments);
-                addWindowListenerSpy.apply(this, arguments);
-            },
-    
-            getWindowOrientation: function() {
-                return 0;
-            },
-    
-            waitUntil: function(condition, onSatisfied) {
-                onSatisfied.call(this);
-            }
-        });
-    });
-
     beforeEach(function() {
         addWindowListenerSpy = jasmine.createSpy();
     });
 
-    describe("constructor()", function() {
-        var viewport;
-        
-        afterEach(function() {
-            viewport = Ext.destroy(viewport);
+    describe("constructor()", function(){
+        it("should attach initial listeners", function(){
+            var viewport = new Viewport();
+
+            expect(addWindowListenerSpy).toHaveBeenCalled();
+
+            viewport.destroy();
         });
     });
 
@@ -81,16 +71,12 @@ topSuite("Ext.viewport.Default", function() {
             });
         });
 
-        describe("onWindowResize()", function() {
-            afterEach(function() {
-                top.Test.SandBox.getIframe().style.width = '';
-            });
-
+        describe("onResize()", function(){
             it("should invoke getWindowWidth() and getWindowHeight()", function(){
                 spyOn(viewport, 'getWindowWidth');
                 spyOn(viewport, 'getWindowHeight');
 
-                viewport.onWindowResize();
+                viewport.onResize();
 
                 expect(viewport.getWindowWidth).toHaveBeenCalled();
                 expect(viewport.getWindowHeight).toHaveBeenCalled();
@@ -99,27 +85,9 @@ topSuite("Ext.viewport.Default", function() {
             it("should NOT fire a 'resize' event if the size doesn't change", function(){
                 spyOn(viewport, 'fireEvent');
 
-                viewport.onWindowResize();
+                viewport.onResize();
 
                 expect(viewport.fireEvent).not.toHaveBeenCalled();
-            });
-
-            it('should fire a resize event when the window size changes', function() {
-                var resizeSpy = spyOnEvent(viewport, 'resize'),
-                    oldWidth = viewport.lastSize.width,
-                    oldHeight = viewport.lastSize.height;
-
-                top.Test.SandBox.getIframe().style.width = '900px';
-
-                // Wait for async resize event to fire.
-                waitsFor(function() {
-                    return resizeSpy.callCount > 0;
-                });
-
-                // The viewport resize listener should fire with expected arguments.
-                runs(function() {
-                    expect(resizeSpy.mostRecentCall.args).toEqual([viewport, 900, oldHeight, oldWidth, oldHeight]);
-                });
             });
         });
 
@@ -211,12 +179,10 @@ topSuite("Ext.viewport.Default", function() {
                 spyOn(viewport, 'fireEvent');
 
                 viewport.updateSize = function() {
-                    var lastSize = this.lastSize;
+                    this.windowWidth = 100;
+                    this.windowHeight = 200;
 
-                    lastSize.width = 100;
-                    lastSize.height = 200;
-
-                    return lastSize;
+                    return this;
                 };
                 viewport.onOrientationChange();
 

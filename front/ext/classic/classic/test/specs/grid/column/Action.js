@@ -1,9 +1,6 @@
-/* global Ext, jasmine, expect, spyOn, topSuite */
-/* eslint indent: off */
+/* global Ext, jasmine, expect, spyOn */
 
-topSuite("Ext.grid.column.Action",
-    ['Ext.grid.Panel', 'Ext.window.MessageBox'],
-function() {
+describe("Ext.grid.column.Action", function(){
     var store, grid, view, actionColumn,
         synchronousLoad = true,
         proxyStoreLoad = Ext.data.ProxyStore.prototype.load,
@@ -19,20 +16,20 @@ function() {
         return grid.getView().getCellInclusive({
             row: rowIdx,
             column: colIdx
-        }, true);
+        });
     }
     
     function getActionItem(rowIdx, colIdx, itemIdx) {
         var cell = getCell(rowIdx || 0, colIdx || 1);
         
-        var items = cell.querySelectorAll('.' + Ext.grid.column.Action.prototype.actionIconCls);
+        var items = cell.select('.' + Ext.grid.column.Action.prototype.actionIconCls);
         
-        return items[itemIdx || 0];
+        return items.item(itemIdx || 0);
     }
     
     function triggerAction(type, row, colIdx) {
         var cell = getCell(row || 0, colIdx || 1);
-        jasmine.fireMouseEvent(cell.querySelector('.' + Ext.grid.column.Action.prototype.actionIconCls), type || 'click');
+        jasmine.fireMouseEvent(cell.down('.' + Ext.grid.column.Action.prototype.actionIconCls, true), type || 'click');
         return cell;
     }
 
@@ -58,7 +55,7 @@ function() {
                 renderer: Ext.emptyFn,
                 items: [{
                     handler: actionHandler|| Ext.emptyFn,
-                    isActionDisabled: Ext.emptyFn
+                    isDisabled: Ext.emptyFn
                 }]
             }],
             renderTo: Ext.getBody()
@@ -100,10 +97,10 @@ function() {
                     renderer: Ext.emptyFn,
                     items: [{
                         handler: handlerSpy,
-                        isActionDisabled: Ext.emptyFn
+                        isDisabled: Ext.emptyFn
                     }, {
                         handler: Ext.emptyFn,
-                        isActionDisabled: Ext.emptyFn
+                        isDisabled: Ext.emptyFn
                     }]
                 }]
             });
@@ -114,7 +111,7 @@ function() {
             cellEl = grid.getView().getCell(0, 1);
             
             // This is a bit hacky but so is Action column :(
-            actionItemEl = cellEl.querySelector('[role=button]');
+            actionItemEl = cellEl.down('[role=button]', true);
         });
         
         afterEach(function() {
@@ -129,9 +126,7 @@ function() {
             // Navigate and enter actionable mode
             pressKey(cellEl, 'enter');
             
-            waitsFor(function() {
-                return actionableSpy.callCount === 1 && view.cellFocused;
-            }, 'actionable mode to start');
+            waitForSpy(actionableSpy);
             
             runs(function() {
                 // Check that worked
@@ -142,7 +137,7 @@ function() {
             // Activate the item.
             pressKey(actionItemEl, 'space');
             
-            waitForSpy(handlerSpy, 'action handler to be called');
+            waitForSpy(handlerSpy);
             
             runs(function() {
                 expect(msgBox).toBeDefined();
@@ -151,7 +146,7 @@ function() {
             // MsgBox window must contains focus
             waitsFor(function() {
                 return msgBox.isVisible() === true && msgBox.containsFocus;
-            }, 'message box to show and focus');
+            });
 
             runs(function () {
                 expect(Ext.getCmp(msgBox.id)).toBe(msgBox);
@@ -165,7 +160,7 @@ function() {
             // Should revert focus back into grid in same mode that it left.
             waitsFor(function() {
                 return grid.actionableMode;
-            }, 'grid to return to actionable mode');
+            });
             
             runs(function() {
                 // SHould revert focus back into grid in same mode that it left.
@@ -175,62 +170,11 @@ function() {
             // Focus should have reverted back to the action item
             waitsFor(function() {
                 return Ext.Element.getActiveElement() === actionItemEl;
-            }, 'focus to return to the action item');
-        });
-    });
-
-    describe("quicktips", function() {
-        it("should be able to render html", function() {
-            makeGrid({
-                columns: [{
-                    dataIndex: 'text',
-                    header: 'Text'
-                }, {
-                    xtype: 'actioncolumn',
-                    dataIndex: 'actionCls',
-                    header: 'Action',
-                    renderer: Ext.emptyFn,
-                    items: [{
-                        iconCls: 'x-fa fa-cog',
-                        getTip: function (value, metadata, record) {
-                            return record.get('tip');
-                        }
-                    }]
-                }]
-            }, {
-                data: [{
-                    text: 'foo',
-                    tip: '<b>foo</b>'
-                }]
             });
-
-            expect(getActionItem(0,1).getAttribute('data-qtip')).toBe('<b>foo</b>');
-        });
-
-        it("should not render encoded html as html", function() {
-            makeGrid({
-                columns: [{
-                    dataIndex: 'text',
-                    header: 'Text'
-                }, {
-                    xtype: 'actioncolumn',
-                    dataIndex: 'actionCls',
-                    header: 'Action',
-                    items: [{
-                        iconCls: 'x-fa fa-cog',
-                        getTip: function (value, metadata, record) {
-                            return record.get('tip');
-                        }
-                    }]
-                }]
-            }, {
-                data: [{
-                    text: 'foo',
-                    tip: '&lt;b&gt;foo&lt;/b&gt;'
-                }]
+            
+            runs(function() {
+                expect(document.activeElement).toBe(actionItemEl);
             });
-
-            expect(getActionItem(0,1).getAttribute('data-qtip')).toBe('&lt;b&gt;foo&lt;/b&gt;');
         });
     });
 
@@ -267,7 +211,6 @@ function() {
         it('should not process mousedown events', function () {
             triggerAction('mousedown');
             expect(handled).toBe(false);
-            triggerAction('mouseup');
         });
     });
 
@@ -343,8 +286,6 @@ function() {
         });
 
         it("should select the row & focus the cell when clicking the action with stopSelection: false", function() {
-            var isTouch;
-
             makeGrid({
                 columns: [{}, {
                     xtype: 'actioncolumn',
@@ -352,25 +293,16 @@ function() {
                     dataIndex: 'actionCls',
                     header: 'Action',
                     items: [{
-                        handler: function(view, recordIndex, cellIndex, item, e, record, row) {
-                            isTouch = e.pointerType === 'touch';
-                        }
+                        handler: Ext.emptyFn
                     }]
                 }]
             });
 
             triggerAction();
             expect(grid.getSelectionModel().isSelected(store.first())).toBe(true);
-
             var pos = grid.view.actionPosition;
-
-            // Touch events do not cause actionable mode
-            if (isTouch) {
-                expect(pos).not.toBeDefined();
-            } else {
-                expect(pos.record).toBe(store.first());
-                expect(pos.column).toBe(grid.down('actioncolumn'));
-            }
+            expect(pos.record).toBe(store.first());
+            expect(pos.column).toBe(grid.down('actioncolumn'));
         });
     });
     
@@ -465,8 +397,8 @@ function() {
 
                 var view   = grid.getView(),
                     rowEl  = view.getNode(0),
-                    img    = rowEl.querySelector('.x-action-col-icon'),
-                    imgCls = Ext.fly(img).hasCls('x-item-disabled');
+                    img    = Ext.get(rowEl).down('.x-action-col-icon'),
+                    imgCls = img.hasCls('x-item-disabled');
 
                 triggerAction();
                 expect(spy1).not.toHaveBeenCalled();
@@ -484,8 +416,8 @@ function() {
 
                 var view   = grid.getView(),
                     rowEl  = view.getNode(0),
-                    img    = rowEl.querySelector('.x-action-col-icon'),
-                    imgCls = Ext.fly(img).hasCls('x-item-disabled');
+                    img    = Ext.get(rowEl).down('.x-action-col-icon'),
+                    imgCls = img.hasCls('x-item-disabled');
 
                 col.enableAction(0);
                 triggerAction();
@@ -502,7 +434,7 @@ function() {
 
                 var view   = grid.getView(),
                     rowEl  = view.getNode(0),
-                    img    = Ext.fly(rowEl.querySelector('.x-action-col-icon'));
+                    img    = Ext.get(rowEl).down('.x-action-col-icon');
 
                 expect(img.hasCls('x-item-disabled')).toBe(false);
                 col.disableAction(0);
@@ -769,16 +701,16 @@ function() {
                 runTest('defaultRenderer');
             });
 
-            describe('isActionDisabled on items', function () {
-                it('should call isActionDisabled', function () {
+            describe('isDisabled on items', function () {
+                it('should call isDisabled', function () {
                     var item;
 
                     makeGrid();
                     item = actionColumn.items[0];
-                    spyOn(item, 'isActionDisabled').andCallThrough();
+                    spyOn(item, 'isDisabled').andCallThrough();
                     store.getAt(0).set('text', 'Kilgore Trout');
 
-                    expect(item.isActionDisabled.callCount).toBe(1);
+                    expect(item.isDisabled.callCount).toBe(1);
                 });
             });
         });
@@ -1010,7 +942,7 @@ function() {
                         items: [{
                             ariaRole: null
                         }, {
-                            ariaRole: ''
+                            ariaRole: '',
                         }, {
                             ariaRole: 'throbbe'
                         }]
@@ -1026,15 +958,5 @@ function() {
                 expect(item2).toHaveAttr('role', 'throbbe');
             });
         });
-    });
-
-    it("should not fail when using contains()", function() {
-        makeGrid({
-            columns: [{
-                xtype: 'actioncolumn',
-                dataIndex: 'actionCls'
-            }]
-        });
-        expect(actionColumn.contains(grid)).toBe(false);
     });
 });

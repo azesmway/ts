@@ -1,5 +1,5 @@
 /**
- * @property {Boolean} [USE_NATIVE_JSON=true]
+ * @property {Boolean} [USE_NATIVE_JSON=false]
  * @member Ext
  * Indicates whether to use native browser parsing for JSON methods.
  * This option is ignored if the browser does not support native JSON methods.
@@ -7,7 +7,7 @@
  * **Note:** Native JSON methods will not work with objects that have functions.
  * Also, property names must be quoted, otherwise the data will not parse.
  */
-Ext.USE_NATIVE_JSON = true;
+Ext.USE_NATIVE_JSON = false;
 
 /**
  * Modified version of [Douglas Crockford's JSON.js][dc] that doesn't
@@ -45,15 +45,15 @@ var me = this,
                 return me.encodeString(o);
             }
         } else if (typeof o === "number") {
-            // don't use isNumber here, since finite checks happen inside isNumber
+            //don't use isNumber here, since finite checks happen inside isNumber
             return isFinite(o) ? String(o) : "null";
         } else if (Ext.isBoolean(o)) {
             return String(o);
         }
-        // Allow custom serialization by adding a toJSON method to any object type.
+        // Allow custom zerialization by adding a toJSON method to any object type.
         // Date/String have a toJSON in some environments, so check these first.
-        else if (typeof o.toJSON === 'function') {
-            return doEncode(o.toJSON());
+        else if (o.toJSON) {
+            return o.toJSON();
         } else if (Ext.isArray(o)) {
             return encodeArray(o, newline);
         } else if (Ext.isObject(o)) {
@@ -111,7 +111,7 @@ var me = this,
             val = o[i];
             if (!useHasOwn || o.hasOwnProperty(i)) {
                 // To match JSON.stringify, we shouldn't encode functions or undefined
-                if (typeof val === 'function' || val === undefined || val.isInstance) {
+                if (typeof val === 'function' || val === undefined) {
                     continue;
                 }
                 a.push(me.encodeValue(i) + ': ' + me.encodeValue(val, cnewline), sep);
@@ -203,7 +203,7 @@ var me = this,
      *         return Ext.Date.format(d, '"Y-m-d"');
      *     };
      *
-     * @param {Date} o The Date to encode
+     * @param {Date} d The Date to encode
      * @return {String} The string literal to use in a JSON string.
      */
     me.encodeDate = function(o) {

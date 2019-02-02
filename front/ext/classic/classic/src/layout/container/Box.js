@@ -448,11 +448,9 @@ Ext.define('Ext.layout.container.Box', {
         };
 
         // Scrolling can occur if:
-        // a) The owner is configured to scroll - not if there's a boxOverflow scroller.
-        // We must not handle scroll if its this layout's innerCt which is scrolling
-        // which can be set by  a Ext.layout.container.boxOverflow.Scroller.
+        // a) The owner is configured to scroll in that direction
         // b) We're not shrink wrapping. If we shrink wrap, we should always size around the content
-        if (scrollable && !scrollable.isBoxOverflowScroller) {
+        if (scrollable) {
             if (!canScroll) {
                 // Use getX/getY here to indicate whether we will show visible scrollbars in that direction, we may have
                 // a scrollable and can scroll in that direction without having a visible scrollbar.

@@ -1,7 +1,6 @@
 /**
  * @class Ext.sparkline.Base
  */
-
 Ext.define('Ext.override.sparkline.Base', {
     override: 'Ext.sparkline.Base',
 
@@ -17,55 +16,26 @@ Ext.define('Ext.override.sparkline.Base', {
     },
 
     onMouseMove: function (e) {
-        this.getSharedTooltip().triggerEvent = e;
+        this.tooltip.triggerEvent = e;
         this.callParent([e]);
     },
 
     onMouseLeave: function(e) {
         this.callParent([e]);
-        this.getSharedTooltip().target = null;
+        this.tooltip.target = null;  
     },
 
     privates: {
         hideTip: function() {
-            var tip = this.getSharedTooltip();
+            var tip = this.tooltip;
             tip.target = null;  
             tip.hide();
         },
 
         showTip: function() {
-            var tip = this.getSharedTooltip();
+            var tip = this.tooltip;
             tip.target = this.el;
             tip.onTargetOver(tip.triggerEvent);
         }
-    }
-}, function(Cls) {
-    // If we are on a VML platform (IE8 - TODO: remove this when that retires)...
-    if (!Ext.supports.Canvas) {
-        Cls.prototype.element = {
-            tag: 'span',
-            reference: 'element',
-            listeners: {
-                mouseenter: 'onMouseEnter',
-                mouseleave: 'onMouseLeave',
-                mousemove: 'onMouseMove'
-            },
-            style: {
-                display: 'inline-block',
-                position: 'relative',
-                overflow: 'hidden',
-                margin: '0px',
-                padding: '0px',
-                verticalAlign: 'top',
-                cursor: 'default'
-            },
-            children: [{
-                tag: 'svml:group',
-                reference: 'groupEl',
-                coordorigin: '0 0',
-                coordsize: '0 0',
-                style: 'position:absolute;width:0;height:0;pointer-events:none'
-            }]
-        };
     }
 });

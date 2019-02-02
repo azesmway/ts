@@ -1,6 +1,6 @@
 /* global expect, spyOn, Ext, jasmine */
 
-topSuite("Ext.form.field.Spinner", function() {
+describe("Ext.form.field.Spinner", function() {
     var component, makeComponent;
 
     beforeEach(function() {
@@ -275,10 +275,8 @@ topSuite("Ext.form.field.Spinner", function() {
         });
         
         describe('spinend', function() {
-            var spinUpsToDo = Ext.isIE8 ? 20 : 100,
-                spinUpCount = 0,
-                spinEndCount = 0,
-                idleSpy, spinEndSpy;
+            var spinUpCount = 0,
+                spinEndCount = 0;
 
             beforeEach(function() {
                 component = new Ext.form.field.Spinner({
@@ -293,36 +291,24 @@ topSuite("Ext.form.field.Spinner", function() {
                         }
                     }
                 });
-                
-                idleSpy = jasmine.createSpy('idle listener');
-                spinEndSpy = jasmine.createSpy('spinEnd listener');
-            });
-            
-            afterEach(function() {
-                Ext.GlobalEvents.un('idle', idleSpy);
-                idleSpy = spinEndSpy = null;
             });
 
             it('should fire a spinend event when the spin stops', function() {
                 waitsFor(function() {
-                    if (spinUpCount === spinUpsToDo) {
+                    if (spinUpCount === 100) {
                         jasmine.fireKeyEvent(component.inputEl, 'keyup', Ext.event.Event.UP);
                         return true;
                     }
                     jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.UP);
-                }, 'Spinner to fire all events', 5000);
+                });
 
                 // The firing of spinend is buffered because of the repeating, so it will fire soon.
                 runs(function() {
                     expect(spinEndCount).toBe(0);
-                    component.on('spinend', spinEndSpy);
-                    Ext.GlobalEvents.on('idle', idleSpy);
                 });
 
-                waitForSpy(spinEndSpy);
-                
                 // Only one spinend event must fire, so wait for any extraneous ones.
-                waitForSpy(idleSpy);
+                waits(500);
 
                 runs(function() {
                     expect(spinEndCount).toBe(1);

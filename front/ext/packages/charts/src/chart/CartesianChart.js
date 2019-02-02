@@ -1,4 +1,8 @@
 /**
+ * @class Ext.chart.CartesianChart
+ * @extends Ext.chart.AbstractChart
+ * @xtype cartesian
+ *
  * Represents a chart that uses cartesian coordinates.
  * A cartesian chart has two directions, X direction and Y direction.
  * The series and axes are coordinated along these directions.
@@ -10,10 +14,8 @@
  * Based on this property, cartesian series can be trimmed and summarized properly
  * to gain a better performance.
  *
- * Please check out the summary for the {@link Ext.chart.AbstractChart} as well,
- * for helpful tips and important details.
- *
  */
+
 Ext.define('Ext.chart.CartesianChart', {
     extend: 'Ext.chart.AbstractChart',
     alternateClassName: 'Ext.chart.Chart',
@@ -93,16 +95,20 @@ Ext.define('Ext.chart.CartesianChart', {
     },
 
     getDirectionForAxis: function (position) {
-        var flipXY = this.getFlipXY(),
-            direction;
-
+        var flipXY = this.getFlipXY();
         if (position === 'left' || position === 'right') {
-            direction = flipXY ? 'X' : 'Y';
+            if (flipXY) {
+                return 'X';
+            } else {
+                return 'Y';
+            }
         } else {
-            direction = flipXY ? 'Y' : 'X';
+            if (flipXY) {
+                return 'Y';
+            } else {
+                return 'X';
+            }
         }
-
-        return direction;
     },
 
     /**
@@ -111,22 +117,17 @@ Ext.define('Ext.chart.CartesianChart', {
     performLayout: function () {
         var me = this;
 
+        me.animationSuspendCount++;
         if (me.callParent() === false) {
+            --me.animationSuspendCount;
             return;
         }
-
-        me.chartLayoutCount++;
-        me.suspendAnimation();
-
         // 'chart' surface rect is the size of the chart's inner element
         // (see chart.getChartBox), i.e. the portion of the chart minus
         // the legend area (whether DOM or sprite based).
         var chartRect = me.getSurface('chart').getRect(),
-            left = chartRect[0],
-            top = chartRect[1],
             width = chartRect[2],
             height = chartRect[3],
-            captionList = me.captionList,
             axes = me.getAxes(), axis,
             seriesList = me.getSeries(), series,
             axisSurface, thickness,
@@ -139,14 +140,16 @@ Ext.define('Ext.chart.CartesianChart', {
             mainRect, innerWidth, innerHeight,
             elements, floating, floatingValue, matrix, i, ln,
             isRtl = me.getInherited().rtl,
-            flipXY = me.getFlipXY(),
-            caption;
+            flipXY = me.getFlipXY();
 
         if (width <= 0 || height <= 0) {
             return;
         }
 
         me.suspendThicknessChanged();
+
+        shrinkBox.left += chartRect[0];
+        shrinkBox.top += chartRect[1];
 
         for (i = 0; i < axes.length; i++) {
             axis = axes[i];
@@ -156,16 +159,16 @@ Ext.define('Ext.chart.CartesianChart', {
             thickness = axis.getThickness();
             switch (axis.getPosition()) {
                 case 'top':
-                    axisSurface.setRect([left, top + shrinkBox.top + 1, width, thickness]);
+                    axisSurface.setRect([0, shrinkBox.top + 1, width, thickness]);
                     break;
                 case 'bottom':
-                    axisSurface.setRect([left, top + height - (shrinkBox.bottom + thickness), width, thickness]);
+                    axisSurface.setRect([0, height - (shrinkBox.bottom + thickness), width, thickness]);
                     break;
                 case 'left':
-                    axisSurface.setRect([left + shrinkBox.left, top, thickness, height]);
+                    axisSurface.setRect([shrinkBox.left, 0, thickness, height]);
                     break;
                 case 'right':
-                    axisSurface.setRect([left + width - (shrinkBox.right + thickness), top, thickness, height]);
+                    axisSurface.setRect([width - (shrinkBox.right + thickness), 0, thickness, height]);
                     break;
             }
             if (floatingValue === null) {
@@ -176,12 +179,7 @@ Ext.define('Ext.chart.CartesianChart', {
         width -= shrinkBox.left + shrinkBox.right;
         height -= shrinkBox.top + shrinkBox.bottom;
 
-        mainRect = [
-            left + shrinkBox.left,
-            top + shrinkBox.top,
-            width,
-            height
-        ];
+        mainRect = [shrinkBox.left, shrinkBox.top, width, height];
 
         shrinkBox.left += innerPadding.left;
         shrinkBox.top += innerPadding.top;
@@ -209,7 +207,6 @@ Ext.define('Ext.chart.CartesianChart', {
 
         for (i = 0; i < axes.length; i++) {
             axis = axes[i];
-            axis.getRange(true);
             axisSurface = axis.getSurface();
             matrix = axisSurface.matrix;
             elements = matrix.elements;
@@ -236,8 +233,8 @@ Ext.define('Ext.chart.CartesianChart', {
             if (flipXY) {
                 if (isRtl) {
                     surface.matrix.set(0, -1, -1, 0,
-                        innerPadding.left + innerWidth,
-                        innerPadding.top + innerHeight);
+                            innerPadding.left + innerWidth,
+                            innerPadding.top + innerHeight);
                 } else {
                     surface.matrix.set(0, -1, 1, 0,
                         innerPadding.left,
@@ -251,38 +248,11 @@ Ext.define('Ext.chart.CartesianChart', {
             surface.matrix.inverse(surface.inverseMatrix);
             series.getOverlaySurface().setRect(mainRect);
         }
-
-        if (captionList) {
-            for (i = 0, ln = captionList.length; i < ln; i++) {
-                caption = captionList[i];
-                if (caption.getAlignTo() === 'series') {
-                    caption.alignRect(mainRect);
-                }
-                caption.performLayout();
-            }
-        }
-
-        // In certain cases 'performLayout' override is not an option without major code duplication.
-        // 'afterChartLayout' can be a cleaner solution in such cases (because of the timing of its call).
-        me.afterChartLayout(); // currently in cartesian charts only (used by Navigator)
         me.redraw();
 
-        me.resumeAnimation();
-        // 'resumeThicknessChanged' may trigger another layout, if the 'redraw' call above
-        // resulted in a situation where an axis is no longer 'thick' enough to accommodate
-        // the new labels. E.g. the labels were: 'Bob', 'Ann', 'Joe' and now they are 'Jonathan',
-        // 'Rachael', 'Michael'. An axis has to be made thicker now, and another layout should be
-        // performed. This second layout is not scheduled, but performed immediately, which will
-        // increment the 'chartLayoutCount' again.
+        me.animationSuspendCount--;
         me.resumeThicknessChanged();
-        me.chartLayoutCount--;
-        // 'checkLayoutEnd' will check if another layout is already running or scheduled and,
-        // if neither is the case, will fire the 'layout' event, meaning we are totally done
-        // with layout at this point.
-        me.checkLayoutEnd();
     },
-
-    afterChartLayout: Ext.emptyFn,
 
     refloatAxes: function () {
         var me = this,
@@ -376,9 +346,7 @@ Ext.define('Ext.chart.CartesianChart', {
 
         for (i = 0; i < seriesList.length; i++) {
             series = seriesList[i];
-
-            axisX = series.getXAxis();
-            if (axisX) {
+            if ((axisX = series.getXAxis())) {
                 visibleRange = axisX.getVisibleRange();
                 xRange = axisX.getRange();
                 xRange = [
@@ -389,8 +357,7 @@ Ext.define('Ext.chart.CartesianChart', {
                 xRange = series.getXRange();
             }
 
-            axisY = series.getYAxis();
-            if (axisY) {
+            if ((axisY = series.getYAxis())) {
                 visibleRange = axisY.getVisibleRange();
                 yRange = axisY.getRange();
                 yRange = [
@@ -467,7 +434,7 @@ Ext.define('Ext.chart.CartesianChart', {
             }
         }
         me.renderFrame();
-        me.callParent();
+        me.callParent(arguments);
     },
 
     renderFrame: function () {

@@ -38,25 +38,27 @@ Ext.define('Ext.grid.column.Boolean', {
     alias: ['widget.booleancolumn'],
     alternateClassName: 'Ext.grid.BooleanColumn',
 
+    //<locale>
     /**
      * @cfg {String} trueText
      * The string returned by the renderer when the column value is not falsey.
-     * @locale
      */
     trueText: 'true',
+    //</locale>
 
+    //<locale>
     /**
      * @cfg {String} falseText
      * The string returned by the renderer when the column value is falsey (but not undefined).
-     * @locale
      */
     falseText: 'false',
+    //</locale>
 
     /**
      * @cfg {String} undefinedText
      * The string returned by the renderer when the column value is undefined.
      */
-    undefinedText: '\u00a0',
+    undefinedText: '&#160;',
 
     defaultFilterType: 'boolean',
 
@@ -71,7 +73,7 @@ Ext.define('Ext.grid.column.Boolean', {
      */
 
      /**
-     * @cfg producesHTML
+     * @cfg {Boolean} producesHTML
      * @inheritdoc
      */
     producesHTML: false,

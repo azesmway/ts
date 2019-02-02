@@ -75,7 +75,6 @@ Ext.define('Ext.chart.axis.Category', {
     extend: 'Ext.chart.axis.Axis',
     alias: 'axis.category',
     type: 'category',
-    isCategory: true,
 
     config: {
         layout: 'combineDuplicate',

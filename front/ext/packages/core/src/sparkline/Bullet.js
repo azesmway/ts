@@ -5,16 +5,6 @@
  *
  * See <a href="http://en.wikipedia.org/wiki/Bullet_graph">Bullet graphs Wikipedia Page</a> for more information.
  *
- * The first value should be the target value. If there is no target value, it should be `null`.
- * The second value should be the performance value. If there is no performance value, it should be specified as `null`.
- *
- * An example value:
- *
- *     // Target 10
- *     // Performance 12
- *     // Ranges 12,9,7
- *     [10, 12, 12, 9, 7]
- *
  * See {@link Ext.sparkline.Base the base class} for a simple example.
  */
 Ext.define('Ext.sparkline.Bullet', {
@@ -68,7 +58,7 @@ Ext.define('Ext.sparkline.Bullet', {
     applyValues: function(newValues) {
         newValues = Ext.Array.map(Ext.Array.from(newValues), this.normalizeValue);
         this.disabled = !(newValues && newValues.length);
-        this.updateConfigChange();
+        this.applyConfigChange();
         return newValues;
     },
 
@@ -110,7 +100,7 @@ Ext.define('Ext.sparkline.Bullet', {
     getRegionFields: function(region) {
         return {
             fieldkey: region.substr(0, 1),
-            value: this.values[parseInt(region.substr(1), 10)],
+            value: this.values[region.substr(1)],
             region: region
         };
     },
@@ -126,7 +116,7 @@ Ext.define('Ext.sparkline.Bullet', {
 
         switch (region.substr(0, 1)) {
             case 'r':
-                shape = me.renderRange(parseInt(region.substr(1), 10), true);
+                shape = me.renderRange(region.substr(1), true);
                 break;
             case 'p':
                 shape = me.renderPerformance(true);
@@ -142,16 +132,13 @@ Ext.define('Ext.sparkline.Bullet', {
     },
 
     renderRange: function(region, highlight) {
-        var me = this,
-            rangeval = me.values[region],
-            rangewidth = Math.round(me.getWidth() * ((rangeval - me.min) / me.range)),
-            colors = me.getRangeColors(),
-            color = colors[Math.min(region - 2, colors.length - 1)];
-
+        var rangeval = this.values[region],
+            rangewidth = Math.round(this.getWidth() * ((rangeval - this.min) / this.range)),
+            color = this.getRangeColors()[region - 2];
         if (highlight) {
-            color = me.calcHighlightColor(color);
+            color = this.calcHighlightColor(color);
         }
-        return me.canvas.drawRect(0, 0, rangewidth - 1, me.getHeight() - 1, color, color);
+        return this.canvas.drawRect(0, 0, rangewidth - 1, this.getHeight() - 1, color, color);
     },
 
     renderPerformance: function(highlight) {
@@ -207,7 +194,7 @@ Ext.define('Ext.sparkline.Bullet', {
         }
 
         // If mouse is over, apply the highlight
-        if (me.currentPageXY && me.canvasRegion.contains(me.currentPageXY)) {
+        if (me.currentPageXY && me.el.getRegion().contains(me.currentPageXY)) {
             me.updateDisplay();
         }
         canvas.render();
@@ -215,7 +202,7 @@ Ext.define('Ext.sparkline.Bullet', {
 
     privates: {
         isValidRegion: function(region, values) {
-            return parseInt(region.substr(1), 10) < values.length;
+            return true;
         }
     }
 });

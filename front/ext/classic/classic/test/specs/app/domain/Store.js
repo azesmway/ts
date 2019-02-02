@@ -1,4 +1,4 @@
-topSuite("Ext.app.domain.Store", function() {
+describe("Ext.app.domain.Store", function() {
     var ctrl, storeFoo, storeBar, handlerFoo, handlerBar;
     
     beforeEach(function() {

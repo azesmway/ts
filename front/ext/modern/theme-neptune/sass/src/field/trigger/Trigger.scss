@@ -19,19 +19,16 @@
 );
 
 .#{$prefix}trigger.#{$prefix}grouped {
-    display: flex;
-
-    @if $trigger-grouped-align == vertical {
-        flex-direction: column;
-    }
+    @include st-box;
+    @include st-box-orient($trigger-grouped-align);
 
     @mixin vertical-trigger() {
-        flex-direction: column-reverse;
+        @include st-box-direction(reverse, column);
 
         .#{$prefix}trigger {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            @include st-box;
+            @include st-box-orient(vertical);
+            @include st-box-pack(center);
         }
     }
 
@@ -41,33 +38,13 @@
 
     @if $enable-big {
         .x-big & {
-            @if $trigger-grouped-align != $trigger-grouped-align-big {
-                @if $trigger-grouped-align-big == vertical {
-                    flex-direction: column;
-                } @else {
-                    flex-direction: row;
-                }
-            }
+            @include st-box-orient($trigger-grouped-align-big);
 
             @if $trigger-grouped-align-big == vertical {
                 @include vertical-trigger();
             } @else {
-                flex-direction: row;
+                @include st-box-direction(normal, row);
             }
         }
-    }
-}
-
-@if $enable-default-uis {
-    @if $trigger-alt-ui {
-        @include trigger-ui(map-merge((ui: 'alt'), $trigger-alt-ui)...);
-    }
-
-    @if $trigger-faded-ui {
-        @include trigger-ui(map-merge((ui: 'faded'), $trigger-faded-ui)...);
-    }
-
-    @if $trigger-solo-ui {
-        @include trigger-ui(map-merge((ui: 'solo'), $trigger-solo-ui)...);
     }
 }

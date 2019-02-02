@@ -1,4 +1,4 @@
-topSuite("Ext.data.proxy.Proxy", ['Ext.data.ArrayStore'], function() {
+describe("Ext.data.proxy.Proxy", function() {
     var proxy,
         Proxy = Ext.data.proxy.Proxy,
         AlienModelName   = 'spec.Alien',

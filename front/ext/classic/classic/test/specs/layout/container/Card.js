@@ -1,6 +1,4 @@
-topSuite("Ext.layout.container.Card",
-    ['Ext.grid.Panel', 'Ext.tab.Panel', 'Ext.layout.container.Border'],
-function() {
+describe("Ext.layout.container.Card", function() {
     var comp;
 
     function createCardContainer(config) {

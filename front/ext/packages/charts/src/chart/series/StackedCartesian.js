@@ -42,15 +42,6 @@ Ext.define('Ext.chart.series.StackedCartesian', {
         hidden: []
     },
 
-    /**
-     * @private
-     * @property
-     * If `true`, each subsequent sprite has a lower zIndex so that the stroke of previous
-     * sprite in the stack is not covered by the next sprite (which makes the very top
-     * segment look odd in flat bar and area series, especially when wide strokes are used).
-     */
-    reversedSpriteZOrder: true,
-
     spriteAnimationCount: 0,
 
     themeColorCount: function() {
@@ -82,7 +73,7 @@ Ext.define('Ext.chart.series.StackedCartesian', {
             splitStacks = me.getSplitStacks(),
             fullStack = me.getFullStack(),
             fullStackTotal = me.getFullStackTotal(),
-            range = [0, 0],
+            range = {min: 0, max: 0},
             directions = me['fieldCategory' + direction],
             dataStart = [], posDataStart = [], negDataStart = [], dataEnd,
             stacked = me.getStacked(),
@@ -98,23 +89,19 @@ Ext.define('Ext.chart.series.StackedCartesian', {
         }
 
         for (i = 0; i < directions.length; i++) {
-
             fieldCategoriesItem = directions[i];
             fields = me.getFields([fieldCategoriesItem]);
             fieldCount = fields.length;
-
             for (j = 0; j < itemCount; j++) {
                 dataStart[j] = 0;
                 posDataStart[j] = 0;
                 negDataStart[j] = 0;
             }
-
             for (j = 0; j < fieldCount; j++) {
                 if (!hidden[j]) {
                     coordinatedData[j] = me.coordinateData(items, fields[j], axis);
                 }
             }
-
             if (stacked && fullStack) {
                 posTotals = [];
                 if (splitStacks) {
@@ -141,24 +128,17 @@ Ext.define('Ext.chart.series.StackedCartesian', {
                     }
                 }
             }
-
             for (j = 0; j < fieldCount; j++) {
-
                 attr = {};
-
                 if (hidden[j]) {
                     attr['dataStart' + fieldCategoriesItem] = dataStart;
                     attr['data' + fieldCategoriesItem] = dataStart;
                     sprites[j].setAttributes(attr);
                     continue;
                 }
-
                 data = coordinatedData[j];
-
                 if (stacked) {
-
                     dataEnd = [];
-
                     for (k = 0; k < itemCount; k++) {
                         if (!data[k]) {
                             data[k] = 0;
@@ -179,34 +159,23 @@ Ext.define('Ext.chart.series.StackedCartesian', {
                             dataEnd[k] = negDataStart[k];
                         }
                     }
-
                     attr['dataStart' + fieldCategoriesItem] = dataStart;
                     attr['data' + fieldCategoriesItem] = dataEnd;
-
-                    Ext.chart.Util.expandRange(range, dataStart);
-                    Ext.chart.Util.expandRange(range, dataEnd);
-
+                    me.getRangeOfData(dataStart, range);
+                    me.getRangeOfData(dataEnd, range);
                 } else {
-
                     attr['dataStart' + fieldCategoriesItem] = dataStart;
                     attr['data' + fieldCategoriesItem] = data;
-
-                    Ext.chart.Util.expandRange(range, data);
+                    me.getRangeOfData(data, range);
                 }
-
                 sprites[j].setAttributes(attr);
             }
         }
-
-        range = Ext.chart.Util.validateRange(range, me.defaultRange);
-
-        me.dataRange[directionOffset] = range[0];
-        me.dataRange[directionOffset + directionCount] = range[1];
-
+        me.dataRange[directionOffset] = range.min;
+        me.dataRange[directionOffset + directionCount] = range.max;
         attr = {};
-        attr['dataMin' + direction] = range[0];
-        attr['dataMax' + direction] = range[1];
-
+        attr['dataMin' + direction] = range.min;
+        attr['dataMax' + direction] = range.max;
         for (i = 0; i < sprites.length; i++) {
             sprites[i].setAttributes(attr);
         }
@@ -214,11 +183,9 @@ Ext.define('Ext.chart.series.StackedCartesian', {
 
     getFields: function (fieldCategory) {
         var me = this,
-            fields = [],
-            ln = fieldCategory.length,
-            i, fieldsItem;
-
-        for (i = 0; i < ln; i++) {
+            fields = [], fieldsItem,
+            i, ln;
+        for (i = 0, ln = fieldCategory.length; i < ln; i++) {
             fieldsItem = me['get' + fieldCategory[i] + 'Field']();
             if (Ext.isArray(fieldsItem)) {
                 fields.push.apply(fields, fieldsItem);
@@ -226,64 +193,52 @@ Ext.define('Ext.chart.series.StackedCartesian', {
                 fields.push(fieldsItem);
             }
         }
-
         return fields;
     },
 
     updateLabelOverflowPadding: function (labelOverflowPadding) {
-        var me = this,
-            label;
-
-        if (!me.isConfiguring) {
-            label = me.getLabel();
-            if (label) {
-                label.setAttributes({labelOverflowPadding: labelOverflowPadding});
-            }
-        }
-    },
-
-    updateLabelData: function () {
-        var me = this,
-            label = me.getLabel();
-
-        if (label) {
-            label.setAttributes({labelOverflowPadding: me.getLabelOverflowPadding()});
-        }
-
-        me.callParent();
+        this.getLabel().setAttributes({labelOverflowPadding: labelOverflowPadding});
     },
 
     getSprites: function () {
         var me = this,
             chart = me.getChart(),
+            animation = me.getAnimation() || chart && chart.getAnimation(),
             fields = me.getFields(me.fieldCategoryY),
             itemInstancing = me.getItemInstancing(),
-            sprites = me.sprites,
+            sprites = me.sprites, sprite,
             hidden = me.getHidden(),
             spritesCreated = false,
-            fieldCount = fields.length,
-            i, sprite;
+            i, length = fields.length;
 
         if (!chart) {
             return [];
         }
 
-        // Create one Ext.chart.series.sprite.StackedCartesian sprite per field.
-        for (i = 0; i < fieldCount; i++) {
+        for (i = 0; i < length; i++) {
             sprite = sprites[i];
             if (!sprite) {
                 sprite = me.createSprite();
-                sprite.setAttributes({
-                    zIndex: (me.reversedSpriteZOrder ? -1 : 1) * i
-                });
+                // Each subsequent sprite has a lower zIndex so that
+                // the stroke of previous sprite in the stack is not
+                // covered by the next sprite (which is an issue
+                // with wide strokes).
+                sprite.setAttributes({zIndex: -i});
+
                 sprite.setField(fields[i]);
                 spritesCreated = true;
                 hidden.push(false);
                 if (itemInstancing) {
-                    sprite.getMarker('items').getTemplate().setAttributes(me.getStyleByIndex(i));
+                    sprite.itemsMarker.getTemplate().setAttributes(me.getStyleByIndex(i));
                 } else {
                     sprite.setAttributes(me.getStyleByIndex(i));
                 }
+            }
+            if (animation) {
+                if (itemInstancing) {
+                    sprite.itemsMarker.getTemplate().setAnimation(animation);
+                }
+                sprite.setAnimation(animation);
             }
         }
 
@@ -294,51 +249,36 @@ Ext.define('Ext.chart.series.StackedCartesian', {
     },
 
     getItemForPoint: function (x, y) {
-        var me = this,
-            sprites = me.getSprites(),
-            store = me.getStore(),
-            hidden = me.getHidden(),
-            minDistance = Infinity,
-            item = null,
-            spriteIndex = -1,
-            pointIndex = -1,
-            point,
-            yField,
-            sprite,
-            i, ln;
+        if (this.getSprites()) {
+            var me = this,
+                i, ln, sprite,
+                itemInstancing = me.getItemInstancing(),
+                sprites = me.getSprites(),
+                store = me.getStore(),
+                hidden = me.getHidden(),
+                item, index, yField;
 
-        for (i = 0, ln = sprites.length; i < ln; i++) {
-            if (hidden[i]) {
-                continue;
-            }
-            sprite = sprites[i];
-            point = sprite.getNearestDataPoint(x, y);
-            // Don't stop when the first matching point is found.
-            // Keep looking for the nearest point.
-            if (point) {
-                if (point.distance < minDistance) {
-                    minDistance = point.distance;
-                    pointIndex = point.index;
-                    spriteIndex = i;
+            for (i = 0, ln = sprites.length; i < ln; i++) {
+                if (!hidden[i]) {
+                    sprite = sprites[i];
+                    index = sprite.getIndexNearPoint(x, y);
+                    if (index !== -1) {
+                        yField = me.getYField();
+                        item = {
+                            series: me,
+                            index: index,
+                            category: itemInstancing ? 'items' : 'markers',
+                            record: store.getData().items[index],
+                            // Handle the case where we're stacked but a single segment
+                            field: typeof yField === 'string' ? yField : yField[i],
+                            sprite: sprite
+                        };
+                        return item;
+                    }
                 }
             }
+            return null;
         }
-
-        if (spriteIndex > -1) {
-            yField = me.getYField();
-            item = {
-                series: me,
-                sprite: sprites[spriteIndex],
-                category: me.getItemInstancing() ? 'items' : 'markers',
-                index: pointIndex,
-                record: store.getData().items[pointIndex],
-                // Handle the case where we're stacked but a single segment
-                field: typeof yField === 'string' ? yField : yField[spriteIndex],
-                distance: minDistance
-            };
-        }
-
-        return item;
     },
 
     provideLegendInfo: function (target) {

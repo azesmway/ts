@@ -8,8 +8,8 @@
                     // Uncomment the line below and add the platforms you wish to build for
                     "platforms": "ios",
 
-                    "id": "com.azesm.gts",
-                    "name": "GTS"
+                    "id": "com.azesm.etp",
+                    "name": "etp"
                 }
             }
         },
@@ -20,16 +20,15 @@
                     // Uncomment the line below and add the platforms you wish to build for
                     "platforms": "android",
 
-                    "id": "com.azesm.gts",
-                    "name": "GTS"
+                    "id": "com.azesm.etp",
+                    "name": "etp"
                 }
             }
         }
     },
-
                 
-    "name": "GTS",
-    "namespace": "GTS",
+    "name": "etp",
+    "namespace": "etp",
     "version": "1.0.0.0",
     "framework": "ext",
     "toolkit": "modern",
@@ -78,7 +77,7 @@
      * Fashion build configuration properties.
      */
     "fashion": {
-        "missingParameters": "error",
+
         "inliner": {
             /**
              * Disable resource inliner. Production builds enable this by default.
@@ -93,13 +92,13 @@
     "sass": {
         /**
          * The root namespace to use when mapping *.scss files to classes in the
-         * sass/src and sass/var directories. For example, "GTS.view.Foo" would
-         * map to "sass/src/view/Foo.scss". If we changed this to "GTS.view" then
+         * sass/src and sass/var directories. For example, "etp.view.Foo" would
+         * map to "sass/src/view/Foo.scss". If we changed this to "etp.view" then
          * it would map to "sass/src/Foo.scss". To style classes outside the app's
          * root namespace, change this to "". Doing so would change the mapping of
-         * "GTS.view.Foo" to "sass/src/GTS/view/Foo.scss".
+         * "etp.view.Foo" to "sass/src/etp/view/Foo.scss".
          */
-        "namespace": "GTS",
+        "namespace": "etp",
 
         /**
          * Generated sass source settings
@@ -507,5 +506,5 @@
      * Uniquely generated id for this application, used as prefix for localStorage keys.
      * Normally you should never change this value.
      */
-    "id": "477e1729-80c6-49c3-a1b3-2e8a8f3e67a6"
+    "id": "9055ba18-cd4e-4ec5-9d45-c982a9105848"
 }

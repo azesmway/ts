@@ -1,4 +1,4 @@
-topSuite("Ext.panel.Header", ['Ext.Panel'], function() {
+describe("Ext.panel.Header", function() {
     var header;
     
     function makeHeader(cfg) {
@@ -81,7 +81,7 @@ topSuite("Ext.panel.Header", ['Ext.Panel'], function() {
                 });
                 
                 it("should have FocusableContainer disabled", function() {
-                    expect(header.focusableContainer).toBe(false);
+                    expect(header.enableFocusableContainer).toBe(false);
                 });
                 
                 describe("after adding tools", function() {
@@ -106,7 +106,7 @@ topSuite("Ext.panel.Header", ['Ext.Panel'], function() {
                     });
                     
                     it("should enable FocusableContainer", function() {
-                        expect(header.focusableContainer).toBe(true);
+                        expect(header.enableFocusableContainer).toBe(true);
                     });
                 });
             });
@@ -133,7 +133,7 @@ topSuite("Ext.panel.Header", ['Ext.Panel'], function() {
                 });
                 
                 it("should have FocusableContainer disabled", function() {
-                    expect(header.focusableContainer).toBe(false);
+                    expect(header.enableFocusableContainer).toBe(false);
                 });
                 
                 describe("after adding tools", function() {
@@ -158,7 +158,7 @@ topSuite("Ext.panel.Header", ['Ext.Panel'], function() {
                     });
                     
                     it("should not enable FocusableContainer", function() {
-                        expect(header.focusableContainer).toBe(false);
+                        expect(header.enableFocusableContainer).toBe(false);
                     });
                 });
             });
@@ -192,7 +192,7 @@ topSuite("Ext.panel.Header", ['Ext.Panel'], function() {
                     });
                     
                     it("should have FocusableContainer enabled", function() {
-                        expect(header.focusableContainer).toBe(true);
+                        expect(header.enableFocusableContainer).toBe(true);
                     });
                 });
                 
@@ -224,7 +224,7 @@ topSuite("Ext.panel.Header", ['Ext.Panel'], function() {
                     });
                     
                     it("should have FocusableContainer disabled", function() {
-                        expect(header.focusableContainer).toBe(false);
+                        expect(header.enableFocusableContainer).toBe(false);
                     });
                 });
             });
@@ -256,7 +256,7 @@ topSuite("Ext.panel.Header", ['Ext.Panel'], function() {
                 });
                 
                 it("should have FocusableContainer disabled", function() {
-                    expect(header.focusableContainer).toBe(false);
+                    expect(header.enableFocusableContainer).toBe(false);
                 });
             });
         });

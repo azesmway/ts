@@ -1,9 +1,6 @@
 /* global Ext, expect, spyOn, jasmine, xit, MockAjaxManager */
 
-topSuite("grid-general-paging-buffered-renderer",
-    [false, 'Ext.grid.Panel', 'Ext.data.ArrayStore', 'Ext.toolbar.Paging',
-     'Ext.Button'],
-function() {
+describe("grid-general-paging-buffered-renderer", function() {
     var grid, store,
         synchronousLoad = true,
         proxyStoreLoad = Ext.data.ProxyStore.prototype.load,
@@ -55,7 +52,7 @@ function() {
         });
 
         it("should refresh the view on each page change", function() {
-            var store, ptoolbar, refreshCount = 0;
+            var store, ptoolbar;
             
             runs(function() {
                 function getRandomDate() {
@@ -121,27 +118,30 @@ function() {
             // Wait for first refresh.
             waitsFor(function() {
                 return grid.view.all.getCount() === 20;
-            }, 'first refresh');
+            });
             
             runs(function() {
-                refreshCount = grid.view.refreshCounter;
+                var refreshCount = grid.view.refreshCounter;
 
-                grid.view.scrollTo(0, 110);
-            });
+                grid.view.scrollTo(0,100);
 
                 // Wait for the scroll event to get into the BufferedRenderer                
-            waitsFor(function() {
-                return grid.view.getScrollable().getPosition().y >= 100;
-            }, 'view to scroll to scrollTop:100');
+                waitsFor(function() {
+                    return grid.view.bufferedRenderer.scrollTop === 100;
+                });
 
-            runs(function() {
-                jasmine.fireMouseEvent(ptoolbar.down('#next').el, 'click');
+                runs(function() {
+                    jasmine.fireMouseEvent(ptoolbar.down('#next').el, 'click');
 
-                // Should be one more page refresh
-                expect(grid.view.refreshCounter).toBe(refreshCount + 1);
+                    // Should be one more page refresh
+                    expect(grid.view.refreshCounter).toBe(refreshCount + 1);
 
-                // A new full page of 20 records should be there
-                expect(grid.view.all.getCount()).toBe(20);
+                    // A new full page of 20 records should be there
+                    expect(grid.view.all.getCount()).toBe(20);
+
+                    // Should have scrolled to top on view refresh
+                    expect(grid.view.getScrollY()).toBe(0);
+                });
             });
         });
     });

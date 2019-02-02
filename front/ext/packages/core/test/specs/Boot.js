@@ -1,4 +1,4 @@
-topSuite("Ext.Boot", false, function() {
+describe("Boot", function() {
     // This was taken from live 6.0 environment, and is a bit long ;(
     var requestCfg = {
       "loadOrder": [
@@ -17600,6 +17600,37 @@ topSuite("Ext.Boot", false, function() {
           "uses": [],
           "idx": 846
         },
+        "http://localhost/ext/packages/ux/classic/src/GroupTabRenderer.js": {
+          "path": "http://localhost/ext/packages/ux/classic/src/GroupTabRenderer.js",
+          "requires": [
+            98,
+            336
+          ],
+          "uses": [],
+          "idx": 847
+        },
+        "http://localhost/ext/packages/ux/classic/src/GroupTabPanel.js": {
+          "path": "http://localhost/ext/packages/ux/classic/src/GroupTabPanel.js",
+          "requires": [
+            359,
+            668,
+            847
+          ],
+          "uses": [
+            178,
+            183,
+            184,
+            246,
+            357,
+            367,
+            411,
+            524,
+            525,
+            617,
+            664
+          ],
+          "idx": 848
+        },
         "http://localhost/ext/packages/ux/classic/src/IFrame.js": {
           "path": "http://localhost/ext/packages/ux/classic/src/IFrame.js",
           "requires": [
@@ -19697,6 +19728,8 @@ topSuite("Ext.Boot", false, function() {
         "Ext.ux.Explorer",
         "Ext.ux.FieldReplicator",
         "Ext.ux.GMapPanel",
+        "Ext.ux.GroupTabPanel",
+        "Ext.ux.GroupTabRenderer",
         "Ext.ux.IFrame",
         "Ext.ux.LiveSearchGridPanel",
         "Ext.ux.PreviewPlugin",
@@ -20632,6 +20665,8 @@ topSuite("Ext.Boot", false, function() {
         "http://localhost/ext/packages/ux/classic/src/Explorer.js",
         "http://localhost/ext/packages/ux/classic/src/FieldReplicator.js",
         "http://localhost/ext/packages/ux/classic/src/GMapPanel.js",
+        "http://localhost/ext/packages/ux/classic/src/GroupTabPanel.js",
+        "http://localhost/ext/packages/ux/classic/src/GroupTabRenderer.js",
         "http://localhost/ext/packages/ux/classic/src/IFrame.js",
         "http://localhost/ext/packages/ux/classic/src/LiveSearchGridPanel.js",
         "http://localhost/ext/packages/ux/classic/src/PreviewPlugin.js",
@@ -21598,6 +21633,8 @@ topSuite("Ext.Boot", false, function() {
       "http://localhost/ext/packages/ux/classic/src/Explorer.js",
       "http://localhost/ext/packages/ux/classic/src/FieldReplicator.js",
       "http://localhost/ext/packages/ux/classic/src/GMapPanel.js",
+      "http://localhost/ext/packages/ux/classic/src/GroupTabRenderer.js",
+      "http://localhost/ext/packages/ux/classic/src/GroupTabPanel.js",
       "http://localhost/ext/packages/ux/classic/src/IFrame.js",
       "http://localhost/ext/packages/ux/classic/src/statusbar/StatusBar.js",
       "http://localhost/ext/packages/ux/classic/src/LiveSearchGridPanel.js",

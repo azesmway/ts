@@ -113,12 +113,10 @@ xdescribe("Ext.Loader", function() {
 
             spyOn(Loader, 'loadScriptFile').andCallThrough();
 
-            // @define Foo.spec.LoaderTest
             Ext.require('Foo.spec.LoaderTest', function () {
                 callFoo = true;
             });
 
-            // @define Ext.spec.LoaderTest
             Ext.require('Ext.spec.LoaderTest', function () {
                 callExt = true;
             });

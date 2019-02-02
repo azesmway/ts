@@ -448,12 +448,6 @@ Ext.define('Ext.layout.container.CheckboxGroup', {
         
         while (rows.length > rowCount) {
             row = rows[rows.length - 1];
-            
-            while (row.children.length) {
-                Ext.get(row.children[0]).destroy();
-            }
-            
-            // We don't create Element instances for rows
             row.parentNode.removeChild(row);
         }
         
@@ -463,7 +457,7 @@ Ext.define('Ext.layout.container.CheckboxGroup', {
             
             while (columns.length > columnCount) {
                 column = columns[columns.length - 1];
-                Ext.get(column).destroy();
+                row.removeChild(column);
             }
             
             // We only prune empty cells on 2nd and subsequent rows;
@@ -477,7 +471,7 @@ Ext.define('Ext.layout.container.CheckboxGroup', {
                     // due to item removal. As soon as we reach a non-empty column
                     // there's no point in continuing the loop.
                     if (column.children.length === 0) {
-                        Ext.get(column).destroy();
+                        row.removeChild(column);
                     }
                     else {
                         break;
@@ -522,22 +516,5 @@ Ext.define('Ext.layout.container.CheckboxGroup', {
         targetNode = column.children[itemIndex];
         
         column.insertBefore(item.el.dom, targetNode || null);
-    },
-    
-    destroy: function() {
-        if (this.owner.rendered) {
-            var target = this.getRenderTarget(),
-                cells, i, len;
-            
-            if (target) {
-                cells = target.query('.' + this.owner.groupCls, false);
-                
-                for (i = 0, len = cells.length; i < len; i++) {
-                    cells[i].destroy();
-                }
-            }
-        }
-        
-        this.callParent();
     }
 });

@@ -174,8 +174,7 @@ Ext.define('Ext.form.field.Spinner', {
 
         // Init up/down arrow keys
         if (me.keyNavEnabled) {
-            me.spinnerKeyNav = new Ext.util.KeyNav({
-                target: me.inputEl,
+            me.spinnerKeyNav = new Ext.util.KeyNav(me.inputEl, {
                 scope: me,
                 up: me.spinUp,
                 down: me.spinDown
@@ -299,15 +298,7 @@ Ext.define('Ext.form.field.Spinner', {
     }
 
 }, function(Spinner) {
-    var spinEnd = function() {
-        if (!this.destroying && !this.destroyed) {
-            this.fireEvent('spinend', this);
-        }
-    };
-    
-    //<debug>
-    spinEnd.$skipTimerCheck = true;
-    //</debug>
-    
-    Spinner.prototype.onSpinEnd = Ext.Function.createBuffered(spinEnd, 100);
+    Spinner.prototype.onSpinEnd = Ext.Function.createBuffered(function() {
+        this.fireEvent('spinend', this);
+    }, 100);
 });

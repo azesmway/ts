@@ -14,9 +14,8 @@
  *
  *     Ext.create('Ext.chart.CartesianChart', {
  *         plugins: {
- *             chartitemevents: {
- *                 moveEvents: true
- *             }
+ *             ptype: 'chartitemevents',
+ *             moveEvents: true
  *         },
  *         store: {
  *             fields: ['pet', 'households', 'total'],
@@ -89,7 +88,6 @@ Ext.define('Ext.chart.plugin.ItemEvents', {
 
         chart.addElementListener({
             click: handleEvent,
-            tap: handleEvent,
             dblclick: handleEvent,
             mousedown: handleEvent,
             mousemove: handleEvent,

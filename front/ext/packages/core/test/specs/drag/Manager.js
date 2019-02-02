@@ -1,7 +1,6 @@
-/* global Ext, jasmine, expect */
-
 // This will test all interaction between drag/drop targets.
-topSuite("Ext.drag.Manager", ['Ext.drag.*', 'Ext.dom.Element', 'Ext.scroll.Scroller'], function() {
+describe("Ext.drag.Manager", function() {
+
     var helper = Ext.testHelper,
         touchId = 0,
         cursorTrack, source, target,
@@ -121,13 +120,13 @@ topSuite("Ext.drag.Manager", ['Ext.drag.*', 'Ext.dom.Element', 'Ext.scroll.Scrol
             if (xPos === 'middle') {
                 xOffset = size.width / 2;
             } else if (xPos === 'end') {
-                xOffset = size.width - 1;
+                xOffset = size.width;
             }
 
             if (yPos === 'middle') {
                 yOffset = size.height / 2;
             } else if (yPos === 'end') {
-                yOffset = size.height - 1;
+                yOffset = size.height;
             }
 
             start({
@@ -276,14 +275,14 @@ topSuite("Ext.drag.Manager", ['Ext.drag.*', 'Ext.dom.Element', 'Ext.scroll.Scrol
                 startPosDrag('start', 'start');
                 moveBy(-19, -19);
                 runsExpectCallCount(enterSpy, 0);
-                moveBy(-2, -4);
+                moveBy(-2, -2);
                 runsExpectCallCount(enterSpy, 1);
                 moveBy(-10, -10);
                 runsExpectCallCount(enterSpy, 1);
                 moveBy(10, 10);
                 runsExpectCallCount(enterSpy, 1);
                 runsExpectCallCount(leaveSpy, 0);
-                moveBy(2, 4);
+                moveBy(2, 2);
                 runsExpectCallCount(leaveSpy, 1);
                 endDrag();
             });
@@ -296,14 +295,14 @@ topSuite("Ext.drag.Manager", ['Ext.drag.*', 'Ext.dom.Element', 'Ext.scroll.Scrol
                 startPosDrag('middle', 'start');
                 moveBy(0, -19);
                 runsExpectCallCount(enterSpy, 0);
-                moveBy(0, -4);
+                moveBy(0, -2);
                 runsExpectCallCount(enterSpy, 1);
                 moveBy(0, -10);
                 runsExpectCallCount(enterSpy, 1);
                 moveBy(0, 10);
                 runsExpectCallCount(enterSpy, 1);
                 runsExpectCallCount(leaveSpy, 0);
-                moveBy(0, 4);
+                moveBy(0, 2);
                 runsExpectCallCount(leaveSpy, 1);
                 endDrag();
             });
@@ -316,14 +315,14 @@ topSuite("Ext.drag.Manager", ['Ext.drag.*', 'Ext.dom.Element', 'Ext.scroll.Scrol
                 startPosDrag('end', 'start');
                 moveBy(19, -19);
                 runsExpectCallCount(enterSpy, 0);
-                moveBy(2, -4);
+                moveBy(2, -2);
                 runsExpectCallCount(enterSpy, 1);
                 moveBy(10, -10);
                 runsExpectCallCount(enterSpy, 1);
                 moveBy(-10, 10);
                 runsExpectCallCount(enterSpy, 1);
                 runsExpectCallCount(leaveSpy, 0);
-                moveBy(-2, 4);
+                moveBy(-2, 2);
                 runsExpectCallCount(leaveSpy, 1);
                 endDrag();
             });
@@ -370,8 +369,6 @@ topSuite("Ext.drag.Manager", ['Ext.drag.*', 'Ext.dom.Element', 'Ext.scroll.Scrol
         });
 
         describe("z-index", function() {
-            var drop1, drop2, drop3;
-
             function makeZIndexDrop(zIndex, color) {
                 var el = makeEl({
                     style: {
@@ -388,15 +385,11 @@ topSuite("Ext.drag.Manager", ['Ext.drag.*', 'Ext.dom.Element', 'Ext.scroll.Scrol
                     element: el
                 });
             }
-            
-            afterEach(function() {
-                Ext.destroy(drop1, drop2, drop3);
-            });
 
             it("should only match the topmost z-index", function() {
-                drop1 = makeZIndexDrop(300, 'red');
-                drop2 = makeZIndexDrop(200, 'blue');
-                drop3 = makeZIndexDrop(100, 'green');
+                var drop1 = makeZIndexDrop(300, 'red'),
+                    drop2 = makeZIndexDrop(200, 'blue'),
+                    drop3 = makeZIndexDrop(100, 'green');
 
                 makeDragEl();
                 makeSource();
@@ -419,12 +412,15 @@ topSuite("Ext.drag.Manager", ['Ext.drag.*', 'Ext.dom.Element', 'Ext.scroll.Scrol
                     expect(leaveSpy.mostRecentCall.dragInfo.target).toBe(drop1);
                 });
                 endDrag();
+                runs(function() {
+                    Ext.destroy(drop1, drop2, drop3);
+                });
             });
 
             it("should not move to a lower z-index if the topmost doesn't accept the drop", function() {
-                drop1 = makeZIndexDrop(300, 'red'),
-                drop2 = makeZIndexDrop(200, 'blue'),
-                drop3 = makeZIndexDrop(100, 'green');
+                var drop1 = makeZIndexDrop(300, 'red'),
+                    drop2 = makeZIndexDrop(200, 'blue'),
+                    drop3 = makeZIndexDrop(100, 'green');
 
                 makeDragEl();
                 makeSource();
@@ -436,6 +432,9 @@ topSuite("Ext.drag.Manager", ['Ext.drag.*', 'Ext.dom.Element', 'Ext.scroll.Scrol
                 moveBy(50, 50);
                 runsExpectCallCount(enterSpy, 0);
                 endDrag();
+                runs(function() {
+                    Ext.destroy(drop1, drop2, drop3);
+                });
             });
         });
 
@@ -503,7 +502,6 @@ topSuite("Ext.drag.Manager", ['Ext.drag.*', 'Ext.dom.Element', 'Ext.scroll.Scrol
                 });
 
                 runs(function() {
-                    endDrag();
                     inner.destroy();
                 });
             });
@@ -511,35 +509,33 @@ topSuite("Ext.drag.Manager", ['Ext.drag.*', 'Ext.dom.Element', 'Ext.scroll.Scrol
 
         describe("scroll", function() {
             it("should match targets when the document is scrolled", function() {
-                var stretcher, s;
+                var Scroller = Ext.scroll.Scroller,
+                    stretcher;
 
                 makeDragEl(405, 405);
                 makeDropEl(450, 450);
 
                 setup();
-                s = Ext.getViewportScroller();
+                if (Scroller && Scroller.viewport) {
+                    stretcher = Ext.getBody().createChild({
+                        style: {
+                            width: '5000px',
+                            height: '5000px',
+                            border: '1px solid red'
+                        }
+                    });
+                    Scroller.viewport.scrollTo(0, 400);
 
-                stretcher = Ext.getBody().insertFirst({
-                    style: {
-                        width: '5000px',
-                        height: '5000px',
-                        border: '1px solid red'
-                    }
-                });
-
-                s.scrollTo(0, 400);
-
-                waitsForEvent(s, 'scrollend');
-
-                startDrag();
-                moveBy(50, 50);
-                runsExpectCallCount(enterSpy, 1);
-                moveBy(-20, -20);
-                runsExpectCallCount(leaveSpy, 1);
-                endDrag();
-                runs(function() {
-                    stretcher.remove();
-                });
+                    startDrag();
+                    moveBy(50, 50);
+                    runsExpectCallCount(enterSpy, 1);
+                    moveBy(-20, -20);
+                    runsExpectCallCount(leaveSpy, 1);
+                    endDrag();
+                    runs(function() {
+                        stretcher.remove();
+                    });
+                }
             });
         });
     });

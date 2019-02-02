@@ -1,6 +1,6 @@
-/* global Ext, spyOn, expect, MockAjaxManager, jasmine, spyOnEvent */
+/* global Ext, spyOn, expect, MockAjaxManager, jasmine */
 
-topSuite("Ext.data.TreeStore", function() {
+describe("Ext.data.TreeStore", function() {
     var store,
         root,
         loadStore,
@@ -25,6 +25,15 @@ topSuite("Ext.data.TreeStore", function() {
                 {name: 'duration', type: 'string'}
             ]
         });
+
+    function spyOnEvent(object, eventName, fn) {
+        var obj = {
+            fn: fn || Ext.emptyFn
+        },
+        spy = spyOn(obj, "fn");
+        object.addListener(eventName, obj.fn);
+        return spy;
+    }
 
     function expandify(nodes) {
         if (Ext.isNumber(nodes[0])) {
@@ -164,54 +173,6 @@ topSuite("Ext.data.TreeStore", function() {
 
             // All removed records should be represented in the removed records list.
             expect(store.getRemovedRecords().length).toBe(7);
-        });
-    });
-
-    describe("expand node when children not set", function() {
-        it("should expand node without any error if filter function is applied", function() {
-            var node;
-
-            store = new Ext.data.TreeStore({
-                model: NodeModel,
-                root: {
-                    expanded: true,
-                    id: 0,
-                    name: 'Root Node',
-                    children: [{
-                        text: 'Leaf Node',
-                        leaf: true
-                    }, {
-                        text: 'node with chlidren not set',
-                        expanded: false
-                    }, {
-                        text: 'node with children set',
-                        expanded: false,
-                        children: []
-                    }]
-                },
-                filters: function(rec) {
-                    if (rec.get('text').indexOf('.txt') > -1) {
-                        return false;
-                    }
-                    return true;
-                }
-            });
-
-            node = store.getAt(1);
-            
-            expect(function() {
-                node.expand();
-            }).not.toThrow();
-            
-            expect(node.isExpanded()).toBe(true);
-            
-            node = store.getAt(2);
-            
-            expect(function() {
-                node.expand();
-            }).not.toThrow();
-            
-            expect(node.isExpanded()).toBe(true);
         });
     });
 
@@ -381,40 +342,6 @@ topSuite("Ext.data.TreeStore", function() {
                 });
                 expect(store.getModel().superclass.self).toBe(Ext.data.TreeModel);
             });
-        });
-    });
-
-    describe("grouping", function() {
-        it("should always be ungroupable", function() {
-            store = new Ext.data.TreeStore({
-                model: NodeModel,
-                root: {
-                    expanded: true,
-                    children: [{
-                        id: 'l1',
-                        leaf: true,
-                        age: 20
-                    }, {
-                        id: 'f1',
-                        age: 30
-                    }, {
-                        id: 'l2',
-                        leaf: true,
-                        age: 20
-                    }, {
-                        id: 'f2',
-                        age: 30
-                    }]
-                }
-            });
-            expect(function() {
-                store.setGrouper('age');
-            }).toThrow();
-            expect(store.getGrouper()).toBeNull();
-            store.setGroupField('age');
-            expect(store.getGroupField()).toBe('');
-            store.setGroupDir('DESC');
-            expect(store.getGroupDir()).toBeNull();
         });
     });
 
@@ -2247,29 +2174,29 @@ topSuite("Ext.data.TreeStore", function() {
     describe('moving root node between trees', function() {
         it('should move root and all descendants from source tree into destination tree', function() {
             store = new Ext.data.TreeStore({
-                root: {
-                    expanded: true, 
-                    children: [{
-                        text: "Test",
-                        leaf: true,
-                        id: 'testId'
-                    }]
-                },
-                listeners: {
-                    rootchange: function(newRoot, oldRoot) {
-                        oldStoreRootChangeArgs = [newRoot, oldRoot];
+                    root: {
+                        expanded: true, 
+                        children: [{
+                            text: "Test",
+                            leaf: true,
+                            id: 'testId'
+                        }]
                     },
-                    refresh: function() {
-                        storeRefreshed++;
-                    },
-                    add: function() {
-                        added++;
-                    },
-                    remove: function() {
-                        removed++;
+                    listeners: {
+                        rootchange: function(newRoot, oldRoot) {
+                            oldStoreRootChangeArgs = [newRoot, oldRoot];
+                        },
+                        refresh: function() {
+                            storeRefreshed++;
+                        },
+                        add: function() {
+                            added++;
+                        },
+                        remove: function() {
+                            removed++;
+                        }
                     }
-                }
-            });
+                });
 
             var rootNode = store.getRootNode(),
                 childNode = rootNode.firstChild,
@@ -5008,8 +4935,8 @@ topSuite("Ext.data.TreeStore", function() {
     });
     
     describe('datachanged event', function() {
-        it('should not fire events while constructing', function() {
-            var spy = jasmine.createSpy();
+        it('should only fire once when filling a parent node with all descendants expanded', function() {
+            var dataChangeCount = 0;
 
             store = new Ext.data.TreeStore({
                 model: NodeModel,
@@ -5029,14 +4956,12 @@ topSuite("Ext.data.TreeStore", function() {
                     }]
                 },
                 listeners: {
-                    add: spy,
-                    remove: spy,
-                    datachanged: spy,
-                    rootchange: spy,
-                    refresh: spy
+                    datachanged: function() {
+                        dataChangeCount++;
+                    }
                 }
             });
-            expect(spy).not.toHaveBeenCalled();
+            expect(dataChangeCount).toBe(1);
         });
     });
 

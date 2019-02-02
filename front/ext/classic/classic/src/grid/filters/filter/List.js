@@ -30,9 +30,7 @@
  *         height: 250,
  *         width: 350,
  *         store: shows,
- *         plugins: {
- *             gridfilters: true
- *         },
+ *         plugins: 'gridfilters',
  *         columns: [{
  *             dataIndex: 'id',
  *             text: 'ID',
@@ -170,12 +168,13 @@ Ext.define('Ext.grid.filters.filter.List', {
      */
     labelIndex: null,
 
+    //<locale>
     /**
-     * @cfg {String} [loadingText]
+     * @cfg {String} [loadingText="Loading..."]
      * The text that is displayed while the configured store is loading.
-     * @locale
      */
     loadingText: 'Loading...',
+    //</locale>
 
     /**
      * @cfg {Boolean} loadOnShow
@@ -252,10 +251,11 @@ Ext.define('Ext.grid.filters.filter.List', {
         //  3. (Re)loading the store
         //  4. Updating a model
         //
+        // Note we need to make sure it's not the empty store (if it is, the store is being bound to a VM).
         if (!me.store && !me.options) {
             gridStore = me.getGridStore();
 
-            if (me.value != null && me.active) {
+            if (me.value != null && me.active && !gridStore.isEmptyStore) {
                 me.gridStoreListeners = gridStore.on(Ext.apply({
                     scope: me,
                     destroyable: true
@@ -511,13 +511,7 @@ Ext.define('Ext.grid.filters.filter.List', {
     getFilterConfig: function (config, key) {
         // List filter needs to have its value set immediately or else could will fail when filtering since its
         // _value would be undefined.
-        var value = config.value;
-        if (Ext.isEmpty(value)) {
-            value = [];
-        } else if (!Ext.isArray(value)) {
-            value = [value];
-        }
-        config.value = value;
+        config.value = config.value || [];
         return this.callParent([config, key]);
     },
 

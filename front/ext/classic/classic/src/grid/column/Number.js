@@ -41,13 +41,13 @@ Ext.define('Ext.grid.column.Number', {
 
     defaultFilterType: 'number',
 
+    //<locale>
     /**
      * @cfg {String} format
-     * A formatting string as used by {@link Ext.util.Format#number} to format a numeric
-     * value for this Column.
-     * @locale
+     * A formatting string as used by {@link Ext.util.Format#number} to format a numeric value for this Column.
      */
-    format: '0,000.00',
+    format : '0,000.00',
+    //</locale>
 
     /**
      * @cfg {Object} renderer
@@ -60,7 +60,7 @@ Ext.define('Ext.grid.column.Number', {
      */
 
     /**
-     * @cfg producesHTML
+     * @cfg {Boolean} producesHTML
      * @inheritdoc
      */
     producesHTML: false,

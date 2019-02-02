@@ -35,14 +35,13 @@
  */
 Ext.define('Ext.grid.column.Date', {
     extend: 'Ext.grid.column.Column',
-    xtype: 'datecolumn',
-
-    isDateColumn: true,
 
     requires: [
         'Ext.Date',
         'Ext.grid.cell.Date'
     ],
+
+    xtype: 'datecolumn',
 
     config: {
         /**

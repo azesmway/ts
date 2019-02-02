@@ -5,7 +5,7 @@
  *
  * ## Example
  *
- *     @example
+ *     @example miniphone
  *     // Create our container
  *     var container = Ext.create('Ext.Container', {
  *         html: 'My container!'
@@ -23,6 +23,12 @@ Ext.define('Ext.Mask', {
     requires: ['Ext.util.InputBlocker'],
 
     config: {
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        baseCls: Ext.baseCSSPrefix + 'mask',
+
         /**
          * @cfg {Boolean} transparent True to make this mask transparent.
          */
@@ -52,8 +58,6 @@ Ext.define('Ext.Mask', {
          */
         bottom: 0
     },
-
-    baseCls: Ext.baseCSSPrefix + 'mask',
 
     /**
      * @event tap
@@ -86,6 +90,6 @@ Ext.define('Ext.Mask', {
     },
 
     updateTransparent: function(transparent) {
-        this.toggleCls(this.baseCls + '-transparent', transparent);
+        this.toggleCls(this.getBaseCls() + '-transparent', transparent);
     }
 });

@@ -1,4 +1,4 @@
-topSuite("Ext.view.BoundList", ['Ext.data.ArrayStore'], function() {
+describe("Ext.view.BoundList", function() {
     var boundList, store;
 
     function createBoundList(cfg, data) {
@@ -62,7 +62,7 @@ topSuite("Ext.view.BoundList", ['Ext.data.ArrayStore'], function() {
         it("should correctly render items using the tpl", function () {
             createBoundList({}, [{
                 name: 'Item1',
-                id: 'itemone'
+                id: 'itemone',
             }]);
 
             var nodes = boundList.getNodes(),

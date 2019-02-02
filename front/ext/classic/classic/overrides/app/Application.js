@@ -1,7 +1,6 @@
 /**
  * @class Ext.app.Application
  */
-
 Ext.define('Ext.overrides.app.Application', {
     override: 'Ext.app.Application',
     uses: [
@@ -37,23 +36,22 @@ Ext.define('Ext.overrides.app.Application', {
     },
 
     applyMainView: function(mainView) {
-        var view, proto, config, protoPlugins, configPlugins;
+        var view, proto, config, plugins;
 
         if (typeof mainView === 'string') {
             view = this.getView(mainView);
-            config = {};
         } else {
-            config = mainView;
             view = Ext.ClassManager.getByConfig(mainView);
         }
         proto = view.prototype;
 
         if (!proto.isViewport) {
-            // Need to copy over any plugins defined on the prototype and on the config.
-            protoPlugins = Ext.Array.from(proto.plugins);
-            configPlugins = Ext.Array.from(config.plugins);
-            config = Ext.apply({}, config);
-            config.plugins = ['viewport'].concat(protoPlugins, configPlugins);
+            plugins = proto.plugins;
+            // Need to copy over any plugins defined on the prototype.
+            plugins = ['viewport'].concat(plugins ? Ext.Array.from(plugins, true) : []);
+            config = {
+                plugins: plugins
+            };
         }
 
         return view.create(config);

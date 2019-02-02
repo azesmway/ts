@@ -1,9 +1,11 @@
-Ext.define('GTS.store.Personnel', {
+Ext.define('etp.store.Personnel', {
     extend: 'Ext.data.Store',
 
     alias: 'store.personnel',
 
-    model: 'GTS.model.Personnel',
+    fields: [
+        'name', 'email', 'phone'
+    ],
 
     data: { items: [
         { name: 'Jean Luc', email: "jeanluc.picard@enterprise.com", phone: "555-111-1111" },

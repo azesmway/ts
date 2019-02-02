@@ -141,18 +141,15 @@ Ext.define('Ext.grid.selection.Cells', {
             var me = this,
                 view = me.view;
 
-            if (view.getVisibleColumnManager().getColumns().length) {
-                me.eachCell(function(cellContext) {
-                    view.onCellDeselect(cellContext);
-                });
-            }
+            me.eachCell(function(cellContext) {
+                view.onCellDeselect(cellContext);
+            });
             me.startCell = me.endCell = null;
         },
 
         /**
          * Used during drag/shift+downarrow range selection on start.
          * @param {Ext.grid.CellContext} startCell The start cell of the cell drag selection.
-         * @param {Ext.grid.CellContext} endCell The end cell of the cell drag selection.
          * @private
          */
         setRangeStart: function (startCell, endCell) {
@@ -168,11 +165,18 @@ Ext.define('Ext.grid.selection.Cells', {
          */
         setRangeEnd: function (endCell) {
             var me = this,
+                range,
+                lastRange,
+                rowStart,
+                rowEnd,
+                colStart,
+                colEnd,
+                rowIdx,
+                colIdx,
                 view = me.view,
                 rows = view.all,
                 cell = new Ext.grid.CellContext(view),
-                maxColIdx = view.getVisibleColumnManager().getColumns().length - 1,
-                range, lastRange, rowStart, rowEnd, colStart, colEnd, rowIdx, colIdx;
+                maxColIdx = view.getVisibleColumnManager().getColumns().length - 1;
 
             me.endCell = endCell.clone();
             range = me.getRange();
@@ -213,18 +217,6 @@ Ext.define('Ext.grid.selection.Cells', {
                 me.startCell = me.startCell.setPosition(me.getFirstRowIndex(), me.getFirstColumnIndex());
                 me.setRangeEnd(extensionVector.end);
                 me.view.getNavigationModel().setPosition(extensionVector.end);
-            }
-        },
-
-        reduceRange: function(extensionVector) {
-            var me = this,
-                newEndCell;
-
-            if (extensionVector[extensionVector.type] < 0) {
-                newEndCell = extensionVector.end.clone();
-                me.startCell = extensionVector.start.clone();
-                me.setRangeEnd(newEndCell);
-                me.view.getNavigationModel().setPosition(extensionVector.start);
             }
         },
 

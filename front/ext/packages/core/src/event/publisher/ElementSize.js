@@ -56,26 +56,10 @@ Ext.define('Ext.event.publisher.ElementSize', {
             sizeMonitor.destroy();
             delete monitors[id];
         }
-
-        if (element.activeRead) {
-            Ext.TaskQueue.cancelRead(element.activeRead);
-        }
-    },
-    
-    fireElementResize: function(element, info) {
-        delete element.activeRead;
-        this.fire(element, 'resize', [element, info]);
     },
 
     onElementResize: function(element, info) {
-        if (!element.activeRead) {
-            element.activeRead = Ext.TaskQueue.requestRead(
-                'fireElementResize', this, [element, info]
-                //<debug>
-                , !!element.$skipResourceCheck
-                //</debug>
-            );
-        }
+        Ext.TaskQueue.requestRead('fire', this, [element, 'resize', [element, info]]);
     }
 
     //<debug>
@@ -99,11 +83,7 @@ Ext.define('Ext.event.publisher.ElementSize', {
                     monitor.forceRefresh();
                 }
             }
-            // This just pushes onto the RAF queue.
             Ext.TaskQueue.flush();
-
-            // Flush the RAF queue to make this truly synchronous.
-            Ext.Function.fireElevatedHandlers();
         }
     }
     //</debug>

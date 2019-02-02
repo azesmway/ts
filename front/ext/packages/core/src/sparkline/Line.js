@@ -101,13 +101,13 @@ Ext.define('Ext.sparkline.Line', {
          * Omitting aither means an open ended range. For example to render green spots on all values less than 50
          * and red on values higher than 50 use:
          *
-         *     {
-         *         // Open ended range, with max value 49
-         *         ":49": "green",
+         *    {
+         *        // Open ended range, with max value 49
+         *        ":49": "green",
          *
-         *         // Open ended range, with min value 50
-         *         "50:": "red"
-         *     }
+         *        // Open ended range, with min value 50
+         *        "50:": "red"
+         *    }
          */
         valueSpots: null
     },
@@ -118,7 +118,7 @@ Ext.define('Ext.sparkline.Line', {
         if (valueSpots && !valueSpots.get) {
             valueSpots = new Ext.sparkline.RangeMap(valueSpots);
         }
-        this.updateConfigChange();
+        this.applyConfigChange();
         return valueSpots;
     },
 
@@ -179,28 +179,29 @@ Ext.define('Ext.sparkline.Line', {
             xvalues = me.xvalues,
             yvalues = me.yvalues,
             yminmax = me.yminmax,
-            i, val;
+            i, val, isStr, isArray, sp;
 
         for (i = 0; i < valcount; i++) {
             val = values[i];
-            if (typeof val === 'string') {
-                val = val.split(':');
-            }
+            isStr = typeof(values[i]) === 'string';
+            isArray = typeof(values[i]) === 'object' && values[i] instanceof Array;
+            sp = isStr && values[i].split(':');
 
-            // Array. Use first two values as X and Y
-            if (val && val.length === 2) {
-                xvalues.push(Number(val[0]));
-                yvalues.push(val = Number(val[1]));
-                yminmax.push(val);
-            }
-            // Single value. Use i as X, the value as Y
-            else {
+            if (isStr && sp.length === 2) { // x:y
+                xvalues.push(Number(sp[0]));
+                yvalues.push(Number(sp[1]));
+                yminmax.push(Number(sp[1]));
+            } else if (isArray) {
+                xvalues.push(val[0]);
+                yvalues.push(val[1]);
+                yminmax.push(val[1]);
+            } else {
                 xvalues.push(i);
-                if (val == null || val === 'null') {
+                if (values[i] === null || values[i] === 'null') {
                     yvalues.push(null);
                 } else {
-                    yvalues.push(val = Number(val));
-                    yminmax.push(val);
+                    yvalues.push(Number(val));
+                    yminmax.push(Number(val));
                 }
             }
         }
@@ -446,7 +447,7 @@ Ext.define('Ext.sparkline.Line', {
         me.canvasTop = canvasTop;
 
         // If mouse is over, apply the highlight
-        if (me.currentPageXY && me.canvasRegion.contains(me.currentPageXY)) {
+        if (me.currentPageXY && me.el.getRegion().contains(me.currentPageXY)) {
             me.updateDisplay();
         }
         canvas.render();

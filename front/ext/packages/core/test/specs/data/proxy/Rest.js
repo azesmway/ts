@@ -1,4 +1,4 @@
-topSuite("Ext.data.proxy.Rest", ['Ext.data.ArrayStore'], function() {
+describe("Ext.data.proxy.Rest", function() {
     var proxy;
 
     beforeEach(function() {

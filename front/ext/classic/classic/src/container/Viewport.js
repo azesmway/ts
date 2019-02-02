@@ -120,11 +120,6 @@ Ext.define('Ext.container.Viewport', {
      * Sets itself to viewport height.
      * @private
      */
-
-    /**
-     * @cfg scrollable
-     * @hide
-     */
     
     ariaRole: 'application',
     

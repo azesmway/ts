@@ -279,14 +279,15 @@ Ext.define("Ext.form.Labelable", {
      */
     labelPad: 5,
 
+    //<locale>
     /**
      * @cfg {String} labelSeparator
      * Character(s) to be inserted at the end of the {@link #fieldLabel label text}.
      *
      * Set to empty string to hide the separator completely.
-     * @locale
      */
     labelSeparator : ':',
+    //</locale>
 
     /**
      * @cfg {String} labelStyle
@@ -370,20 +371,20 @@ Ext.define("Ext.form.Labelable", {
     /**
      * @cfg {String} [ariaHelp] Optional text description for this object. This text will be
      * announced to Assistive Technology users when the object is focused.
-     * @locale
      */
     ariaHelp: undefined,
     
+    //</locale>
     /**
      * @cfg {String} ariaErrorText Localized announcement text for validation errors. This text
      * will be used by Assistive Technologies such as screen readers to alert the users when
      * field validation fails.
      *
-     * This config is used with {@link Ext.String#format}. '{0}' will be replaced with the actual
+     * This config is used with {@link Ext.String.format}. '{0}' will be replaced with the actual
      * error message(s), '{1}' will be replaced with field label.
-     * @locale
      */
     ariaErrorText: 'Input error. {0}.',
+    //</locale>
 
     labelableInsertions: [
 

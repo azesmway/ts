@@ -28,33 +28,18 @@ Ext.define('Ext.grid.RowEditor', {
      * record which has not been modified will delete that record from the store.
      */
 
-    /**
-     * @cfg {String} saveBtnText
-     * The text for the Update button below the row edit form.
-     * @locale
-     */
+    //<locale>
     saveBtnText: 'Update',
-
-    /**
-     * @cfg {String} cancelBtnText
-     * The text for the Cancel button below the row edit form.
-     * @locale
-     */
+    //</locale>
+    //<locale>
     cancelBtnText: 'Cancel',
-
-    /**
-     * @cfg {String} errorsText
-     * The title for displaying an error tip.
-     * @locale
-     */
+    //</locale>
+    //<locale>
     errorsText: 'Errors',
-
-    /**
-     * @cfg {String} dirtyText
-     * The message to display when dirty data prevents closing the row editor.
-     * @locale
-     */
+    //</locale>
+    //<locale>
     dirtyText: 'You need to commit or cancel your changes',
+    //</locale>
 
     lastScrollLeft: 0,
     lastScrollTop: 0,
@@ -70,13 +55,6 @@ Ext.define('Ext.grid.RowEditor', {
     // Change the hideMode to offsets so that we get accurate measurements when
     // the roweditor is hidden for laying out things like a TriggerField.
     hideMode: 'offsets',
-    
-    defaultFocus: 'field:canfocus',
-    
-    layout: {
-        type: 'hbox',
-        align: 'middle'
-    },
 
     _cachedNode: false,
 
@@ -88,6 +66,11 @@ Ext.define('Ext.grid.RowEditor', {
 
         me.cls = Ext.baseCSSPrefix + 'grid-editor ' + Ext.baseCSSPrefix + 'grid-row-editor';
 
+        me.layout = {
+            type: 'hbox',
+            align: 'middle'
+        };
+
         me.lockable = grid.lockable;
 
         // Create field containing structure for when editing a lockable grid.
@@ -95,7 +78,6 @@ Ext.define('Ext.grid.RowEditor', {
             me.items = [
                 // Locked columns container shrinkwraps the fields
                 lockedCt = me.lockedColumnContainer = new Container({
-                    $initParent: me,
                     id: grid.id + '-locked-editor-cells',
                     scrollable: {
                         x: false,
@@ -111,23 +93,19 @@ Ext.define('Ext.grid.RowEditor', {
 
                 // Normal columns container flexes the remaining RowEditor width
                 normalCt = me.normalColumnContainer = new Container({
-                    $initParent: me,
-                    id: grid.id + '-normal-editor-cells',
                     // not user scrollable, but needs a Scroller instance for syncing with view
                     scrollable: {
                         x: false,
                         y: false
                     },
+                    flex: 1,
+                    id: grid.id + '-normal-editor-cells',
                     layout: {
                         type: 'hbox',
                         align: 'middle'
-                    },
-                    flex: 1
+                    }
                 })
             ];
-
-            delete lockedCt.$initParent;
-            delete normalCt.$initParent;
 
             // keep horizontal position of fields in sync with view's horizontal scroll position
             lockedCt.getScrollable().addPartner(grid.lockedGrid.view.getScrollable(), 'x');
@@ -224,10 +202,7 @@ Ext.define('Ext.grid.RowEditor', {
             width;
 
         field._marginWidth = (field._marginWidth || field.el.getMargin('lr'));
-
-        // Avoid negative width as this will throw Invalid Argument errors in IE
-        width = Math.max(column.getWidth() - field._marginWidth, 0);
-        
+        width = column.getWidth() - field._marginWidth;
         field.setWidth(width);
         if (field.xtype === 'displayfield') {
             // displayfield must have the width set on the inputEl for ellipsis to work
@@ -311,8 +286,7 @@ Ext.define('Ext.grid.RowEditor', {
         var me = this,
             plugin = me.editingPlugin;
 
-        me.keyNav = new Ext.util.KeyNav({
-            target: me.el,
+        me.keyNav = new Ext.util.KeyNav(me.el, {
             tab: {
                 fn: me.onFieldTab,
                 scope: me
@@ -340,15 +314,11 @@ Ext.define('Ext.grid.RowEditor', {
         // Ignore refresh caused by the completion process
         if (!me.completing) {
             // Recover our row node after a view refresh
-            // Note that refresh could have been caused by column removal
-            if (context && !context.column.destroyed && (row = view.getRow(context.record))) {
-                if (view === context.column.getView()) {
-                    context.row = row;
-                    context.view = view;
-                    me.reposition();
-                    if (me.tooltip && me.tooltip.isVisible()) {
-                        me.tooltip.setTarget(context.row);
-                    }
+            if (context && (row = view.getRow(context.record))) {
+                context.row = row;
+                me.reposition();
+                if (me.tooltip && me.tooltip.isVisible()) {
+                    me.tooltip.setTarget(context.row);
                 }
             } else {
                 me.editingPlugin.cancelEdit();
@@ -527,19 +497,19 @@ Ext.define('Ext.grid.RowEditor', {
         fieldContainer.insert(idx, column.getEditor());
     },
 
-    onColumnAdd: function(column, pos) {
+    onColumnAdd: function(column) {
 
         // If a column header added, process its leaves
         if (column.isGroupHeader) {
             column = column.getGridColumns();
         }
-        this.preventReposition = true;
+        //this.preventReposition = true;
         this.addFieldsForColumn(column);
-        this.insertColumnEditor(column, pos);
+        this.insertColumnEditor(column);
         this.preventReposition = false;
     },
 
-    insertColumnEditor: function(column, pos) {
+    insertColumnEditor: function(column) {
         var me = this,
             field,
             fieldContainer,
@@ -556,14 +526,10 @@ Ext.define('Ext.grid.RowEditor', {
             return;
         }
 
-        if (pos == null) {
-            pos = column.getIndex();
-        }
-
         fieldContainer = column.isLocked() ? me.lockedColumnContainer : me.normalColumnContainer;
 
         // Insert the column's field into the editor panel.
-        fieldContainer.insert(pos, field = column.getEditor());
+        fieldContainer.insert(column.getIndex(), field = column.getEditor());
 
         // Ensure the view scrolls the field into view on focus
         field.on('focus', me.onFieldFocus, me);
@@ -575,8 +541,8 @@ Ext.define('Ext.grid.RowEditor', {
         // Cache the active field so that we can restore focus into its cell onHide
 
         // Makes the cursor always be placed at the end of the textfield
-        // when the field is being edited for the first time.
-        if (field.selectText) {
+        // when the field is being edited for the first time (IE/Edge only).
+        if ((Ext.isIE || Ext.isEdge) && field.selectText) {
             field.selectText(field.inputEl.dom.value.length);
         }
 
@@ -585,7 +551,7 @@ Ext.define('Ext.grid.RowEditor', {
 
         // skipFocusScroll should be true right after the editor has been started
         if (!this.skipFocusScroll) {
-            field.column.getView().getScrollable().ensureVisible(field.el);
+            field.column.getView().getScrollable().scrollIntoView(field.el);
         } else {
             this.skipFocusScroll = null;
         }
@@ -632,7 +598,7 @@ Ext.define('Ext.grid.RowEditor', {
                     // If going back to the first column, scroll back to field.
                     // If we're in a locking view, this has to be done programatically to avoid jarring
                     // when navigating from the locked back into the normal side
-                    activeField.column.getView().getScrollable().ensureVisible(activeField.ownerCt.child(':focusable').el);
+                    activeField.column.getView().getScrollable().scrollIntoView(activeField.ownerCt.child(':focusable').el);
                 }
                 else {
                     target = me.down(':focusable:not([isButton]):last');
@@ -667,8 +633,7 @@ Ext.define('Ext.grid.RowEditor', {
         if (!btns && !me.destroying && !me.destroyed) {
             me.floatingButtons = btns = new Ext.grid.RowEditorButtons({
                 ownerCmp: me,
-                rowEditor: me,
-                hidden: me.hidden
+                rowEditor: me
             });
         }
         return btns;
@@ -878,11 +843,9 @@ Ext.define('Ext.grid.RowEditor', {
         }
 
         if (column.getEditor) {
+
             // Get a default display field if necessary
             field = column.getEditor(null, me.getDefaultFieldCfg());
-            
-            // Focus is managed by RowEditor
-            field.preventRefocus = true;
 
             if (column.align === 'right') {
                 style = field.fieldStyle;
@@ -1220,7 +1183,6 @@ Ext.define('Ext.grid.RowEditor', {
         if (me._cachedNode) {
             me.clearCache();
         }
-        
         me.hide();
 
         // If we are editing a new record, and we cancel still in invalid state, then remove it.
@@ -1310,11 +1272,8 @@ Ext.define('Ext.grid.RowEditor', {
             column = context.column;
         }
         
-        // Hiding could have been caused by removing our column
-        if (column && !column.destroyed) {
-            focusContext = new Ext.grid.CellContext(column.getView()).setPosition(context.record, column);
-            focusContext.view.getNavigationModel().setPosition(focusContext);
-        }
+        focusContext = new Ext.grid.CellContext(column.getView()).setPosition(context.record, column);
+        focusContext.view.getNavigationModel().setPosition(focusContext);
         
         me.activeField = null;
         me.wrapEl.hide();
@@ -1404,7 +1363,7 @@ Ext.define('Ext.grid.RowEditor', {
             tip = me.getToolTip();
 
         if (tip.isVisible()) {
-            tip.realignToTarget();
+            tip.handleAfterShow();
         } else {
             tip.showBy(me.el);
         }
@@ -1446,10 +1405,8 @@ Ext.define('Ext.grid.RowEditor', {
             Ext.fx.Manager.removeAnim(me.wrapAnim);
             me.wrapAnim = null;
         }
-
-        // Properties must be cleared because class-specific getRefItems explicitly references them.
-        me.keyNav = me.floatingButtons = me.tooltip =
-            Ext.destroy(me.keyNav, me.floatingButtons, me.tooltip, me.wrapEl);
+        
+        me.floatingButtons = me.tooltip = Ext.destroy(me.floatingButtons, me.tooltip);
         
         me.callParent();    
     }

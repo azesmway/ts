@@ -1,6 +1,4 @@
-topSuite("Ext.layout.container.Column",
-    ['Ext.Panel', 'Ext.Button', 'Ext.layout.container.Anchor'],
-function() {
+describe("Ext.layout.container.Column", function() {
     describe('wrapping with uneven heights', function() {
         // We must ensure that each row start clears to start of row.
         // Tall items would block it as below.

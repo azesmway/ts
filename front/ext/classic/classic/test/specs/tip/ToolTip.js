@@ -1,17 +1,14 @@
 /* global Ext, jasmine, expect, spyOn, describe, xdescribe */
 
-topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function() {
+describe("Ext.tip.ToolTip", function() {
+
     var tip,
         target,
-        describeNotTouch = jasmine.supportsTouch ? xdescribe : describe,
-        itNotTouch = jasmine.supportsTouch ? xit : it,
-        triggerEvent = jasmine.supportsTouch && !Ext.os.is.Desktop ? 'click' : 'mouseover';
+        describeNotTouch = Ext.supports.TouchEvents ? xdescribe : describe;
 
     function createTip(config) {
         config = Ext.apply({target: target, width: 50, height: 50, html: 'X'}, config);
-        tip = new Ext.tip.ToolTip(Ext.apply({
-            showOnTap: triggerEvent === 'click'
-        }, config));
+        tip = new Ext.tip.ToolTip(config);
         return tip;
     }
 
@@ -28,12 +25,15 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
     });
 
     afterEach(function() {
-        tip = target = Ext.destroy(tip, target);
+        if (tip) {
+            tip.destroy();
+            tip = null;
+        }
+        target.destroy();
     });
 
-    function mouseOverTarget(t) {
-        t = Ext.fly(t || target);
-        jasmine.fireMouseEvent(t, triggerEvent, t.getX(), t.getY(), 0, false, false, false, document.body);
+    function mouseOverTarget() {
+        jasmine.fireMouseEvent(target, 'mouseover', target.getX(), target.getY());
     }
     function mouseOutTarget() {
         jasmine.fireMouseEvent(target, 'mouseout', 1000, 1000);
@@ -66,15 +66,6 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
             expect(function() {
                 tip.show();
             }).not.toThrow();
-        });
-    });
-
-    describe("showBy", function() {
-        it("should return the tip reference", function() {
-            createTip({
-                target: null
-            });
-            expect(tip.showBy(target)).toBe(tip);
         });
     });
 
@@ -154,7 +145,7 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
 
         it("should hide the tooltip after a delay", function() {
             runs(function() {
-                createTip({showDelay: 1, dismissDelay: Ext.isIE8 ? 200 : 15});
+                createTip({showDelay: 1, dismissDelay: 15});
                 mouseOverTarget();
             });
             waitsFor(function() {
@@ -192,7 +183,6 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
                 this.spy = spyOn(tip, 'hide').andCallThrough();
                 jasmine.fireMouseEvent(Ext.getBody(), 'mousedown', 0, 0);
                 expect(this.spy).toHaveBeenCalled();
-                jasmine.fireMouseEvent(Ext.getBody(), 'mouseup', 0, 0);
             });
         });
     });
@@ -239,7 +229,7 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
                 y = target.getY();
             runs(function() {
                 createTip({showDelay: 1, trackMouse: true});
-                jasmine.fireMouseEvent(target, triggerEvent, x, y);
+                jasmine.fireMouseEvent(target, 'mouseover', x, y);
             });
             waitsFor(function() {
                 return tip.isVisible();
@@ -353,7 +343,7 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
             var xy = target.getXY();
             runs(function() {
                 createTip({showDelay: 1, anchorToTarget: false, anchor: 'top'});
-                jasmine.fireMouseEvent(target, triggerEvent, xy[0], xy[1]);
+                jasmine.fireMouseEvent(target, 'mouseover', xy[0], xy[1]);
             });
             waitsFor(function() {
                 return tip.isVisible();
@@ -367,7 +357,7 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
             var xy = target.getXY();
             runs(function() {
                 createTip({showDelay: 1, anchorToTarget: false, anchor: 'right'});
-                jasmine.fireMouseEvent(target, triggerEvent, xy[0], xy[1]);
+                jasmine.fireMouseEvent(target, 'mouseover', xy[0], xy[1]);
             });
             waitsFor(function() {
                 return tip.isVisible();
@@ -381,7 +371,7 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
             var xy = target.getXY();
             runs(function() {
                 createTip({showDelay: 1, anchorToTarget: false, anchor: 'bottom'});
-                jasmine.fireMouseEvent(target, triggerEvent, xy[0], xy[1]);
+                jasmine.fireMouseEvent(target, 'mouseover', xy[0], xy[1]);
             });
             waitsFor(function() {
                 return tip.isVisible();
@@ -395,7 +385,7 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
             var xy = target.getXY();
             runs(function() {
                 createTip({showDelay: 1, anchorToTarget: false, anchor: 'left'});
-                jasmine.fireMouseEvent(target, triggerEvent, xy[0], xy[1]);
+                jasmine.fireMouseEvent(target, 'mouseover', xy[0], xy[1]);
             });
             waitsFor(function() {
                 return tip.isVisible();
@@ -406,25 +396,11 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
         });
     });
 
-    describe("delegate", function() {
+    describeNotTouch("delegate", function() {
         var delegatedTarget;
 
         beforeEach(function() {
-            target.insertHtml('beforeEnd',
-                '<span class="hasTip" id="delegatedTarget">' +
-                    '<span id="delegate-child-1">' +
-                        'x' +
-                    '</span>' +
-                    '<span id="delegate-child-2">' +
-                        'x' +
-                        '<span id="delegate-child-2-2">' +
-                            'x' +
-                        '</span>' +
-                    '</span>' +
-                '</span>' +
-                '<span class="noTip">' +
-                    'x' +
-                '</span>');
+            target.insertHtml('beforeEnd', '<span class="hasTip" id="delegatedTarget">x</span><span class="noTip">x</span>');
             delegatedTarget = Ext.get('delegatedTarget');
         });
 
@@ -433,18 +409,10 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
         });
 
         it("should show the tooltip for descendants matching the selector", function() {
-            createTip({delegate: '.hasTip', showDelay: 0});
-            runs(function() {
-                mouseOverTarget(delegatedTarget);
-
-                // Click-shown tips are not subject to a delay, so if visible, do not wait on an event
-                if (!tip.isVisible()) {
-                    waitsForEvent(tip, 'show');
-                }
-            });
-            runs(function() {
-                expect(tip.isVisible()).toBe(true);
-            });
+            createTip({delegate: '.hasTip'});
+            var spy = spyOn(tip, 'delayShow');
+            jasmine.fireMouseEvent(delegatedTarget, 'mouseover', delegatedTarget.getX(), delegatedTarget.getY());
+            expect(spy).toHaveBeenCalled();
         });
 
         it("should not show the tooltip for descendants that do not match the selector", function() {
@@ -456,99 +424,15 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
 
         it("should set the triggerElement property to the active descendant element when shown", function() {
             createTip({delegate: '.hasTip'});
-            mouseOverTarget(delegatedTarget);
+            jasmine.fireMouseEvent(delegatedTarget, 'mouseover', delegatedTarget.getX(), delegatedTarget.getY());
             expect(tip.triggerElement).toBe(delegatedTarget.dom);
         });
 
         it("should unset the triggerElement property when hiding", function() {
-            createTip({
-                delegate: '.hasTip',
-                dismissDelay: 1
-            });
-            runs(function() {
-                mouseOverTarget(delegatedTarget);
-
-                // Click-shown tips are not subject to a delay, so if visible, do not wait on an event
-                if (!tip.isVisible()) {
-                    waitsForEvent(tip, 'show');
-                }
-            });
-            
-            waitsFor(function() {
-                return !tip.isVisible();
-            });
-            
-            runs(function() {
-                expect(tip.triggerElement).toBe(null);
-            });
-        });
-
-        // This test tests whether a mouseMOVE's related target is in the same delegate as the target.
-        // If we're moving WITHIN a delegate, then mousemoves element to element within, should not
-        // trigger a tooltip show.
-        // Tap to show does noyt have this issue.
-        itNotTouch("should not reshow an autohidden tip when moving to a different child of a delegated starget", function() {
-            var showSpy;
-
-            createTip({
-                delegate: '.hasTip',
-                showDelay: 0,
-                dismissDelay: 1
-            });
-            
-            delegatedTarget = Ext.get('delegate-child-1');
-
-            runs(function() {
-                jasmine.fireMouseEvent(delegatedTarget, triggerEvent, null, null, 0, false, false, false, document.body);
-
-                // Click-shown tips are not subject to a delay, so if visible, do not wait on an event
-                if (!tip.isVisible()) {
-                    waitsForEvent(tip, 'show');
-                }
-            });
-
-            // autoDismiss in 1ms
-            waitsForEvent(tip, 'hide', 'tooltip to dismiss');
-
-            // Wait until we're past quickShowInterval
-            waits(500);
-
-            runs(function() {
-                expect(tip.triggerElement).toBe(null);
-                
-                showSpy = spyOnEvent(tip, 'show');
-
-                // Now move from delegate-child-1 into delegate-child-2
-                // This is within the same .x-hasTip target, so should not trigger a new show
-                jasmine.fireMouseEvent(Ext.get('delegate-child-2'), triggerEvent, null, null, 0, false, false, false, Ext.get('delegate-child-1'));
-            });
-
-            // Nothing should happen, so we can't wait for anything
-            waits(100);
-
-            // After 100ms, there should have been no show
-            runs(function() {
-                expect(showSpy).not.toHaveBeenCalled();
-                expect(tip.triggerElement).toBe(null);
-                
-                showSpy = spyOnEvent(tip, 'show');
-
-                // Now move from delegate-child-2 into delegate-child-2-2
-                // This is within the same .x-hasTip target, so should not trigger a new show
-                jasmine.fireMouseEvent(Ext.get('delegate-child-2-2'), triggerEvent, null, null, 0, false, false, false, Ext.get('delegate-child-2'));
-            });
-
-            // Nothing should happen, so we can't wait for anything
-            waits(100);
-
-            // After 100ms, there should have been no show
-            runs(function() {
-                expect(showSpy).not.toHaveBeenCalled();
-                Ext.get('delegate-child-2-2').destroy();
-                Ext.get('delegate-child-2').destroy();
-                Ext.get('delegate-child-1').destroy();
-                Ext.get('delegatedTarget').destroy();
-            });
+            createTip({delegate: '.hasTip'});
+            jasmine.fireMouseEvent(delegatedTarget, 'mouseover', delegatedTarget.getX(), delegatedTarget.getY());
+            tip.hide();
+            expect(tip.triggerElement).toBe(null);
         });
     });
 
@@ -568,7 +452,7 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
 
         it("should show at the 'pointerEvent' position if there's no target", function() {
             createTip({target: null, html: 'Shown by pointer event', showOnTap: true});
-            if (jasmine.supportsTouch) {
+            if (Ext.supports.TouchEvents) {
                 Ext.getBody().on({
                     touchstart: showTip,
                     single: true
@@ -579,7 +463,7 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
                     mouseover: showTip,
                     single: true
                 });
-                jasmine.fireMouseEvent(document.body, triggerEvent, 100, 100);
+                jasmine.fireMouseEvent(document.body, 'mouseover', 100, 100);
             }
         });
     });
@@ -588,17 +472,14 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
         var alwaysOnTopWindow,
             extraWindow,
             centerWindow,
-            combo,
-            toolTip,
-            tipTarget;
+            combo;
 
         afterEach(function() {
             Ext.destroy(
                 alwaysOnTopWindow,
                 extraWindow,
                 centerWindow,
-                combo,
-                toolTip
+                combo
             );
         });
 
@@ -650,61 +531,53 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
                     allowBlank: false,
                     store: states,
                     displayField: 'name',
-                    valueField: 'abbr'
+                    valueField: 'abbr',
+                    listConfig : {
+                        getInnerTpl : function() {
+                            return '<div data-qtip="<b>Name:</b>{name} <br/><b>Abbreviation:</b>{abbr} <br/>">{name} ({abbr})</div>';
+                        }
+                    }
                 }]
             }).show();
+
+            // We use a QuickTip instance for convenience
+            tip = new Ext.tip.QuickTip({
+                showDelay: 100,
+                autoHide: true,
+                dismissDelay: 100
+            });
 
             combo = centerWindow.down('combobox');
             combo.focus();
             combo.expand();
-            
-            tipTarget = Ext.get(combo.getPicker().getNode(0));
-
-            toolTip = new Ext.tip.ToolTip({
-                target: tipTarget,
-                showDelay: 100,
-                autoHide: true,
-                dismissDelay: 100,
-                showOnTap: jasmine.supportsTouch
-            });
 
             // Mouseover the dropdown.
-            jasmine.fireMouseEvent(tipTarget, triggerEvent);
+            jasmine.fireMouseEvent(Ext.fly(combo.getPicker().getNode(0)).down('[data-qtip]'), 'mouseover');
 
             // Tip should show, and should be topmost in stack.
             // Bug was that the alwaysOnTop window stayed on top and the tip
             // remained below.
-            //
-            // On Tap, the tip should show immediately
-            if (triggerEvent !== 'mouseover') {
-                expect(toolTip.isVisible(true)).toBe(true);
-                expect(centerWindow.zIndexManager.getActive()).toBe(toolTip);
-            }
-            // Mouseover shows on a delay
-            else {
-                waitsFor(function() {
-                    return toolTip.isVisible(true) && centerWindow.zIndexManager.getActive() === toolTip;
-                }, 'tip to show from delay on mouseover');
-            }
+            waitsFor(function() {
+                return tip.isVisible(true) && centerWindow.zIndexManager.getActive() === tip;
+            });
 
             // After its dismissDelay, tip should hide, and focus should remain in the combobox
             waitsFor(function() {
-                return !toolTip.isVisible();
-            }, 'tip to autoHide');
+                return !tip.isVisible();
+            });
 
-            // Picker should be visible, unless we've had to *tap* on the picker
-            // item to show the tip!
+            // Picker should be visible.
             // Bug was that the alwaysOnTop" window, on being moved back to the top
             // on tooltip hide, was acquiring focus and causing combo collapse.
             runs(function() {
-                expect(combo.getPicker().isVisible()).toBe(triggerEvent === 'mouseover');
-                tipTarget.destroy();
+                expect(combo.getPicker().isVisible()).toBe(true);
             });
+
         });
     });
 
-    describeNotTouch('cancel show', function() {
-        it('should show when rehovering after a show has been canceled', function() {
+    describe('cancel show', function() {
+        it('should show when rehovering after a show has been canceked', function() {
             createTip({
                 target: document.body,
                 delegate: '#tipTarget',
@@ -721,32 +594,6 @@ topSuite("Ext.tip.ToolTip", ['Ext.window.Window', 'Ext.form.field.*'], function(
             waitsFor(function() {
                 return tip.isVisible();
             }, 1000, 'tooltip to show');
-        });
-    });
-
-    describe('positioning', function () {
-        it('should adjust constrained region with the body scroll position', function () {
-            var body = Ext.getBody(),
-                spy = jasmine.createSpy(),
-                container = body.insertHtml(
-                    'beforeEnd',
-                    '<div><div style="height: 5000px"></div><a href="#" id="tipTarget2" style="position:relative; width: 50px; height: 50px;background-color:red;">x</a></div>',
-                    true
-                );
-            
-            target.destroy();
-            target = container.down('a');
-
-            createTip();
-            window.scrollTo(0, 5000);
-            mouseOverTarget();
-            
-            waitsForEvent(tip, 'show');
-            runs(function () {
-                // within 10px is close enough
-                expect(Math.abs(target.getRegion().bottom - tip.el.getRegion().bottom)).toBeLessThan(10);
-                container.destroy();
-            });
         });
     });
 });

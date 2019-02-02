@@ -86,7 +86,7 @@ Ext.define('Ext.dd.DropZone', {
      * @param {Event} e The event
      * @param {Object} data An object containing arbitrary data supplied by the drag source
      */
-    onNodeEnter : function(nodeData, source, e, data){
+    onNodeEnter : function(n, dd, e, data){
         
     },
 
@@ -104,7 +104,7 @@ Ext.define('Ext.dd.DropZone', {
      * underlying {@link Ext.dd.StatusProxy} can be updated
      * @template
      */
-    onNodeOver : function(nodeData, source, e, data){
+    onNodeOver : function(n, dd, e, data){
         return this.dropAllowed;
     },
 
@@ -119,7 +119,7 @@ Ext.define('Ext.dd.DropZone', {
      * @param {Object} data An object containing arbitrary data supplied by the drag source
      * @template
      */
-    onNodeOut : function(nodeData, source, e, data){
+    onNodeOut : function(n, dd, e, data){
         
     },
 
@@ -135,7 +135,7 @@ Ext.define('Ext.dd.DropZone', {
      * @return {Boolean} True if the drop was valid, else false
      * @template
      */
-    onNodeDrop : function(nodeData, source, e, data){
+    onNodeDrop : function(n, dd, e, data){
         return false;
     },
 
@@ -150,7 +150,7 @@ Ext.define('Ext.dd.DropZone', {
      * underlying {@link Ext.dd.StatusProxy} can be updated
      * @template
      */
-    onContainerOver : function(source, e, data){
+    onContainerOver : function(dd, e, data){
         return this.dropNotAllowed;
     },
 
@@ -165,7 +165,7 @@ Ext.define('Ext.dd.DropZone', {
      * @return {Boolean} True if the drop was valid, else false
      * @template
      */
-    onContainerDrop : function(source, e, data){
+    onContainerDrop : function(dd, e, data){
         return false;
     },
 
@@ -181,8 +181,8 @@ Ext.define('Ext.dd.DropZone', {
      * underlying {@link Ext.dd.StatusProxy} can be updated
      * @template
      */
-    notifyEnter : function(source, e, data) {
-        this.callParent([source, e, data]);
+    notifyEnter : function(dd, e, data) {
+        this.callParent([dd, e, data]);
         return this.dropNotAllowed;
     },
 
@@ -200,27 +200,27 @@ Ext.define('Ext.dd.DropZone', {
      * underlying {@link Ext.dd.StatusProxy} can be updated
      * @template
      */
-    notifyOver : function(source, e, data){
+    notifyOver : function(dd, e, data){
         var me = this,
             n = me.getTargetFromEvent(e);
 
         if (!n) { // not over valid drop target
             if (me.lastOverNode) {
-                me.onNodeOut(me.lastOverNode, source, e, data);
+                me.onNodeOut(me.lastOverNode, dd, e, data);
                 me.lastOverNode = null;
             }
-            return me.onContainerOver(source, e, data);
+            return me.onContainerOver(dd, e, data);
         }
 
         if (me.lastOverNode !== n) {
             if (me.lastOverNode) {
-                me.onNodeOut(me.lastOverNode, source, e, data);
+                me.onNodeOut(me.lastOverNode, dd, e, data);
             }
-            me.onNodeEnter(n, source, e, data);
+            me.onNodeEnter(n, dd, e, data);
             me.lastOverNode = n;
         }
 
-        return me.onNodeOver(n, source, e, data);
+        return me.onNodeOver(n, dd, e, data);
     },
 
     /**
@@ -232,10 +232,10 @@ Ext.define('Ext.dd.DropZone', {
      * @param {Object} data An object containing arbitrary data supplied by the drag zone
      * @template
      */
-    notifyOut : function(source, e, data) {
-        this.callParent([source, e, data]);
+    notifyOut : function(dd, e, data) {
+        this.callParent([dd, e, data]);
         if (this.lastOverNode){
-            this.onNodeOut(this.lastOverNode, source, e, data);
+            this.onNodeOut(this.lastOverNode, dd, e, data);
             this.lastOverNode = null;
         }
     },
@@ -251,17 +251,17 @@ Ext.define('Ext.dd.DropZone', {
      * @return {Boolean} False if the drop was invalid.
      * @template
      */
-    notifyDrop : function(source, e, data){
+    notifyDrop : function(dd, e, data){
         var me = this,
             n = me.getTargetFromEvent(e),
             result = n ?
-                me.onNodeDrop(n, source, e, data) :
-                me.onContainerDrop(source, e, data);
+                me.onNodeDrop(n, dd, e, data) :
+                me.onContainerDrop(dd, e, data);
 
         // Exit the overNode upon drop.
         // Must do this after dropping because exiting a node may perform actions which invalidate a drop.
         if (me.lastOverNode) {
-            me.onNodeOut(me.lastOverNode, source, e, data);
+            me.onNodeOut(me.lastOverNode, dd, e, data);
             me.lastOverNode = null;
         }
         return result;

@@ -1650,11 +1650,11 @@ Ext.define('Ext.layout.component.Dock', {
             item.removeClsWithUI(this.getDockCls(item.dock));
         }
 
-        dom = item.el && item.el.dom;
-        if (dom && !item.destroying) {
+        dom = item.el.dom;
+
+        if (!item.destroying && dom) {
             dom.parentNode.removeChild(dom);
         }
-
         this.childrenChanged = true;
     },
 

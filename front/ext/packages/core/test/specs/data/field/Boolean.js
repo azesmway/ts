@@ -1,4 +1,4 @@
-topSuite("Ext.data.field.Boolean", function() {
+describe("Ext.data.field.Boolean", function() {
 
     var field;
 

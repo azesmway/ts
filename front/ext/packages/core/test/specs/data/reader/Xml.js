@@ -1,4 +1,4 @@
-topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
+describe("Ext.data.reader.Xml", function() {
     var reader,
         responseText,
         readData,
@@ -244,14 +244,14 @@ topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
                 expect(reader.getTotal(getXml('<node1>1</node1><node2>2</node2><node3>3</node3>'))).toBe('3');
             });
             
-            it("should be able to use some xpath", function(){
+            xit("should be able to use some xpath", function(){
                 createReader({
                     totalProperty: 'foo/bar'
                 });
                 expect(reader.getTotal(getXml('<foo><bar>18</bar></foo>'))).toBe('18');
             });
             
-            it("should support attribute reading", function(){
+            xit("should support attribute reading", function(){
                 createReader({
                     totalProperty: '@total'
                 });
@@ -288,14 +288,14 @@ topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
                 expect(reader.getSuccess(getXml('<node1>true</node1><node2>false</node2><node3>false</node3>'))).toBe('true');
             });
             
-            it("should be able to use some xpath", function(){
+            xit("should be able to use some xpath", function(){
                 createReader({
                     successProperty: 'a/node/path'
                 });
                 expect(reader.getSuccess(getXml('<a><node><path>false</path></node></a>'))).toBe('false');
             });
             
-            it("should support attribute reading", function(){
+            xit("should support attribute reading", function(){
                 createReader({
                     totalProperty: '@success'
                 });
@@ -332,254 +332,18 @@ topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
                 expect(reader.getMessage(getXml('<node1>msg1</node1><node2>msg2</node2><node3>msg3</node3>'))).toBe('msg2');
             });
             
-            it("should be able to use some xpath", function(){
+            xit("should be able to use some xpath", function(){
                 createReader({
                     messageProperty: 'some/nodes'
                 });
                 expect(reader.getMessage(getXml('<some><nodes>message here</nodes></some>'))).toBe('message here');
             });
             
-            it("should support attribute reading", function(){
+            xit("should support attribute reading", function(){
                 createReader({
                     totalProperty: '@message'
                 });
                 expect(reader.getTotal(parseXml('<node message="attribute msg" />').firstChild)).toBe('attribute msg');
-            });
-        });
-
-        describe("groupRootProperty", function() {
-            function makeSuite(asSummaryModel) {
-                var M = Ext.define(null, {
-                    extend: 'Ext.data.Model',
-                    fields: ['city', {
-                        name: 'income',
-                        type: 'int',
-                        summary: 'avg'
-                    }, {
-                        name: 'aField',
-                        mapping: 'fieldMapped',
-                        type: 'int'
-                    }],
-                    summary: asSummaryModel ? {
-                        maxIncome: {
-                            field: 'avg',
-                            type: 'int'
-                        },
-                        aSummaryField: {
-                            type: 'int',
-                            mapping: 'summaryMapped'
-                        }
-                    } : null
-                });
-
-                var expectedType = asSummaryModel ? M.getSummaryModel() : M;
-
-                describe("defaults", function() {
-                    it("should not read anything with no root", function() {
-                        createReader({
-                            model: M,
-                            record: 'item'
-                        });
-                        var resultSet = reader.read(getXml(''));
-                        expect(resultSet.getGroupData()).toBeNull();
-                    });
-
-                    it("should not read anything with a root", function() {
-                        createReader({
-                            model: M,
-                            record: 'item',
-                            rootProperty: 'data'
-                        });
-                        var resultSet = reader.read(getXml('<data></data>'));
-                        expect(resultSet.getGroupData()).toBeNull();
-                    });
-                });
-
-                // This is not meant to be exhaustive of all the parse options,
-                // since this uses the same logic as the root
-                describe("parsing", function() {
-                    var groupData;
-
-                    beforeEach(function() {
-                        groupData = '<item><city>City1</city><income>100</income><maxIncome>200</maxIncome></item>' +
-                                    '<item><city>City2</city><income>101</income><maxIncome>201</maxIncome></item>' +
-                                    '<item><city>City3</city><income>102</income><maxIncome>202</maxIncome></item>';
-                    });
-
-                    function expectData(resultSet) {
-                        var groups = resultSet.getGroupData();
-                        expect(groups.length).toBe(3);
-                        expect(groups[0] instanceof expectedType).toBe(true);
-                        expect(groups[1] instanceof expectedType).toBe(true);
-                        expect(groups[2] instanceof expectedType).toBe(true);
-
-                        expect(groups[0].get('income')).toBe(100);
-                        expect(groups[1].get('income')).toBe(101);
-                        expect(groups[2].get('income')).toBe(102);
-
-                        expect(groups[0].get('maxIncome')).toBe(asSummaryModel ? 200 : undefined);
-                        expect(groups[1].get('maxIncome')).toBe(asSummaryModel ? 201 : undefined);
-                        expect(groups[2].get('maxIncome')).toBe(asSummaryModel ? 202 : undefined);
-                    }
-
-                    it("should read the specified node name", function(){
-                        createReader({
-                            model: M,
-                            record: 'item',
-                            groupRootProperty: 'groups'
-                        });
-                        expectData(reader.read(getXml('<groups>' + groupData + '</groups>')));
-                    });
-                    
-                    it("should accept a function configuration", function(){
-                        createReader({
-                            model: M,
-                            record: 'item',
-                            groupRootProperty: function(data){
-                                return data.firstChild;
-                            }
-                        });
-                        expectData(reader.read(getXml('<groups>' + groupData + '</groups>')));
-                    });
-
-                    it("should respect mapped fields", function() {
-                        createReader({
-                            model: M,
-                            record: 'item',
-                            groupRootProperty: 'groups'
-                        });
-
-                        var s = '<item><fieldMapped>1</fieldMapped><summaryMapped>2</summaryMapped></item>';
-                        var resultSet = reader.read(getXml('<groups>' + s + '</groups>'));
-
-                        var rec = resultSet.getGroupData()[0];
-                        expect(rec.get('aField')).toBe(1);
-                        if (asSummaryModel) {
-                            expect(rec.get('aSummaryField')).toBe(2);
-                        }
-                    });
-                });
-            }
-
-            describe("with no summary model", function() {
-                makeSuite(false);
-            });
-
-            describe("with a summary model", function() {
-                makeSuite(true);
-            });
-        });
-
-        describe("summaryRootProperty", function() {
-            function makeSuite(asSummaryModel) {
-                var M = Ext.define(null, {
-                    extend: 'Ext.data.Model',
-                    fields: ['city', {
-                        name: 'income',
-                        type: 'int',
-                        summary: 'avg'
-                    }, {
-                        name: 'aField',
-                        mapping: 'fieldMapped',
-                        type: 'int'
-                    }],
-                    summary: asSummaryModel ? {
-                        maxIncome: {
-                            field: 'avg',
-                            type: 'int'
-                        },
-                        aSummaryField: {
-                            type: 'int',
-                            mapping: 'summaryMapped'
-                        }
-                    } : null
-                });
-
-                var expectedType = asSummaryModel ? M.getSummaryModel() : M;
-
-                describe("defaults", function() {
-                    it("should not read anything with no root", function() {
-                        createReader({
-                            model: M,
-                            record: 'item'
-                        });
-                        var resultSet = reader.read(getXml(''));
-                        expect(resultSet.getSummaryData()).toBeNull();
-                    });
-
-                    it("should not read anything with a root", function() {
-                        createReader({
-                            model: M,
-                            record: 'item',
-                            rootProperty: 'data'
-                        });
-                        var resultSet = reader.read(getXml('<data></data>'));
-                        expect(resultSet.getSummaryData()).toBeNull();
-                    });
-                });
-
-                // This is not meant to be exhaustive of all the parse options,
-                // since this uses the same logic as the root
-                describe("parsing", function() {
-                    var summaryData;
-
-                    beforeEach(function() {
-                        summaryData = '<item><city>City1</city><income>100</income><maxIncome>200</maxIncome></item>';
-                    });
-
-                    function expectData(resultSet) {
-                        var data = resultSet.getSummaryData();
-                        expect(data instanceof expectedType).toBe(true);
-
-                        expect(data.get('income')).toBe(100);
-                        expect(data.get('maxIncome')).toBe(asSummaryModel ? 200 : undefined);
-                    }
-
-                    it("should read the specified node name", function(){
-                        createReader({
-                            model: M,
-                            record: 'item',
-                            summaryRootProperty: 'summary'
-                        });
-                        expectData(reader.read(getXml('<summary>' + summaryData + '</summary>')));
-                    });
-                    
-                    it("should accept a function configuration", function(){
-                        createReader({
-                            model: M,
-                            record: 'item',
-                            summaryRootProperty: function(data){
-                                return data.firstChild;
-                            }
-                        });
-                        expectData(reader.read(getXml('<summary>' + summaryData + '</summary>')));
-                    });
-
-                    it("should respect mapped fields", function() {
-                        createReader({
-                            model: M,
-                            record: 'item',
-                            summaryRootProperty: 'summary'
-                        });
-
-                        var s = '<item><fieldMapped>1</fieldMapped><summaryMapped>2</summaryMapped></item>';
-                        var resultSet = reader.read(getXml('<summary>' + s + '</summary>'));
-
-                        var rec = resultSet.getSummaryData();
-                        expect(rec.get('aField')).toBe(1);
-                        if (asSummaryModel) {
-                            expect(rec.get('aSummaryField')).toBe(2);
-                        }
-                    });
-                });
-            }
-
-            describe("with no summary model", function() {
-                makeSuite(false);
-            });
-
-            describe("with a summary model", function() {
-                makeSuite(true);
             });
         });
         
@@ -638,7 +402,7 @@ topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
                 expect(result.field).toBe('b');
             });
             
-            it("should allow basic xpath", function(){
+            xit("should allow basic xpath", function(){
                 createReader([{
                     name: 'field',
                     mapping: 'some/xpath/here'
@@ -646,26 +410,24 @@ topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
                 var result = reader.readRecords(getXml('<some><xpath><here>a value</here></xpath></some>'), rawOptions).getRecords()[0];
                 expect(result.field).toBe('a value');
             });
-            
-            it("should support attribute reading", function(){
+                        
+            xit("should support attribute reading", function(){
                 createReader([{
                     name: 'field',
                     mapping: '@other'
-                }], {
-                    record: 'node'
-                });
-                var result = reader.readRecords(parseXml('<node other="attr value" />'), rawOptions).getRecords()[0];
+                }]);
+                var result = reader.readRecords(parseXml('<node other="attr value" />').firstChild, rawOptions).getRecords()[0];
                 expect(result.field).toBe('attr value');
             });
 
-            it("should read fields from xml nodes that have a namespace prefix", function() {
+            xit("should read fields from xml nodes that have a namespace prefix", function() {
                 createReader(['field'], {namespace: 'n'});
                 var result = reader.readRecords(getXml('<n:field xmlns:n="nns">val</n:field>').firstChild, rawOptions).getRecords()[0];
                 expect(result.field).toBe('val');
 
             });
 
-            it("should read field data from a mapped xml node with namespace prefix", function(){
+            xit("should read field data from a mapped xml node with namespace prefix", function(){
                 createReader([{
                     name: 'field',
                     mapping: 'm|other'
@@ -678,7 +440,7 @@ topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
         });
     });
     
-    describe("reading data", function() {
+    xdescribe("reading data", function() {
         var readData, user;
 
         beforeEach(function() {
@@ -692,7 +454,7 @@ topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
             });
 
             reader = new Ext.data.reader.Xml({
-                rootProperty: 'data',
+                root: 'data',
                 totalProperty: 'totalProp',
                 messageProperty: 'messageProp',
                 successProperty: 'successProp',
@@ -834,7 +596,7 @@ topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
                     type: 'rest',
                     reader: {
                         type: 'xml',
-                        rootProperty: 'users'
+                        root: 'users'
                     }
                 }
             });
@@ -852,7 +614,7 @@ topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
                     type: 'memory',
                     reader: {
                         type: 'xml',
-                        rootProperty: 'orders',
+                        root: 'orders',
                         record: 'order'
                     }
                 }
@@ -870,7 +632,7 @@ topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
                     type: 'memory',
                     reader: {
                         type: 'xml',
-                        rootProperty: 'order_items',
+                        root: 'order_items',
                         record: 'order_item'
                     }
                 }
@@ -895,8 +657,8 @@ topSuite("Ext.data.reader.Xml", ['Ext.data.Model'], function() {
 
             createReader = function (config) {
                 return new Ext.data.reader.Xml(Ext.apply({}, config, {
-                    model: "spec.User",
-                    rootProperty: "users",
+                    model : "spec.User",
+                    root  : "users",
                     record: "user"
                 }));
             };

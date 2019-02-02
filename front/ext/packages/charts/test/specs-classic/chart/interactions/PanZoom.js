@@ -1,7 +1,4 @@
-topSuite("Ext.chart.interactions.PanZoom",
-    ['Ext.Panel', 'Ext.toolbar.Toolbar', 'Ext.chart.*', 'Ext.data.ArrayStore',
-     'Ext.Button'],
-function() {
+describe('Ext.chart.interactions.PanZoom', function () {
 
     describe('modeToggleButton', function () {
         it('should have its value set based on the value of zoomOnPanGesture config', function () {

@@ -1,6 +1,4 @@
-/* global Ext, spyOn, expect */
-
-topSuite("Ext.app.Controller", ['Ext.app.Application', 'Ext.Panel'], function() {
+describe("Ext.app.Controller", function() {
     var panelEventFired = false,
         customEventFired = false,
         Controller = Ext.app.Controller,
@@ -620,15 +618,13 @@ topSuite("Ext.app.Controller", ['Ext.app.Application', 'Ext.Panel'], function() 
                 controllers: ['Parent']
             });
             
-            var testApp = new TestController.Application();
+            new TestController.Application();
             
             expect(called1).toBeTruthy();
             // AND
             expect(called2).toBeTruthy();
             // AND
             expect(called3).toBeTruthy();
-
-            testApp.destroy();
         });
     });
 

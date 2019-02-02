@@ -17,7 +17,7 @@ Ext.define('Ext.util.Schedulable', {
         var me = this,
             scheduler = me.getScheduler();
 
-        if (scheduler && !scheduler.destroyed) {
+        if (scheduler) {
             scheduler.remove(me);
         }
 
@@ -71,8 +71,7 @@ Ext.define('Ext.util.Schedulable', {
 
             if (me.scheduled) {
                 scheduler = me.getScheduler();
-                
-                if (scheduler && !scheduler.destroyed) {
+                if (scheduler) {
                     scheduler.unscheduleItem(me);
                 }
 

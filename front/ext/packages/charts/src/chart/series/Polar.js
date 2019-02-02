@@ -4,31 +4,21 @@
  * @extends Ext.chart.series.Series
  *
  * Common base class for series implementations that plot values using polar coordinates.
- *
- * Polar charts accept angles in radians. You can calculate radians with the following
- * formula:
- *
- *      radians = degrees x Π/180
  */
 Ext.define('Ext.chart.series.Polar', {
 
     extend: 'Ext.chart.series.Series',
 
     config: {
-
         /**
          * @cfg {Number} [rotation=0]
-         * The angle in radians at which the first polar series item should start.
+         * The angle in degrees at which the first polar series item should start.
          */
         rotation: 0,
 
         /**
          * @cfg {Number} radius
-         * @private
-         * Use {@link Ext.chart.series.Pie#cfg!radiusFactor radiusFactor} instead.
-         *
-         * The internally used radius of the polar series. Set to `null` will fit the
-         * polar series to the boundary.
+         * The radius of the polar series. Set to `null` will fit the polar series to the boundary.
          */
         radius: null,
 
@@ -166,12 +156,11 @@ Ext.define('Ext.chart.series.Polar', {
     },
 
     applyRotation: function (rotation) {
-        return Ext.draw.sprite.AttributeParser.angle(Ext.draw.Draw.rad(rotation));
+        return Ext.draw.sprite.AttributeParser.angle(rotation);
     },
 
     updateRotation: function (rotation) {
         var sprites = this.getSprites();
-
         if (sprites && sprites[0]) {
             sprites[0].setAttributes({
                 baseRotation: rotation

@@ -106,11 +106,10 @@ Ext.define('Ext.sparkline.Base', {
     ],
 
     cachedConfig: {
+        baseCls: Ext.baseCSSPrefix + 'sparkline',
+
         /**
-         * @cfg {String} lineColor
-         * The hex value for line colors in graphs which
-         * display lines ({@link Ext.sparkline.Box Box},
-         * {@link Ext.sparkline.Discrete Discrete} and {@link Ext.sparkline.Line Line}).
+         * @cfg {String} [lineColor=#157fcc] The hex value for line colors in graphs which display lines ({@link Ext.sparkline.Box Box}, {@link Ext.sparkline.Discrete Discrete and {@link Ext.sparkline.Line Line}).
          */
         lineColor: '#157fcc',
 
@@ -123,47 +122,39 @@ Ext.define('Ext.sparkline.Base', {
         enableHighlight: true,
         
         /**
-         * @cfg {String} [highlightColor=null]
-         * The hex value for the highlight color to use when mouseing over a graph segment.
+         * @cfg {String} [highlightColor=null] The hex value for the highlight color to use when mouseing over a graph segment.
          */
         highlightColor: null,
         
         /**
-         * @cfg {Number} [highlightLighten]
-         * How much to lighten the highlight color by when mouseing over a graph segment.
+         * @cfg {Number} [highlightLighten] How much to lighten the highlight color by when mouseing over a graph segment.
          */
         highlightLighten: 0.1,
         
         /**
-         * @cfg {Boolean} [tooltipSkipNull=true]
-         * Null values will not have a tooltip displayed.
+         * @cfg {Boolean} [tooltipSkipNull=true] Null values will not have a tooltip displayed.
          */
         tooltipSkipNull: true,
         
         /**
-         * @cfg {String} [tooltipPrefix]
-         * A string to prepend to each field displayed in a tooltip.
+         * @cfg {String} [tooltipPrefix] A string to prepend to each field displayed in a tooltip.
          */
         tooltipPrefix: '',
         
         /**
-         * @cfg {String} [tooltipSuffix]
-         * A string to append to each field displayed in a tooltip.
+         * @cfg {String} [tooltipSuffix] A string to append to each field displayed in a tooltip.
          */
         tooltipSuffix: '',
         
         /**
-         * @cfg {Boolean} [disableTooltips=false]
-         * Set to `true` to disable mouseover tooltips.
+         * @cfg {Boolean} [disableTooltips=false] Set to `true` to disable mouseover tooltips.
          */
         disableTooltips: false,
         
         disableInteraction: false,
         
         /**
-         * @cfg {String/Ext.XTemplate} [tipTpl]
-         * An XTemplate used to display the value or values in a tooltip when hovering
-         * over a Sparkline.
+         * @cfg {String/Ext.XTemplate} [tipTpl] An XTemplate used to display the value or values in a tooltip when hovering over a Sparkline.
          *
          * The implemented subclases all define their own `tipTpl`, but it can be overridden.
          */
@@ -176,8 +167,6 @@ Ext.define('Ext.sparkline.Base', {
          */
         values: null
     },
-
-    baseCls: Ext.baseCSSPrefix + 'sparkline',
 
     element: {
         tag: 'canvas',
@@ -209,22 +198,29 @@ Ext.define('Ext.sparkline.Base', {
          * @static
          * @inheritable
          */
+        sparkLineTipClass: Ext.baseCSSPrefix + 'sparkline-tip-target',
+
+        /**
+         * @private
+         * @static
+         * @inheritable
+         */
         onClassCreated: function(cls) {
-            var configUpdater = cls.prototype.updateConfigChange,
+            var configApplier = cls.prototype.applyConfigChange,
                 proto = cls.prototype,
                 configs = cls.getConfigurator().configs,
                 config,
-                updaterName;
+                applierName;
 
             // Set up an applier for all local configs which kicks off a request to redraw on the next animation frame
             for (config in configs) {
                 // tipTpl not included in this scheme
                 if (config !== 'tipTpl') {
-                    updaterName = Ext.Config.get(config).names.update;
-                    if (proto[updaterName]) {
-                        proto[updaterName] = Ext.Function.createSequence(proto[updaterName], configUpdater);
+                    applierName = Ext.Config.get(config).names.apply;
+                    if (proto[applierName]) {
+                        proto[applierName] = Ext.Function.createSequence(proto[applierName], configApplier);
                     } else {
-                        proto[updaterName] = configUpdater;
+                        proto[applierName] = configApplier;
                     }
                 }
             }    
@@ -232,13 +228,16 @@ Ext.define('Ext.sparkline.Base', {
     },
 
     constructor: function(config) {
-        var me = this,
-            ns = Ext.sparkline;
+        var me = this;
 
         // The canvas sets our element config
-        me.canvas = Ext.supports.Canvas ? new ns.CanvasCanvas(me)
-                                        : new ns.VmlCanvas(me);
+        me.canvas = Ext.supports.Canvas ? new Ext.sparkline.CanvasCanvas(me)
+                                        : new Ext.sparkline.VmlCanvas(me);
+        if (!me.getDisableTooltips()) {
+            me.element.cls = Ext.sparkline.Base.sparkLineTipClass;
+        }
 
+        Ext.apply(me, config);
         me.callParent([config]);
     },
 
@@ -257,24 +256,16 @@ Ext.define('Ext.sparkline.Base', {
         return true;
     },
 
-    // generic config value updater.
-    // Redraws the graph, unless we are configured to buffer redraws
-    // in wehich case it adds this to the queue to do a redraw on the next animation frame.
-    updateConfigChange: function(newValue) {
+    // generic config value applier.
+    // Adds this to the queue to do a redraw on the next animation frame
+    applyConfigChange: function(newValue) {
         var me = this;
+        me.redrawQueue[me.getId()] = me;
 
-        // If we are buffering until animation frame, or we have not been sized, then
-        // queue a redraw flush.
-        if (me.bufferRedraw || !me.height || !me.width) {
-            me.redrawQueue[me.getId()] = me;
-
-            // Ensure that there is a single timer to handle all queued redraws.
-            if (!me.redrawTimer) {
-                Ext.sparkline.Base.prototype.redrawTimer =
-                        Ext.raf(me.processRedrawQueue);
-            }
-        } else {
-            me.redraw();
+        // Ensure that there is a single timer to handle all queued redraws.
+        if (!me.redrawTimer) {
+            Ext.sparkline.Base.prototype.redrawTimer =
+                    Ext.Function.requestAnimationFrame(me.processRedrawQueue);
         }
         return newValue;
     },
@@ -341,36 +332,24 @@ Ext.define('Ext.sparkline.Base', {
         me.height = height;
     },
 
-    setValues: function(values)  {
-        var me = this,
-            oldValues = me.getValues();
-
-        // the values config is expected to be an array
-        values = values == null ? [] : Ext.Array.from(values);
-        me.values = values;
-        me.callParent([values]);
-
-        // If it's physically the same Array object, we need to invoke the updater
-        // because though the array is the same, it may have been mutated,
-        // and the config system setter will reject the change and not invoke the updater.
-        // This is how the Stock Ticker example works. It shuffles values down
-        // a static array.
-        if (values === oldValues) {
-            me.updateValues([values, oldValues]);
+    applyValues: function(values, oldValues)  {
+        if (values && oldValues && Ext.Array.equals(values, oldValues)) {
+            values = undefined;
         }
+        return values;
+    },
+
+    updateValues: function(values) {
+        this.values = values;
     },
 
     redraw: function() {
         var me = this;
 
-        if (!me.destroyed) {
+        if (!me.destroyed && me.getValues()) {
+            me.onUpdate();
             me.canvas.onOwnerUpdate();
-            me.canvas.reset();
-
-            if (me.getValues()) {
-                me.onUpdate();
-                me.renderGraph();
-            }
+            me.renderGraph();
         }
     },
 
@@ -393,20 +372,13 @@ Ext.define('Ext.sparkline.Base', {
     },
 
     onMouseMove: function (e) {
-        var me = this;
-
-        // In IE/Edge, the mousemove event fires before mouseenter
-        // This is correct according to the spec
-        // https://www.w3.org/TR/uievents/#events-mouseevent-event-order
-        me.canvasRegion = me.canvasRegion || me.canvas.el.getRegion();
-        me.currentPageXY = e.getPoint();
-        me.redraw();
+        this.currentPageXY = e.getPoint();
+        this.redraw();
     },
 
     onMouseLeave: function () {
         var me = this;
-        // mouseleave is guaranteed to fire last, so clear region here
-        me.canvasRegion = me.currentPageXY = me.targetX = me.targetY = null;
+        me.currentPageXY = me.targetX = me.targetY = null;
         me.redraw();
         me.hideTip();
     },
@@ -414,28 +386,22 @@ Ext.define('Ext.sparkline.Base', {
     updateDisplay: function () {
         var me = this,
             values = me.getValues(),
-            tipHtml, region;
+            offset, tipHtml, region;
 
-        // To work out the position of currentPageXY within the canvas, we must account for the fact that
-        // while document Y values as represented in the currentPageXY are based from the top of
-        // the document, canvas Y values begin from the bottom of the canvas element.
-        if (values && values.length && me.currentPageXY && me.canvasRegion.contains(me.currentPageXY)) {
-            region = me.getRegion(me.currentPageXY[0] - me.canvasRegion.left, (me.canvasRegion.bottom - 1) - me.currentPageXY[1]);
+        if (values && values.length && me.currentPageXY && me.el.getRegion().contains(me.currentPageXY)) {
+            offset = me.canvas.el.getXY();
+            region = me.getRegion(me.currentPageXY[0] - offset[0], me.currentPageXY[1] - offset[1]);
 
             if (region != null && me.isValidRegion(region, values)) {
                 if (!me.disableHighlight) {
                     me.renderHighlight(region);
                 }
-                if (!me.getDisableTooltips()) {
-                    tipHtml = me.getRegionTooltip(region);
-                }
+                tipHtml = me.getRegionTooltip(region);
             }
-            if (me.hasListeners.sparklineregionchange) {
-                me.fireEvent('sparklineregionchange', me);
-            }
+            me.fireEvent('sparklineregionchange', me);
 
             if (tipHtml) {
-                me.getSharedTooltip().setHtml(tipHtml);
+                me.tooltip.setHtml(tipHtml);
                 me.showTip();
             }
         }
@@ -543,16 +509,9 @@ Ext.define('Ext.sparkline.Base', {
 }, function(SparklineBase) {
     var proto = SparklineBase.prototype;
 
-    proto.getSharedTooltip = function () {
-        var me = this,
-            tooltip = me.tooltip;
-
-        if (!tooltip) {
-            proto.tooltip = tooltip = SparklineBase.constructTip();
-        }
-
-        return tooltip;
-    };
+    Ext.onInternalReady(function() {
+        proto.tooltip = SparklineBase.constructTip();
+    });
 
     SparklineBase.onClassCreated(SparklineBase);
     
@@ -566,4 +525,33 @@ Ext.define('Ext.sparkline.Base', {
         proto.redrawQueue = {};
         proto.redrawTimer = 0;
     };
+
+    // If we are on a VML platform (IE8 - TODO: remove this when that retires)...
+    if (!Ext.supports.Canvas) {
+        SparklineBase.prototype.element = {
+            tag: 'span',
+            reference: 'element',
+            listeners: {
+                mouseenter: 'onMouseEnter',
+                mouseleave: 'onMouseLeave',
+                mousemove: 'onMouseMove'
+            },
+            style: {
+                display: 'inline-block',
+                position: 'relative',
+                overflow: 'hidden',
+                margin: '0px',
+                padding: '0px',
+                verticalAlign: 'top',
+                cursor: 'default'
+            },
+            children: [{
+                tag: 'svml:group',
+                reference: 'groupEl',
+                coordorigin: '0 0',
+                coordsize: '0 0',
+                style: 'position:absolute;width:0;height:0;pointer-events:none'
+            }]
+        };
+    }
 });

@@ -1,4 +1,4 @@
-topSuite("Ext.picker.Time", function() {
+describe("Ext.picker.Time", function() {
     var component, makeComponent;
 
     beforeEach(function() {

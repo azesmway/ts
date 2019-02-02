@@ -1,4 +1,4 @@
-topSuite("Ext.Img", function() {
+describe("Ext.Img", function() {
     var senchaPng = '../../../../test/local/sencha.png',
         img, defaultFamily;
 

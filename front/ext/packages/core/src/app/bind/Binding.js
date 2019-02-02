@@ -22,9 +22,10 @@ Ext.define('Ext.app.bind.Binding', {
         me.stub = stub;
         me.depth = stub.depth;
 
-        // We need to announce the current value, so if the stub is available
+        // We need to announce the current value, so if the stub is not loading (which
         // will generate its own announcement to all bindings) then we need to schedule
-        if (stub.isAvailable() && !stub.scheduled) {
+        // ourselves.
+        if (!stub.isLoading() && !stub.scheduled) {
             me.schedule();
         }
     },
@@ -32,10 +33,9 @@ Ext.define('Ext.app.bind.Binding', {
     /**
      * Destroys this binding. No further calls will be made to the callback method. No
      * methods should be called on this binding after calling this method.
-     * @param {Boolean} [fromParent] (private)
      * @since 5.0.0
      */
-    destroy: function (fromParent) {
+    destroy: function (/* private */ fromParent) {
         var me = this,
             stub = me.stub;
 
@@ -101,8 +101,8 @@ Ext.define('Ext.app.bind.Binding', {
     },
 
     /**
-     * Returns the current value of the bound property. If this binding is not 
-     * {@link #isAvailable available} the value will be `undefined`.
+     * Returns the current value of the bound property. If this binding `isLoading` this
+     * value will be `undefined`.
      * @return {Mixed} The value of the bound property.
      * @since 5.0.0
      */
@@ -111,18 +111,6 @@ Ext.define('Ext.app.bind.Binding', {
             stub = me.stub;
 
         return stub && stub.getValue();
-    },
-
-    /**
-     * Returns `true` if the bound property is available. If this returns `false`, 
-     * it generally means the value is not reachable because the a parent value is
-     * not present.
-     * @return {Boolean}
-     * @since 5.1.2
-     */
-    isAvailable: function() {
-        var stub = this.stub;
-        return stub && stub.isAvailable();
     },
 
     /**
@@ -173,9 +161,7 @@ Ext.define('Ext.app.bind.Binding', {
 
     /**
      * Sets the value of the bound property. This will throw an error in debug mode if
-     * this binding `isReadOnly`. This method will climb to set data on
-     * a parent view model of this binding if appropriate. See "Inheriting Data" in the {@link Ext.app.ViewModel}
-     * class introduction for more information.
+     * this binding `isReadOnly`.
      * @param {Mixed} value The new value.
      * @since 5.0.0
      */

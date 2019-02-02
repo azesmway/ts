@@ -1,4 +1,4 @@
-topSuite("Ext.form.action.Load", function() {
+describe("Ext.form.action.Load", function() {
 
     var action;
 

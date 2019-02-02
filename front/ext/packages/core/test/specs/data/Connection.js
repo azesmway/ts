@@ -1,6 +1,4 @@
-/* global Ext, jasmine, expect, MockAjaxManager, spyOn, MockAjax */
-
-topSuite("Ext.data.Connection", ['Ext.JSON'], function() {
+describe("Ext.data.Connection", function() {
     var originalExtAsap,
         makeConnection, connection, request;
         
@@ -10,22 +8,23 @@ topSuite("Ext.data.Connection", ['Ext.JSON'], function() {
             cfg = cfg || {};
             connection = new Ext.data.Connection(cfg);
         };
-
-        originalExtAsap = Ext.asap; // Synchronous callbacks are so much easier to test
+        
+        // Synchronous callbacks are so much easier to test
+        originalExtAsap = Ext.asap;
+        
         Ext.asap = function(fn, scope, parameters) {
             if (scope != null || parameters != null) {
                 fn = Ext.Function.bind(fn, scope, parameters);
             }
             
             fn();
-        };
+        }
     }); 
 
     afterEach(function() {
         Ext.asap = originalExtAsap;
-        MockAjaxManager.removeMethods();   
-        connection.abortAll();
-        request = connection = makeConnection = null;
+        MockAjaxManager.removeMethods();    
+        request = connection = makeConnection = originalExtAsap = null;
     });
 
     describe("beforerequest", function(){
@@ -73,9 +72,7 @@ topSuite("Ext.data.Connection", ['Ext.JSON'], function() {
             });
 
             connection.request(options);
-            expect(o.fn).toHaveBeenCalledWith(options, false, {
-                status: -1, statusText: 'Request cancelled in beforerequest event handler'
-            });
+            expect(o.fn).toHaveBeenCalledWith(options, undefined, undefined);
             expect(scope).toEqual(o);
         });
     });
@@ -1926,7 +1923,7 @@ topSuite("Ext.data.Connection", ['Ext.JSON'], function() {
             want: {
                 status: 400,
                 statusText: "Could not acquire a suitable connection for the file upload service.",
-                responseText: '{"success":false, "message":"Could not acquire a suitable connection for the file upload service."}'
+                responseText: '{success:false,message:"Could not acquire a suitable connection for the file upload service."}'
             }
         });
         
@@ -1936,7 +1933,7 @@ topSuite("Ext.data.Connection", ['Ext.JSON'], function() {
                 aborted: true,
                 status: -1,
                 statusText: "transaction aborted",
-                responseText: '{"success":false, "message":"transaction aborted"}'
+                responseText: '{success:false,message:"transaction aborted"}'
             },
             failFn: function(request) {
                 request.abort();
@@ -1952,7 +1949,7 @@ topSuite("Ext.data.Connection", ['Ext.JSON'], function() {
                 timedout: true,
                 status: 0,
                 statusText: "communication failure",
-                responseText: '{"success":false, "message":"communication failure"}'
+                responseText: '{success:false,message:"communication failure"}'
             },
             failFn: Ext.emptyFn
         });
@@ -1962,35 +1959,18 @@ topSuite("Ext.data.Connection", ['Ext.JSON'], function() {
         var request, resolveSpy, rejectSpy;
         
         function mockRequest(options, complete, status) {
-            var request = makeRequest(options);
-
-            attachSpies();
+            options = Ext.applyIf(options || {}, {
+                url: 'foo'
+            });
+            
+            request = connection.request(options);
+            request.then(resolveSpy, rejectSpy);
             
             if (complete) {
                 connection.mockComplete({
                     status: status || 200
                 });
-            }
-        }
-
-        function makeRequest(options) {
-            options = Ext.applyIf(options || {}, {
-                url: 'foo'
-            });
-
-            request = connection.request(options);
-            
-            return request;
-        }
-
-        function complete(status) {
-            connection.mockComplete({
-                status: status || 200
-            });
-        }
-
-        function attachSpies(qq) {
-            request.then(resolveSpy, rejectSpy);
+            };
         }
         
         beforeEach(function() {
@@ -2009,39 +1989,26 @@ topSuite("Ext.data.Connection", ['Ext.JSON'], function() {
         });
         
         describe("success", function() {
-            function makeSuite(name, beforeFn) {
-                describe(name, function() {
-                    beforeEach(function() {
-                        runs(function() {
-                            beforeFn();
-                        });
-                        waitsForSpy(resolveSpy, 'promise to resolve', 1000);
-                    });
-
-                    it("should resolve promise", function() {
-                        expect(resolveSpy).toHaveBeenCalled();
-                    });
-                    
-                    it("should not reject promise", function() {
-                        expect(rejectSpy).not.toHaveBeenCalled();
-                    });
-                    
-                    it("should pass result to the resolve callback", function() {
-                        var args = resolveSpy.mostRecentCall.args[0];
-                        
-                        expect(args.status).toBe(200);
-                    });
+            beforeEach(function() {
+                runs(function() {
+                    mockRequest({}, true);
                 });
-            }
-
-            makeSuite("then called before request completes", function() {
-                mockRequest({}, true);
+                
+                waitsForSpy(resolveSpy, 'promise to resolve', 1000);
             });
-
-            makeSuite("then called after request completes", function() {
-                makeRequest({});
-                complete();
-                attachSpies(true);
+            
+            it("should resolve promise", function() {
+                expect(resolveSpy).toHaveBeenCalled();
+            });
+            
+            it("should not reject promise", function() {
+                expect(rejectSpy).not.toHaveBeenCalled();
+            });
+            
+            it("should pass result to the resolve callback", function() {
+                var args = resolveSpy.mostRecentCall.args[0];
+                
+                expect(args.status).toBe(200);
             });
         });
         
@@ -2073,122 +2040,80 @@ topSuite("Ext.data.Connection", ['Ext.JSON'], function() {
             it("should pass options to the reject callback", function() {
                 var args = rejectSpy.mostRecentCall.args[0];
                 
-                expect(args).toEqual([options, false, {
-                    status: -1, statusText: 'Request cancelled in beforerequest event handler'
-                }]);
+                expect(args).toEqual([options, undefined, undefined]);
             });
         });
         
         describe("timeout", function() {
-            function makeSuite(name, beforeFn) {
-                describe(name, function() {
-                    beforeEach(function() {
-                        beforeFn();
-                    });
-
-                    it("should reject promise", function() {
-                        expect(rejectSpy).toHaveBeenCalled();
-                    });
-                    
-                    it("should not resolve promise", function() {
-                        expect(resolveSpy).not.toHaveBeenCalled();
-                    });
-                    
-                    it("should pass result to the reject callback", function() {
-                        var args = rejectSpy.mostRecentCall.args[0];
-                        
-                        expect(args.timedout).toBe(true);
-                    });
+            beforeEach(function() {
+                runs(function() {
+                    mockRequest({ timeout: 1 });
                 });
-            }
-
-            makeSuite("then called before timeout", function() {
-                mockRequest({ timeout: 1 });
+                
                 waitsForSpy(rejectSpy, 'promise to be rejected', 1000);
             });
-
-            makeSuite("then called after timeout", function() {
-                makeRequest({ timeout: 1 });
-                waits(50);
-                runs(function() {
-                    attachSpies();
-                });
-                waitsForSpy(rejectSpy, 'promise to be rejected', 1000);
+            
+            it("should reject promise", function() {
+                expect(rejectSpy).toHaveBeenCalled();
+            });
+            
+            it("should not resolve promise", function() {
+                expect(resolveSpy).not.toHaveBeenCalled();
+            });
+            
+            it("should pass result to the reject callback", function() {
+                var args = rejectSpy.mostRecentCall.args[0];
+                
+                expect(args.timedout).toBe(true);
             });
         });
         
         describe("abort", function() {
-            function makeSuite(name, beforeFn) {
-                describe(name, function() {
-                    beforeEach(function() {
-                        runs(function() {
-                            beforeFn(); 
-                        });
-                        waitsForSpy(rejectSpy, 'promise to be rejected', 1000);
-                    });
-
-                    it("should reject promise", function() {
-                        expect(rejectSpy).toHaveBeenCalled();
-                    });
-                    
-                    it("should not resolve promise", function() {
-                        expect(resolveSpy).not.toHaveBeenCalled();
-                    });
-                    
-                    it("should pass result to the reject callback", function() {
-                        var args = rejectSpy.mostRecentCall.args[0];
-                        
-                        expect(args.aborted).toBe(true);
-                    });
+            beforeEach(function() {
+                runs(function() {
+                    mockRequest({ timeout: 1000 });
+                    request.abort();
                 });
-            }
-
-            makeSuite("then called before abort", function() {
-                mockRequest({ timeout: 1000 });
-                request.abort();
+                
+                waitsForSpy(rejectSpy, 'promise to be rejected', 1000);
             });
-
-            makeSuite("then called after abort", function() {
-                makeRequest({ timeout: 1000 });
-                request.abort();
-                attachSpies();
+            
+            it("should reject promise", function() {
+                expect(rejectSpy).toHaveBeenCalled();
+            });
+            
+            it("should not resolve promise", function() {
+                expect(resolveSpy).not.toHaveBeenCalled();
+            });
+            
+            it("should pass result to the reject callback", function() {
+                var args = rejectSpy.mostRecentCall.args[0];
+                
+                expect(args.aborted).toBe(true);
             });
         });
         
         describe("failure", function() {
-            function makeSuite(name, beforeFn) {
-                describe(name, function() {
-                    beforeEach(function() {
-                        runs(function() {
-                            beforeFn();
-                        });
-                        waitsForSpy(rejectSpy, 'promise to be rejected', 1000);
-                    });
-
-                    it("should reject promise", function() {
-                        expect(rejectSpy).toHaveBeenCalled();
-                    });
-                
-                    it("should not resolve promise", function() {
-                        expect(resolveSpy).not.toHaveBeenCalled();
-                    });
-                
-                    it("should pass result to the reject callback", function() {
-                        var args = rejectSpy.mostRecentCall.args[0];
-                    
-                        expect(args.status).toBe(404);
-                    });
+            beforeEach(function() {
+                runs(function() {
+                    mockRequest({ timeout: 1000 }, true, 404);
                 });
-            }
-
-            makeSuite("then called before failure", function() {
-                mockRequest({}, true, 404);
+                
+                waitsForSpy(rejectSpy, 'promise to be rejected', 1000);
             });
-
-            makeSuite("then called after failure", function() {
-                makeRequest({});
-                complete(404);
-                attachSpies();
+            
+            it("should reject promise", function() {
+                expect(rejectSpy).toHaveBeenCalled();
+            });
+            
+            it("should not resolve promise", function() {
+                expect(resolveSpy).not.toHaveBeenCalled();
+            });
+            
+            it("should pass result to the reject callback", function() {
+                var args = rejectSpy.mostRecentCall.args[0];
+                
+                expect(args.status).toBe(404);
             });
         });
     });

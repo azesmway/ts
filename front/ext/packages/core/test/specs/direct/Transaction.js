@@ -1,4 +1,4 @@
-topSuite("Ext.direct.Transaction", ['Ext.direct.*'], function() {
+describe("Ext.direct.Transaction", function() {
     var transaction, provider;
     
     beforeEach(function() {

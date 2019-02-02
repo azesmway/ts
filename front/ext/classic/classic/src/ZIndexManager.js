@@ -27,8 +27,6 @@ Ext.define('Ext.ZIndexManager', {
         zBase : 9000,
         activeCounter: 0
     },
-    
-    reflowSuspended: 0,
 
     /**
      * @private
@@ -138,19 +136,24 @@ Ext.define('Ext.ZIndexManager', {
         return this.onCollectionSort();
     },
 
+    /**
+     * @private
+     * Called whenever the zIndexStack is sorted.
+     * That happens in reaction to the activeCounter time being set, or the alwaysOnTop config being set.
+     */
     onCollectionSort: function() {
         var me = this,
             oldFront = me.front,
             zIndex = me.zseed,
             a = me.zIndexStack.getRange(),
             len = a.length,
-            i, comp, topModal, topFocusable, topMost,
+            i, comp, topModal, topVisible,
             doFocus = !oldFront || oldFront.isVisible();
 
         me.sortCount++;
         for (i = 0; i < len; i++) {
             comp = a[i];
-
+            
             if (comp.destroying || comp.destroyed) {
                 continue;
             }
@@ -165,38 +168,45 @@ Ext.define('Ext.ZIndexManager', {
             zIndex = comp.setZIndex(zIndex);
 
             // Only register a new topmost to activate if we find one that is visible
-            // Unfiltered panels with hidden:true can end up here during an animated hide process
+            // Unfiltered panels with hidden:"true can end up here during an animated hide process
             // When the hidden flag is set, and the ghost show operation kicks the ZIndexManager's sort.
             if (!comp.hidden) {
-                topMost = comp;
+                topVisible = comp;
 
                 // Track topmost visible modal so we can place the modal mask just below it.
-                // Any prior focusable ones just became not focusable - they'll be below our mask.
                 if (comp.modal) {
                     topModal = comp;
-                    topFocusable = null;
-                }
-
-                // Track topmost focusable floater which is above all modals.
-                // Unfocusable things like tooltips and toasts may be above it
-                // but they do not matter, the topmost *focusable* must be focused.
-                if (doFocus && (comp.isFocusable(true) &&
-                        (comp.modal || comp.focusOnToFront))) {
-                    topFocusable = comp;
                 }
             }
         }
 
-        // Sort resulted in a different topmost focusable.
-        if (topFocusable && topFocusable !== oldFront && !topFocusable.preventFocusOnActivate) {
-            topFocusable.onFocusTopmost();
+        // Sort resulted in a different component (possibly no component) at the top of the stack
+        if (topVisible !== oldFront) {
+
+            // Clear active flag on old front component. Just fires the deactivate event/
+            // Do not inform it, if the reason for its deactivation is that it's being destroyed.
+            if (oldFront && !oldFront.destroying) {
+                oldFront.setActive(false);
+            }
+
+            // Only activate topmost *visible* component.
+            // Only focus it if the previous topmost contained focus.
+            if (topVisible) {
+                // If the topVisible is focusable, then focus it if either it is modal, OR, it is configured to focusOnToFront
+                doFocus = doFocus && (topVisible.isFocusable(true) &&
+                         (topVisible.modal || (topVisible.focusOnToFront && !topVisible.preventFocusOnActivate)));
+                topVisible.setActive(true, doFocus);
+            }
         }
+
+        // Cache the top of the stack
+        me.front = topVisible || null;
 
         // If we encountered a modal in our reassigment, ensure our modal mask is just below it.
         if (topModal) {
             // If it's the same topmost, then just ensure the
             // correct z-index and size of mask.
-            if (topModal === me.topModal) {
+            if (topModal === oldFront) {
                 me.syncModalMask(topModal);
             }
             // If it's a new top, we must re-show the mask because of tabbability resets.
@@ -206,29 +216,6 @@ Ext.define('Ext.ZIndexManager', {
         } else {
             me.hideModalMask();
         }
-
-        // Inform components of change in to of stack.
-        if (topMost !== me.topMost) {
-            if (me.topMost) {
-                // This one has been bumped from top.
-                me.topMost.onZIndexChange(false);
-            }
-            if (topMost) {
-                // This one is now at the top.
-                topMost.onZIndexChange(true);
-            }
-        }
-
-        // Cache the top of the stack
-        me.front = topFocusable;
-        me.topModal = topModal;
-        me.topMost = topMost;
-    
-        // Ensure the top-most component is the front
-        if (!me.front && me.topMost) {
-            me.front = me.topMost;
-        }
-
         return zIndex;
     },
 
@@ -240,25 +227,13 @@ Ext.define('Ext.ZIndexManager', {
      * eg {@link Ext.Component#alwaysOnTop alwaysOnTop} or {@link Ext.Component#activeCounter activeCounter}
      */
     onComponentUpdate: function(comp) {
-        if (!this.reflowSuspended && this.zIndexStack.contains(comp)) {
+        if (this.zIndexStack.contains(comp)) {
             this.zIndexStack.sort();
-        }
-    },
-    
-    suspendReflow: function() {
-        this.reflowSuspended++;
-    },
-
-    resumeReflow: function (flush) {
-        if (this.reflowSuspended && ! --this.reflowSuspended) {
-            if (flush) {
-                this.zIndexStack.sort();
-            }
         }
     },
 
     onAfterComponentRender: function(comp) {
-        if (!this.reflowSuspended && comp.isVisible() && comp.toFrontOnShow) {
+        if (comp.isVisible() && comp.toFrontOnShow) {
             this.zIndexStack.itemChanged(comp, 'hidden');
             this.zIndexStack.sort();
         }
@@ -297,7 +272,7 @@ Ext.define('Ext.ZIndexManager', {
             // We must update the frontmost according to the new stack order
             // even if there has been no sort (Collection will not autosort if only one member)
             zIndexStack.endUpdate();
-            if (me.sortCount === sortCount && !me.reflowSuspended) {
+            if (me.sortCount === sortCount) {
                 me.onCollectionSort();
             }
         }
@@ -586,7 +561,7 @@ Ext.define('Ext.ZIndexManager', {
                 // If we're masking the body, subtract the border/padding so we don't cause scrollbar.
                 return {
                     height: Math.max(document.body.scrollHeight, Ext.dom.Element.getDocumentHeight()),
-                    width: Math.max(document.body.scrollWidth, Ext.dom.Element.getDocumentWidth()),
+                    width: Math.max(document.body.scrollWidth, document.documentElement.clientWidth),
                     x: 0,
                     y: 0
                 };
@@ -601,7 +576,7 @@ Ext.define('Ext.ZIndexManager', {
             // Responsive will request animation frame on browser window resize event,
             // we do likewise here to minimize flicker.
             if (!this.containerResizeTimer) {
-                this.containerResizeTimer = Ext.raf(this.onContainerResize, this);
+                this.containerResizeTimer = Ext.Function.requestAnimationFrame(this.onContainerResize, this);
             }
         },
 
@@ -634,14 +609,14 @@ Ext.define('Ext.ZIndexManager', {
 
         onMaskMousedown: function(e) {
             // Focus frontmost modal, do not allow mousedown to focus mask.
-            if (this.topModal) {
-                this.topModal.focus();
+            if (this.front) {
+                this.front.focus();
                 e.preventDefault();
             }
         },
 
         onMaskClick: function() {
-            var front = this.topModal,
+            var front = this.front,
                 methodName;
 
             if (front) {

@@ -29,12 +29,14 @@
  *         }]
  *     }).showAt([5, 5]);
  */
-Ext.define('Ext.menu.ColorPicker', {
-    extend: 'Ext.menu.Menu',
-    alias: 'widget.colormenu',
-    requires: [
+ Ext.define('Ext.menu.ColorPicker', {
+     extend: 'Ext.menu.Menu',
+
+     alias: 'widget.colormenu',
+
+     requires: [
         'Ext.picker.Color'
-    ],
+     ],
 
     /**
      * @cfg {Boolean} hideOnClick
@@ -65,32 +67,23 @@ Ext.define('Ext.menu.ColorPicker', {
 
     initComponent : function(){
         var me = this,
-            cfg = Ext.apply({}, me.initialConfig),
-            pickerConfig;
+            cfg = Ext.apply({}, me.initialConfig);
 
         // Ensure we don't get duplicate listeners
         delete cfg.listeners;
-
-        pickerConfig = Ext.applyIf({
-            cls: Ext.baseCSSPrefix + 'menu-color-item',
-            margin: 0,
-            id: me.pickerId,
-            xtype: 'colorpicker'
-        }, cfg);
-
-        // This is a Menu and it will have an ownerCmp pointing to its owning MenuItem.
-        // This MUST not be propagated down into the picker. The picker's getRefOwner
-        // must follow the ownerCt and find this Menu.
-        delete pickerConfig.ownerCmp;
-
         Ext.apply(me, {
             plain: true,
             showSeparator: false,
             bodyPadding: 0,
-            items: [pickerConfig]
+            items: Ext.applyIf({
+                cls: Ext.baseCSSPrefix + 'menu-color-item',
+                margin: 0,
+                id: me.pickerId,
+                xtype: 'colorpicker'
+            }, cfg)
         });
 
-        me.callParent();
+        me.callParent(arguments);
 
         me.picker = me.down('colorpicker');
 
@@ -112,4 +105,4 @@ Ext.define('Ext.menu.ColorPicker', {
     hidePickerOnSelect: function() {
         Ext.menu.Manager.hideAll();
     }
-});
+ });

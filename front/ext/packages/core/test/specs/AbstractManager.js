@@ -1,4 +1,5 @@
-topSuite("Ext.AbstractManager", ["Ext.util.Filter"], function() {
+describe("AbstractManager", function(){
+    
     var manager;
     
     beforeEach(function(){

@@ -1,8 +1,4 @@
-/* global Ext, expect, jasmine */
-
-topSuite("Ext.resizer.Splitter",
-    ['Ext.Panel', 'Ext.layout.container.Border'],
-function() {
+describe("Ext.resizer.Splitter", function () {
     var splitter, c;
 
     function makeContainer(splitterCfg) {
@@ -116,7 +112,7 @@ function() {
                     width: 200,
                     region: 'west',
                     split: true,
-                    collapsible: true
+                    collapsible: true,
                 }, iframe]
             });
             splitter = c.down('splitter');
@@ -147,7 +143,6 @@ function() {
             c.down('panel').collapse();
             jasmine.fireMouseEvent(splitter, 'mousedown');
             expect(Ext.fly(iframe.el.dom.parentNode).isMasked()).toBe(false);
-            jasmine.fireMouseEvent(splitter, 'mouseup');
         });
     });
 

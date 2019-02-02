@@ -44,10 +44,10 @@ Ext.define('Ext.Decorator', {
     isDecorator: true,
 
     config: {
-        // @cmd-auto-dependency { aliasPrefix: 'widget.', typeProperty: 'xtype' }
         /**
          * @cfg {Object} component
          * The config object to factory the Component that this Decorator wraps around.
+         * @cmd-auto-dependency { aliasPrefix: 'widget.', typeProperty: 'xtype' }
          */
         component: {
             xtype: 'component'
@@ -114,10 +114,7 @@ Ext.define('Ext.Decorator', {
      * @private
      */
     applyComponent: function(config) {
-        var result = Ext.factory(config);
-        
-        result.ownerCmp = this;
-        return result;
+        return Ext.factory(config);
     },
 
     /**
@@ -127,8 +124,7 @@ Ext.define('Ext.Decorator', {
         var me = this;
 
         if (oldComponent) {
-            if (me.isRendered() && oldComponent.rendered) {
-                oldComponent.setRendered(false);
+            if (me.isRendered() && oldComponent.setRendered(false)) {
                 oldComponent.fireEventedAction('renderedchange', [me, oldComponent, false],
                     me.doUnsetComponent, me, false);
             } else {
@@ -137,7 +133,7 @@ Ext.define('Ext.Decorator', {
         }
 
         if (newComponent) {
-            if (me.isRendered() && !newComponent.rendered) {
+            if (me.isRendered() && newComponent.setRendered(true)) {
                 newComponent.fireEventedAction('renderedchange', [me, newComponent, true],
                     me.doSetComponent, me, false);
             } else {
@@ -152,7 +148,8 @@ Ext.define('Ext.Decorator', {
     doUnsetComponent: function(component) {
         var dom = component.renderElement.dom;
         if (dom) {
-            this.bodyElement.dom.removeChild(dom);
+            component.setLayoutSizeFlags(0);
+            this.innerElement.dom.removeChild(dom);
         }
     },
 
@@ -161,34 +158,42 @@ Ext.define('Ext.Decorator', {
      */
     doSetComponent: function(component) {
         var dom = component.renderElement.dom;
-
         if (dom) {
-            this.bodyElement.dom.appendChild(dom);
-
-            if (this.rendered) {
-                component.setRendered(true);
-            }
+            component.setLayoutSizeFlags(this.getSizeFlags());
+            this.innerElement.dom.appendChild(dom);
         }
     },
 
     /**
      * @private
      */
-    setDisabled: function(disabled) {
+    setRendered: function(rendered) {
         var component;
-        
+
+        if (this.callParent(arguments)) {
+            component = this.getComponent();
+
+            if (component) {
+                component.setRendered(rendered);
+            }
+
+            return true;
+        }
+
+        return false;
+    },
+
+    /**
+     * @private
+     */
+    setDisabled: function(disabled) {
         // @noOptimize.callParent
         this.callParent(arguments);
-        
         // sencha cmd cannot tell that our superclass does indeed have a setDisabled
         // method because it is an auto-generated config setter, so it complains that
         // callParent has no target unless we tell it not to, hence the noOptimize comment
         // above.
-        component = this.getComponent();
-        
-        if (component) {
-            component.setDisabled(disabled);
-        }
+        this.getComponent().setDisabled(disabled);
     },
 
     doDestroy: function() {

@@ -1,6 +1,4 @@
-/* global expect, jasmine, Ext */
-
-topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
+describe("Ext.drag.Info", function() {
     var helper = Ext.testHelper,
         touchId = 0,
         cursorTrack, source, target,
@@ -339,13 +337,13 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
             var spy = jasmine.createSpy();
 
             makeDragEl();
-            var child = Ext.fly(dragEl.createChild({
+            var child = dragEl.createChild({
                 width: '20px',
                 height: '20px',
                 left: '40px',
                 top: '40px',
                 position: 'absolute'
-            }, null, true));
+            });
             makeSource();
             source.on('dragmove', spy);
             var center = getCenter(child);
@@ -359,23 +357,23 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
     });
 
     describe("data", function() {
-        var dropSpy;
+        var spy;
 
         beforeEach(function() {
-            dropSpy = jasmine.createSpy();
+            spy = jasmine.createSpy();
             makeTarget();
-            target.on('drop', dropSpy);
+            target.on('drop', spy);
         });
 
         afterEach(function() {
-            dropSpy = null;
+            spy = null;
         });
 
         function expectPromiseValue(key, v) {
             var promiseSpy = jasmine.createSpy();
 
             runs(function() {
-                var info = dropSpy.mostRecentCall.args[1];
+                var info = spy.mostRecentCall.args[1];
                 info.getData(key).then(promiseSpy);
             });
             waitsFor(function() {
@@ -398,8 +396,6 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
 
             startDrag();
             moveBy(10, 10);
-            endDrag();
-            
             runs(function() {
                 expect(describeSpy.callCount).toBe(1);
                 expect(describeSpy.mostRecentCall.args[0]).toBe(dragSpy.mostRecentCall.args[1]);
@@ -430,11 +426,11 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                         info.setData('foo', 1);
                     }
                 });
-                source.on('dragmove', dropSpy);
+                source.on('dragmove', spy);
                 startDrag(50, 50);
                 moveBy(50, 50);
                 runs(function() {
-                    var info = dropSpy.mostRecentCall.args[1];
+                    var info = spy.mostRecentCall.args[1];
                     expect(function() {
                         info.getData('foo');
                     }).toThrow();
@@ -452,12 +448,7 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                 startDrag();
                 moveBy(50, 50);
                 endDrag();
-
-                waitsForSpy(dropSpy);
-                
-                runs(function() {
-                    expectPromiseValue('bar', '');
-                });
+                expectPromiseValue('bar', '');
             });
 
             describe("with static data", function() {
@@ -471,12 +462,7 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                     startDrag();
                     moveBy(50, 50);
                     endDrag();
-
-                    waitsForSpy(dropSpy);
-
-                    runs(function() {
-                        expectPromiseValue('foo', 1);
-                    });
+                    expectPromiseValue('foo', 1);
                 });
 
                 it("should be able to retrieve data from multiple types", function() {
@@ -490,13 +476,8 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                     startDrag();
                     moveBy(50, 50);
                     endDrag();
-
-                    waitsForSpy(dropSpy);
-
-                    runs(function() {
-                        expectPromiseValue('foo', 1);
-                        expectPromiseValue('bar', 2);
-                    });
+                    expectPromiseValue('foo', 1);
+                    expectPromiseValue('bar', 2);
                 });
 
                 it("should return complex data", function() {
@@ -511,12 +492,7 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                     startDrag();
                     moveBy(50, 50);
                     endDrag();
-
-                    waitsForSpy(dropSpy);
-
-                    runs(function() {
-                        expectPromiseValue('foo', o);
-                    });
+                    expectPromiseValue('foo', o);
                 });
             });
 
@@ -533,16 +509,13 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                     startDrag();
                     moveBy(50, 50);
                     endDrag();
-
-                    waitsForSpy(dropSpy);
-
                     runs(function() {
-                        var info = dropSpy.mostRecentCall.args[1];
+                        var info = spy.mostRecentCall.args[1];
                         info.getData('foo');
                         expect(dataSpy.callCount).toBe(1);
                         expect(dataSpy.mostRecentCall.object).toBe(source);
                         // The info from the drop spy
-                        expect(dataSpy.mostRecentCall.args[0]).toBe(dropSpy.mostRecentCall.args[1]); 
+                        expect(dataSpy.mostRecentCall.args[0]).toBe(spy.mostRecentCall.args[1]); 
                     });
                 });
 
@@ -558,11 +531,8 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                     startDrag();
                     moveBy(50, 50);
                     endDrag();
-
-                    waitsForSpy(dropSpy);
-
                     runs(function() {
-                        var info = dropSpy.mostRecentCall.args[1];
+                        var info = spy.mostRecentCall.args[1];
                         info.getData('foo');
                         info.getData('foo');
                         info.getData('foo');
@@ -583,12 +553,7 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                     startDrag();
                     moveBy(50, 50);
                     endDrag();
-
-                    waitsForSpy(dropSpy);
-
-                    runs(function() {
-                        expectPromiseValue('foo', 2);
-                    });
+                    expectPromiseValue('foo', 2);
                 });
 
                 it("should be able to retrieve data from multiple types", function() {
@@ -606,13 +571,8 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                     startDrag();
                     moveBy(50, 50);
                     endDrag();
-
-                    waitsForSpy(dropSpy);
-
-                    runs(function() {
-                        expectPromiseValue('foo', 1);
-                        expectPromiseValue('bar', 2);
-                    });
+                    expectPromiseValue('foo', 1);
+                    expectPromiseValue('bar', 2);
                 });
 
                 it("should return complex data", function() {
@@ -629,12 +589,7 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                     startDrag();
                     moveBy(50, 50);
                     endDrag();
-
-                    waitsForSpy(dropSpy);
-
-                    runs(function() {
-                        expectPromiseValue('foo', o);
-                    });
+                    expectPromiseValue('foo', o);
                 });
             });
         });
@@ -669,12 +624,7 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                 startDrag();
                 moveBy(50, 50);
                 endDrag();
-
-                waitsForSpy(dropSpy);
-                
-                runs(function() {
-                    expectPromiseValue('type1', '');
-                });
+                expectPromiseValue('type1', '');
             });
         });
     });
@@ -889,7 +839,7 @@ topSuite("Ext.drag.Info", ['Ext.drag.*', 'Ext.dom.Element'], function() {
                     moveBy(-20, -20);
                     runsExpectProxy([50, 50], [65, 65], [15, 15]);
                     endDrag();
-                });
+                })
             });
         });
 

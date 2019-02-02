@@ -150,77 +150,86 @@ Ext.define('Ext.toolbar.Paging', {
      */
     prependButtons: false,
 
+    //<locale>
     /**
      * @cfg {String} displayMsg
      * The paging status message to display. Note that this string is
      * formatted using the braced numbers {0}-{2} as tokens that are replaced by the values for start, end and total
      * respectively. These tokens should be preserved when overriding this string if showing those values is desired.
-     * @locale
      */
-    displayMsg: 'Displaying {0} - {1} of {2}',
+    displayMsg : 'Displaying {0} - {1} of {2}',
+    //</locale>
 
+    //<locale>
     /**
      * @cfg {String} emptyMsg
      * The message to display when no records are found.
-     * @locale
      */
-    emptyMsg: 'No data to display',
+    emptyMsg : 'No data to display',
+    //</locale>
 
+    //<locale>
     /**
      * @cfg {String} beforePageText
      * The text displayed before the input item.
-     * @locale
      */
-    beforePageText: 'Page',
+    beforePageText : 'Page',
+    //</locale>
 
+    //<locale>
     /**
      * @cfg {String} afterPageText
      * Customizable piece of the default paging text. Note that this string is formatted using
      * {0} as a token that is replaced by the number of total pages. This token should be preserved when overriding this
      * string if showing the total page count is desired.
-     * @locale
      */
-    afterPageText: 'of {0}',
+    afterPageText : 'of {0}',
+    //</locale>
 
+    //<locale>
     /**
      * @cfg {String} firstText
      * The quicktip text displayed for the first page button.
      * **Note**: quick tips must be initialized for the quicktip to show.
-     * @locale
      */
-    firstText: 'First Page',
+    firstText : 'First Page',
+    //</locale>
 
+    //<locale>
     /**
      * @cfg {String} prevText
      * The quicktip text displayed for the previous page button.
      * **Note**: quick tips must be initialized for the quicktip to show.
-     * @locale
      */
-    prevText: 'Previous Page',
+    prevText : 'Previous Page',
+    //</locale>
 
+    //<locale>
     /**
      * @cfg {String} nextText
      * The quicktip text displayed for the next page button.
      * **Note**: quick tips must be initialized for the quicktip to show.
-     * @locale
      */
-    nextText: 'Next Page',
+    nextText : 'Next Page',
+    //</locale>
 
+    //<locale>
     /**
      * @cfg {String} lastText
      * The quicktip text displayed for the last page button.
      * **Note**: quick tips must be initialized for the quicktip to show.
-     * @locale
      */
-    lastText: 'Last Page',
+    lastText : 'Last Page',
+    //</locale>
 
+    //<locale>
     /**
      * @cfg {String} refreshText
      * The quicktip text displayed for the Refresh button.
      * **Note**: quick tips must be initialized for the quicktip to show.
-     * @locale
      */
-    refreshText: 'Refresh',
+    refreshText : 'Refresh',
+    //</locale>
 
     /**
      * @cfg {Number} inputItemWidth
@@ -272,12 +281,9 @@ Ext.define('Ext.toolbar.Paging', {
     },
 
     /**
-     * @property defaultBindProperty
      * @inheritdoc
      */
     defaultBindProperty: 'store',
-    
-    _pagingToolbarCls: Ext.baseCSSPrefix + 'grid-paging-toolbar',
 
     /**
      * Gets the standard paging items in the toolbar
@@ -401,12 +407,6 @@ Ext.define('Ext.toolbar.Paging', {
         this.callParent(arguments);
 
         this.updateBarInfo();
-    },
-    
-    afterRender: function() {
-        this.callParent();
-        
-        this.el.addCls(this._pagingToolbarCls);
     },
 
     onAdded: function (owner) {

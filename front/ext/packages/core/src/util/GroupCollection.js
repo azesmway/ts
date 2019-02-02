@@ -20,39 +20,21 @@ Ext.define('Ext.util.GroupCollection', {
 
     config: {
         grouper: null,
-        groupConfig: null,
         itemRoot: null
     },
 
     observerPriority: -100,
 
-    emptyGroupRetainTime: 300000, // Private timer to hang on to emptied groups. Milliseconds.
-
     constructor: function(config) {
-        this.emptyGroups = {};
         this.callParent([config]);
         this.on('remove', 'onGroupRemove', this);
-    },
-
-    /**
-     * Returns the `Ext.util.Group` associated with the given record.
-     *
-     * @param {Object} item The item for which the group is desired.
-     * @return {Ext.util.Group}
-     * @since 6.5.0
-     */
-    getItemGroup: function (item) {
-        var key = this.getGrouper().getGroupString(item);
-        return this.get(key);
     },
 
     //-------------------------------------------------------------------------
     // Calls from the source Collection:
 
     onCollectionAdd: function (source, details) {
-        if (!this.isConfiguring) {
-            this.addItemsToGroups(source, details.items, details.at);
-        }
+        this.addItemsToGroups(source, details.items, details.at);
     },
 
     onCollectionBeforeItemChange: function (source, details) {
@@ -68,92 +50,51 @@ Ext.define('Ext.util.GroupCollection', {
     },
 
     onCollectionItemChange: function (source, details) {
-        // Check if the change to the item caused the item to move. If it did, the group
-        // ordering will be handled by virtue of being removed/added to the collection.
-        // If not, check whether we're in the correct group and fix up if not.
+        var item = details.item;
+
+        // Check if the change to the item caused the item to move. If it did, the group ordering
+        // will be handled by virtue of being removed/added to the collection. If not, check whether
+        // we're in the correct group and fix up if not.
         if (!details.indexChanged) {
-            this.syncItemGrouping(source, details);
+            this.syncItemGrouping(source, item, source.getKey(item), details.oldKey, details.oldIndex);
         }
         this.changeDetails = null;
     },
 
     onCollectionRefresh: function (source) {
-        if (source.generation) {
-            var me = this,
-                itemGroupKeys = me.itemGroupKeys = {},
-                groupData = me.createEntries(source, source.items),
-                entries = groupData.entries,
-                groupKey, i, len, entry, j;
-
-            // The magic of Collection will automatically update the group with its new members.
-            for (i = 0, len = entries.length; i < len; ++i) {
-                entry = entries[i];
-
-                // Will add or replace
-                entry.group.splice(0, 1e99, entry.items);
-
-                // Add item key -> group mapping for every entry
-                for (j = 0; j < entry.items.length; j++) {
-                    itemGroupKeys[source.getKey(entry.items[j])] = entry.group;
-                }
-            }
-
-            // Remove groups to which we have not added items.
-            entries = null;
-            for (groupKey in me.map) {
-                if (!(groupKey in groupData.groups)) {
-                    (entries || (entries = [])).push(me.map[groupKey]);
-                }
-            }
-            if (entries) {
-                me.remove(entries);
-            }
-
-            // autoSort is disabled when adding new groups because
-            // it relies on there being at least one record in the group
-            me.sortItems();
-        }
+        this.removeAll();
+        this.addItemsToGroups(source, source.items);
     },
 
     onCollectionRemove: function (source, details) {
         var me = this,
             changeDetails = me.changeDetails,
-            itemGroupKeys = me.itemGroupKeys || (me.itemGroupKeys = {}),
-            entries, entry, group, i, n, j, removeGroups, item;
+            entries, entry, group, i, n, removeGroups, item;
 
-        if (source.getCount()) {
-            if (changeDetails) {
-                // The item has changed, so the group key may be different, need
-                // to look it up
-                item = changeDetails.item || changeDetails.items[0];
-                entries = me.createEntries(source, [item]).entries;
-                entries[0].group = itemGroupKeys['oldKey' in details ? details.oldKey : source.getKey(item)];
-            } else {
-                entries = me.createEntries(source, details.items).entries;
+        if (changeDetails) {
+            // The item has changed, so the group key may be different, need
+            // to look it up
+            item = changeDetails.item;
+            group = me.findGroupForItem(item);
+            entries = [];
+            if (group) {
+                entries.push({
+                    group: group,
+                    items: [item]
+                });
             }
+        } else {
+            entries = me.groupItems(source, details.items, false);
+        }
 
-            for (i = 0, n = entries.length; i < n; ++i) {
-                group = (entry = entries[i]).group;
-                if (group) {
-                    group.remove(entry.items);
-                }
+        for (i = 0, n = entries.length; i < n; ++i) {
+            group = (entry = entries[i]).group;
 
-                // Delete any item key -> group mapping
-                for (j = 0; j < entry.items.length; j++) {
-                    delete itemGroupKeys[source.getKey(entry.items[j])];
-                }
-
-                if (group && !group.length) {
+            if (group) {
+                group.remove(entry.items);
+                if (!group.length) {
                     (removeGroups || (removeGroups = [])).push(group);
                 }
-            }
-        }
-        // Straight cleardown
-        else {
-            me.itemGroupKeys = {};
-            removeGroups = me.items;
-            for (i = 0, n = removeGroups.length; i < n; ++i) {
-                removeGroups[i].clear();
             }
         }
 
@@ -184,158 +125,142 @@ Ext.define('Ext.util.GroupCollection', {
     },
 
     onCollectionUpdateKey: function (source, details) {
+        var index = details.index,
+            item = details.item;
+
         if (!details.indexChanged) {
-            details.oldIndex = source.indexOf(details.item);
-            this.syncItemGrouping(source, details);
+            index = source.indexOf(item);
+            this.syncItemGrouping(source, item, details.newKey, details.oldKey, index);
         }
     },
 
     //-------------------------------------------------------------------------
     // Private
 
-    addItemsToGroups: function (source, items, at, oldIndex) {
-        var me = this,
-            itemGroupKeys = me.itemGroupKeys || (me.itemGroupKeys = {}),
-            entries = me.createEntries(source, items).entries,
-            index = -1,
-            sourceStartIndex, entry, i, len, j, group, firstIndex, item;
-
-        for (i = 0, len = entries.length; i < len; ++i) {
-            entry = entries[i];
-            group = entry.group;
-
-            // A single item moved - from onCollectionItemChange
-            if (oldIndex || oldIndex === 0) {
-                item = items[0];
-                if (group.getCount() > 0 && source.getSorters().getCount() === 0) {
-                    // We have items in the group & it's not sorted, so find the
-                    // correct position in the group to insert.
-                    firstIndex = source.indexOf(group.items[0]);
-                    if (oldIndex < firstIndex) {
-                        index = 0;
-                    } else {
-                        index = oldIndex - firstIndex;
-                    }
-                }
-                if (index === -1) {
-                    group.add(item);
-                } else {
-                    group.insert(index, item);
-                }
-            }
-            else {
-                if (me.length > 1 && at) {
-                    sourceStartIndex = source.indexOf(entries[0].group.getAt(0));
-                    at = Math.max(at - sourceStartIndex, 0);
-                }
-                entry.group.insert(at != null ? at : group.items.length, entry.items);
-
-                // Add item key -> group mapping
-                for (j = 0; j < entry.items.length; j++) {
-                    itemGroupKeys[source.getKey(entry.items[j])] = entry.group;
-                }
-            }
-        }
-
-        // autoSort is disabled when adding new groups because
-        // it relies on there being at least one record in the group
-        me.sortItems();
+    addItemsToGroups: function (source, items, at) {
+        this.groupItems(source, items, true, at);
     },
 
-    createEntries: function(source, items) {
-    // Separate the items out into arrays by group
+    groupItems: function (source, items, adding, at) {
         var me = this,
-            groups = {},
+            byGroup = {},
             entries = [],
-            grouper = me.getGrouper(),
-            entry, group, groupKey, i, item, len;
+            grouper = source.getGrouper(),
+            groupKeys = me.itemGroupKeys,
+            sourceStartIndex, entry, group, groupKey, i, item, itemKey, len, newGroups;
 
         for (i = 0, len = items.length; i < len; ++i) {
             groupKey = grouper.getGroupString(item = items[i]);
+            itemKey = source.getKey(item);
 
-            if (!(entry = groups[groupKey])) {
-                group = me.getGroup(source, groupKey);
+            if (adding) {
+                (groupKeys || (me.itemGroupKeys = groupKeys = {}))[itemKey] = groupKey;
+            } else if (groupKeys) {
+                delete groupKeys[itemKey];
+            }
 
-                entries.push(groups[groupKey] = entry = {
+            if (!(entry = byGroup[groupKey])) {
+                if (!(group = me.getByKey(groupKey)) && adding) {
+                    (newGroups || (newGroups = [])).push(group = me.createGroup(source, groupKey));
+                }
+
+                entries.push(byGroup[groupKey] = entry = {
                     group: group,
                     items: []
                 });
             }
-            // Collect items to add/remove for each group
-            // which has items in the array
+
             entry.items.push(item);
         }
-        return {
-            groups: groups,
-            entries: entries
-        };
+
+        if (adding && me.length > 1 && at) {
+            sourceStartIndex = source.indexOf(entries[0].group.getAt(0));
+            at = Math.max(at - sourceStartIndex, 0);
+        }
+
+        for (i = 0, len = entries.length; i < len; ++i) {
+            entry = entries[i];
+            entry.group.insert(at != null ? at : group.items.length, entry.items);
+        }
+
+        if (newGroups) {
+            me.add(newGroups);
+        }
+
+        return entries;
     },
 
-    syncItemGrouping: function (source, details) {
+    syncItemGrouping: function (source, item, itemKey, oldKey, itemIndex) {
         var me = this,
             itemGroupKeys = me.itemGroupKeys || (me.itemGroupKeys = {}),
-            item = details.item,
-            oldKey, itemKey, oldGroup, group;
+            grouper = source.getGrouper(),
+            groupKey = grouper.getGroupString(item),
+            removeGroups = 0,
+            index = -1,
+            findKey = itemKey,
+            addGroups, group, oldGroup, oldGroupKey,
+            firstIndex;
 
-        itemKey = source.getKey(item);
-        oldKey = 'oldKey' in details ? details.oldKey : itemKey;
-
-        // The group the item was in before the change took place.
-        oldGroup = itemGroupKeys[oldKey];
-
-        // Look up/create the group into which the item now must be added.
-        group = me.getGroup(source, me.getGrouper().getGroupString(item));
-
-        details.group = group;
-        details.oldGroup = oldGroup;
-
-        // The change did not cause a change in group
-        if (!(details.groupChanged = group !== oldGroup)) {
-            // Inform group about change
-            oldGroup.itemChanged(item, details.modified, details.oldKey, details);
+        if (oldKey || oldKey === 0) {
+            oldGroupKey = itemGroupKeys[oldKey];
+            delete itemGroupKeys[oldKey];
+            findKey = oldKey;
         } else {
-            // Remove from its old group if there was one.
-            if (oldGroup) {
-                // Ensure Geoup knows about any unknown key changes, or item will not be removed.
-                oldGroup.updateKey(item, oldKey, itemKey);
-                oldGroup.remove(item);
+            oldGroupKey = itemGroupKeys[itemKey];
+        }
 
-                // Queue newly empy group for destruction.
-                if (!oldGroup.length) {
-                    me.remove(oldGroup);
+        itemGroupKeys[itemKey] = groupKey;
+
+        if (!(group = me.get(groupKey))) {
+            group = me.createGroup(source, groupKey);
+            addGroups = [group];
+        }
+
+        // This checks whether or not the item is in the collection.
+        // Short optimization instead of calling contains since we already have the key here.
+        if (group.get(findKey) !== item) {
+            if (group.getCount() > 0 && source.getSorters().getCount() === 0) {
+                // We have items in the group & it's not sorted, so find the
+                // correct position in the group to insert.
+                firstIndex = source.indexOf(group.items[0]);
+                if (itemIndex < firstIndex) {
+                    index = 0;
+                } else {
+                    index = itemIndex - firstIndex;
                 }
             }
-
-            // Add to new group
-            me.addItemsToGroups(source, [item], null, details.oldIndex);
-        }
-
-        // Keep item key -> group mapping up to date
-        delete itemGroupKeys[oldKey];
-        itemGroupKeys[itemKey] = group;
-    },
-
-    getGroup: function(source, key) {
-        var me = this,
-            group = me.get(key),
-            autoSort = me.getAutoSort();
-
-        if (group) {
-            group.setSorters(source.getSorters());
+            if (index === -1) {
+                group.add(item);
+            } else {
+                group.insert(index, item);
+            }
         } else {
-            group = me.emptyGroups[key] || Ext.create(Ext.apply({
-                xclass: 'Ext.util.Group',
-                groupKey: key,
-                rootProperty: me.getItemRoot(),
-                sorters: source.getSorters()
-            }, me.getGroupConfig()));
-
-            group.ejectTime = null;
-
-            me.setAutoSort(false);
-            me.add(group);
-            me.setAutoSort(autoSort);
+            group.itemChanged(item, null, oldKey);
         }
+
+        if (groupKey !== oldGroupKey && (oldGroupKey === 0 || oldGroupKey)) {
+            oldGroup = me.get(oldGroupKey);
+            if (oldGroup) {
+                oldGroup.remove(item);
+                if (!oldGroup.length) {
+                    removeGroups = [oldGroup];
+                }
+            }
+        }
+
+        if (addGroups) {
+            me.splice(0, removeGroups, addGroups);
+        } else if (removeGroups) {
+            me.splice(0, removeGroups);
+        }
+    },
+    
+    createGroup: function(source, key) {
+        var group = new Ext.util.Group({
+            groupKey: key,
+            rootProperty: this.getItemRoot(),
+            sorters: source.getSorters()
+        });
         return group;
     },
     
@@ -368,15 +293,12 @@ Ext.define('Ext.util.GroupCollection', {
     },
 
     destroy: function() {
-        var me = this;
-
-        me.$groupable = null;
+        this.$groupable = null;
         
         // Ensure group objects get destroyed, they may have
         // added listeners to the main collection sorters.
-        me.destroyGroups(me.items);
-        Ext.undefer(me.checkRemoveQueueTimer);
-        me.callParent();
+        this.destroyGroups(this.items);
+        this.callParent();
     },
 
     privates: {
@@ -389,46 +311,21 @@ Ext.define('Ext.util.GroupCollection', {
             }
         },
 
-        onGroupRemove: function(collection, info) {
-            var me = this,
-                groups = info.items,
-                emptyGroups = me.emptyGroups,
-                len, group, i;
+        findGroupForItem: function(item) {
+            var items = this.items,
+                len = items.length,
+                i, group;
 
-            groups = Ext.Array.from(groups);
-            for (i = 0, len = groups.length; i < len; i++) {
-                group = groups[i];
-                group.setSorters(null);
-                emptyGroups[group.getGroupKey()] = group;
-                group.ejectTime = Ext.now();
-            }
-
-            // Removed empty groups are reclaimable by getGroup for emptyGroupRetainTime milliseconds
-            me.checkRemoveQueue();
-        },
-
-        checkRemoveQueue: function() {
-            var me = this,
-                emptyGroups = me.emptyGroups,
-                groupKey, group, reschedule;
-
-            for (groupKey in emptyGroups) {
-                group = emptyGroups[groupKey];
-
-                // If the group's retain time has expired, destroy it.
-                if (!group.getCount() && Ext.now() - group.ejectTime > me.emptyGroupRetainTime) {
-                    Ext.destroy(group);
-                    delete emptyGroups[groupKey];
-                } else {
-                    reschedule = true;
+            for (i = 0; i < len; ++i) {
+                group = items[i];
+                if (group.contains(item)) {
+                    return group;
                 }
             }
+        },
 
-            // Still some to remove in the future. Check back in emptyGroupRetainTime
-            if (reschedule) {
-                Ext.undefer(me.checkRemoveQueueTimer);
-                me.checkRemoveQueueTimer = Ext.defer(me.checkRemoveQueue, me.emptyGroupRetainTime, me);
-            }
+        onGroupRemove: function(collection, info) {
+            this.destroyGroups(info.items);
         }
     }
 });

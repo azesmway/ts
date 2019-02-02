@@ -9,11 +9,7 @@ Ext.define('Ext.grid.cell.Number', {
     extend: 'Ext.grid.cell.Text',
     xtype: 'numbercell',
 
-    isNumberCell: true,
-
-    requires: [
-        'Ext.util.Format'
-    ],
+    requires: ['Ext.util.Format'],
 
     config: {
         /**
@@ -29,11 +25,9 @@ Ext.define('Ext.grid.cell.Number', {
     zeroValue: null,
 
     updateColumn: function (column, oldColumn) {
-        this.callParent([ column, oldColumn ]);
-
-        if (column && column.isNumberColumn) {
+        this.callParent([column, oldColumn]);
+        if (column) {
             var format = column.getFormat();
-
             if (format !== null) {
                 this.setFormat(format);
             }
@@ -46,16 +40,16 @@ Ext.define('Ext.grid.cell.Number', {
         }
     },
 
-    formatValue: function (value) {
-        var hasValue = value || value === 0,
+    writeValue: function () {
+        var value = this.getValue(),
+            hasValue = value || value === 0,
             zeroValue;
 
-        if (value === 0 && (zeroValue = this.getZeroValue()) !== null) {
-            value = zeroValue || '';
+        if(value === 0 && (zeroValue = this.getZeroValue()) != null) {
+            value = zeroValue;
         } else {
-            value = hasValue ? Ext.util.Format.number(value, this.getFormat()) : '';
+            value = hasValue ? Ext.util.Format.number(value, this.getFormat()) : null;
         }
-
-        return value;
+        this.setRawValue(value);
     }
 });

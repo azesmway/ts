@@ -4,34 +4,34 @@
  * within the picker itself. Users may easily add or remove `tags` from the 
  * display value area.
  *
- *     @example
- *     var shows = Ext.create('Ext.data.Store', {
- *         fields: ['id','show'],
- *         data: [
- *             {id: 0, show: 'Battlestar Galactica'},
- *             {id: 1, show: 'Doctor Who'},
- *             {id: 2, show: 'Farscape'},
- *             {id: 3, show: 'Firefly'},
- *             {id: 4, show: 'Star Trek'},
- *             {id: 5, show: 'Star Wars: Christmas Special'}
- *         ]
- *     });
+ *       @example
+ *       var shows = Ext.create('Ext.data.Store', {
+ *           fields: ['id','show'],
+ *           data: [
+ *               {id: 0, show: 'Battlestar Galactica'},
+ *               {id: 1, show: 'Doctor Who'},
+ *               {id: 2, show: 'Farscape'},
+ *               {id: 3, show: 'Firefly'},
+ *               {id: 4, show: 'Star Trek'},
+ *               {id: 5, show: 'Star Wars: Christmas Special'}
+ *           ]
+ *        });
  *
- *     Ext.create('Ext.form.Panel', {
- *         renderTo: Ext.getBody(),
- *         title: 'Sci-Fi Television',
- *         height: 200,
- *         width: 500,
- *         items: [{
- *             xtype: 'tagfield',
- *             fieldLabel: 'Select a Show',
- *             store: shows,
- *             displayField: 'show',
- *             valueField: 'id',
- *             queryMode: 'local',
- *             filterPickList: true
- *         }]
- *     });
+ *       Ext.create('Ext.form.Panel', {
+ *           renderTo: Ext.getBody(),
+ *           title: 'Sci-Fi Television',
+ *           height: 200,
+ *           width: 500,
+ *           items: [{
+ *               xtype: 'tagfield',
+ *               fieldLabel: 'Select a Show',
+ *               store: shows,
+ *               displayField: 'show',
+ *               valueField: 'id',
+ *               queryMode: 'local',
+ *               filterPickList: true
+ *           }]
+ *       });  
  *       
  * ### History
  *
@@ -54,10 +54,6 @@ Ext.define('Ext.form.field.Tag', {
 
     xtype: 'tagfield',
 
-    /**
-     * @property noWrap
-     * @inheritdoc
-     */
     noWrap: false,
 
     /**
@@ -104,7 +100,7 @@ Ext.define('Ext.form.field.Tag', {
     tipTpl: undefined,
 
     /**
-     * @cfg forceSelection
+     * @cfg
      * @inheritdoc
      *
      * When {@link #forceSelection} is `false`, new records can be created by the user as they
@@ -179,14 +175,13 @@ Ext.define('Ext.form.field.Tag', {
     filterPickList: false,
     
     /**
-     * @cfg {Boolean} clearOnBackspace
-     * Set to `false` to disable clearing selected values with Backspace key. This mode
-     * is recommended for accessible applications.
+     * @cfg {Boolean} [clearOnBackspace=true] Set to `false` to disable clearing selected
+     * values with Backspace key. This mode is recommended for accessible applications.
      */
     clearOnBackspace: true,
 
     /**
-     * @cfg {Boolean} grow
+     * @cfg {Boolean}
      *
      * `true` if this field should automatically grow and shrink vertically to its content.
      * Note that this overrides the natural trigger grow functionality, which is used to size
@@ -195,7 +190,7 @@ Ext.define('Ext.form.field.Tag', {
     grow: true,
 
     /**
-     * @cfg {Number/Boolean} growMin
+     * @cfg {Number/Boolean}
      * Has no effect if {@link #grow} is `false`
      *
      * The minimum height to allow when {@link #grow} is `true`, or `false` to allow for
@@ -204,7 +199,7 @@ Ext.define('Ext.form.field.Tag', {
     growMin: false,
 
     /**
-     * @cfg {Number/Boolean} growMax
+     * @cfg {Number/Boolean}
      * Has no effect if {@link #grow} is `false`
      *
      * The maximum height to allow when {@link #grow} is `true`, or `false` to allow for
@@ -213,16 +208,23 @@ Ext.define('Ext.form.field.Tag', {
     growMax: false,
 
     /**
-     * @cfg {Boolean} simulatePlaceholder
      * @private
+     * @cfg
      */
     simulatePlaceholder: true,
 
     /**
-     * @cfg selectOnFocus
+     * @cfg
      * @inheritdoc
      */
     selectOnFocus: true,
+
+    /**
+     * @cfg growAppend
+     * @hide
+     * Currently unsupported since this is used for horizontal growth and this component
+     * only supports vertical growth.
+     */
 
     /**
      * @cfg growToLongestValue
@@ -231,69 +233,57 @@ Ext.define('Ext.form.field.Tag', {
      * only supports vertical growth.
      */
     
+    //<locale>
     /**
-     * @cfg {String} ariaHelpText
-     * The text to be announced by screen readers when input element is
+     * @cfg {String} ariaHelpText The text to be announced by screen readers when input element is
      * focused. This text is used when this component is configured not to allow creating
      * new values; when {@link #createNewOnEnter} is set to `true`, {@link #ariaHelpTextEditable}
      * will be used instead.
-     * @locale
      */
     ariaHelpText: 'Use Up and Down arrows to view available values, Enter to select. ' +
                   'Use Left and Right arrows to view selected values, Delete key to deselect.',
     
     /**
-     * @cfg {String} ariaHelpTextEditable
-     * The text to be announced by screen readers when
+     * @cfg {String} ariaHelpTextEditable The text to be announced by screen readers when
      * input element is focused. This text is used when {@link #createNewOnEnter} is set to `true`;
      * see also {@link #ariaHelpText}.
-     * @locale
      */
     ariaHelpTextEditable: 'Use Up and Down arrows to view available values, Enter to select. ' +
                           'Type and press Enter to create a new value. ' +
                           'Use Left and Right arrows to view selected values, Delete key to deselect.',
     
     /**
-     * @cfg {String} ariaSelectedText
-     * Template text for announcing selected values to screen
+     * @cfg {String} ariaSelectedText Template text for announcing selected values to screen
      * reader users. '{0}' will be replaced with the list of selected values.
-     * @locale
      */
     ariaSelectedText: 'Selected {0}.',
     
     /**
-     * @cfg {String} ariaDeselectedText
-     * Template text for announcing deselected values to
+     * @cfg {String} ariaDeselectedText Template text for announcing deselected values to
      * screen reader users. '{0}' will be replaced with the list of values removed from
      * selected list.
-     * @locale
      */
     ariaDeselectedText: '{0} removed from selection.',
     
     /**
-     * @cfg {String} ariaNoneSelectedText
-     * Text to announce to screen reader users when no
+     * @cfg {String} ariaNoneSelectedText Text to announce to screen reader users when no
      * values are currently selected. This text is used when Tag field is focused.
-     * @locale
      */
     ariaNoneSelectedText: 'No value selected.',
     
     /**
-     * @cfg {String} ariaSelectedListLabel
-     * Label to be announced to screen reader users
+     * @cfg {String} ariaSelectedListLabel Label to be announced to screen reader users
      * when they use Left and Right arrow keys to navigate the list of currently selected values.
-     * @locale
      */
     ariaSelectedListLabel: 'Selected values',
     
     /**
-     * @cfg {String} ariaAvailableListLabel
-     * Label to be announced to screen reader users
+     * @cfg {String} ariaAvailableListLabel Label to be announced to screen reader users
      * when they use Up and Down arrow keys to navigate the list of available values.
-     * @locale
      */
     ariaAvailableListLabel: 'Available values',
-
+    //</locale>
+    
     /**
      * @event autosize
      * Fires when the **{@link #autoSize}** function is triggered and the field is resized according to the
@@ -304,8 +294,8 @@ Ext.define('Ext.form.field.Tag', {
      */
 
     /**
-     * @cfg fieldSubTpl
      * @private
+     * @cfg
      */
     fieldSubTpl: [
         // listWrapper div is tabbable in Firefox, for some unfathomable reason
@@ -322,7 +312,7 @@ Ext.define('Ext.form.field.Tag', {
                     '<tpl if="tabIdx != null">tabindex="{tabIdx}" </tpl>',
                     '<tpl if="disabled"> disabled="disabled"</tpl>',
                     '<tpl foreach="inputElAriaAttributes"> {$}="{.}"</tpl>',
-                    'class="' + Ext.baseCSSPrefix + 'tagfield-input-field {inputElCls} {emptyCls} {fixCls}" autocomplete="off">',
+                    'class="' + Ext.baseCSSPrefix + 'tagfield-input-field {inputElCls} {emptyCls}" autocomplete="off">',
                 '</li>',
             '</ul>',
             '<ul id="{cmpId}-ariaList" data-ref="ariaList" role="listbox"',
@@ -357,11 +347,6 @@ Ext.define('Ext.form.field.Tag', {
      */
     clearValueOnEmpty: false,
     ariaSelectable: true,
-    
-    /**
-     * @property ariaEl
-     * @inheritdoc
-     */
     ariaEl: 'listWrapper',
 
     tagItemCls: Ext.baseCSSPrefix + 'tagfield-item',
@@ -689,13 +674,6 @@ Ext.define('Ext.form.field.Tag', {
         return data;
     },
 
-    onRender: function(container, index) {
-        var me = this;
-
-        me.callParent([container, index]);
-        me.emptyClsElements.push(me.listWrapper, me.placeholderLabel);
-    },
-
     afterRender: function() {
         var me = this,
             inputEl = me.inputEl,
@@ -712,7 +690,8 @@ Ext.define('Ext.form.field.Tag', {
         me.applyAriaListMarkup();
         me.applyAriaSelectedText();
 
-        me.callParent();
+        me.callParent(arguments);
+        me.emptyClsElements.push(me.listWrapper, me.placeholderLabel);
     },
 
     findRecord: function(field, value) {
@@ -1002,9 +981,7 @@ Ext.define('Ext.form.field.Tag', {
     // Prevent item from receiving focus.
     // See EXTJS-17686.
     onItemMouseDown: function(e) {
-        if (e.target !== this.inputEl.dom) {
-            e.preventDefault();
-        }
+        e.preventDefault();
     },
 
     /**
@@ -1211,7 +1188,6 @@ Ext.define('Ext.form.field.Tag', {
     },
 
     /**
-     * @method getRawValue
      * @inheritdoc
      * Intercept calls to getRawValue to pretend there is no inputEl for rawValue handling,
      * so that we can use inputEl for user input of just the current value.
@@ -1263,16 +1239,6 @@ Ext.define('Ext.form.field.Tag', {
             me.pickerSelectionModel.deselect(toRemove);
             me.valueCollection.endUpdate();
         }
-    },
-
-    getValue: function () {
-        var value = this.callParent();
-
-        if (value) {
-            value = Ext.Array.from(value);
-        }
-
-        return value;
     },
 
     /**
@@ -1422,7 +1388,6 @@ Ext.define('Ext.form.field.Tag', {
     },
 
     /**
-     * @method getSubmitData
      * @inheritdoc
      * Overridden to optionally allow for submitting the field as a json encoded array.
      */

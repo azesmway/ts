@@ -28,11 +28,9 @@ Ext.define('Ext.util.sizemonitor.Abstract', {
     contentHeight: null,
 
     constructor: function(config) {
-        var me = this;
+        this.refresh = Ext.Function.bind(this.refresh, this);
 
-        me.refresh = me.refresh.bind(me);
-
-        me.info = {
+        this.info = {
             width: 0,
             height: 0,
             contentWidth: 0,
@@ -40,11 +38,11 @@ Ext.define('Ext.util.sizemonitor.Abstract', {
             flag: 0
         };
 
-        me.initElement();
+        this.initElement();
 
-        me.initConfig(config);
+        this.initConfig(config);
 
-        me.bindListeners(true);
+        this.bindListeners(true);
     },
 
     bindListeners: Ext.emptyFn,
@@ -56,7 +54,7 @@ Ext.define('Ext.util.sizemonitor.Abstract', {
     },
 
     updateElement: function(element) {
-        element.append(this.detectorsContainer, true);
+        element.append(this.detectorsContainer);
         element.addCls(Ext.baseCSSPrefix + 'size-monitored');
     },
 
@@ -89,22 +87,20 @@ Ext.define('Ext.util.sizemonitor.Abstract', {
             return false;
         }
 
-        var me = this,
-            size = element.measure(),
-            width = size.width,
-            height = size.height,
-            contentWidth = me.getContentWidth(),
-            contentHeight = me.getContentHeight(),
-            currentContentWidth = me.contentWidth,
-            currentContentHeight = me.contentHeight,
-            info = me.info,
+        var width = element.getWidth(),
+            height = element.getHeight(),
+            contentWidth = this.getContentWidth(),
+            contentHeight = this.getContentHeight(),
+            currentContentWidth = this.contentWidth,
+            currentContentHeight = this.contentHeight,
+            info = this.info,
             resized = false,
-            flag;
+            flag = 0;
 
-        me.width = width;
-        me.height = height;
-        me.contentWidth = contentWidth;
-        me.contentHeight = contentHeight;
+        this.width = width;
+        this.height = height;
+        this.contentWidth = contentWidth;
+        this.contentHeight = contentHeight;
 
         flag = ((currentContentWidth !== contentWidth ? 1 : 0) + (currentContentHeight !== contentHeight ? 2 : 0));
 
@@ -116,28 +112,20 @@ Ext.define('Ext.util.sizemonitor.Abstract', {
             info.flag = flag;
 
             resized = true;
-            me.getCallback().apply(me.getScope(), me.getArgs());
+            this.getCallback().apply(this.getScope(), this.getArgs());
         }
 
         return resized;
     },
 
-    refresh: function() {
+    refresh: function(force) {
         if (this.destroying || this.destroyed) {
             return;
         }
-
-        this.refreshSize();
-
-        // We should always refresh the monitors regardless of whether or not refreshSize
-        // resulted in a new size.  This avoids race conditions in situations such as
-        // panel placeholder expand where we layout the panel in its expanded state momentarily
-        // just so we can measure its animation destination, then immediately collapse it.
-        // In such a scenario refreshSize() will be acting on the original size since it
-        // is asynchronous, so it will not detect a size change, but we still need to
-        // ensure that the monitoring elements are in sync, or else the next resize event
-        // will not fire.
-        Ext.TaskQueue.requestWrite('refreshMonitors', this);
+        
+        if (this.refreshSize() || force) {
+            Ext.TaskQueue.requestWrite('refreshMonitors', this);
+        }
     },
 
     destroy: function() {

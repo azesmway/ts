@@ -10,6 +10,7 @@ Ext.define('Ext.list.TreeItem', {
 
     collapsedCls: Ext.baseCSSPrefix + 'treelist-item-collapsed',
     expandedCls: Ext.baseCSSPrefix + 'treelist-item-expanded',
+    floatedCls: [Ext.Widget.prototype.floatedCls, Ext.baseCSSPrefix + 'treelist-item-floated'],
     floatedToolCls: Ext.baseCSSPrefix + 'treelist-item-tool-floated',
     leafCls: Ext.baseCSSPrefix + 'treelist-item-leaf',
     expandableCls: Ext.baseCSSPrefix + 'treelist-item-expandable',
@@ -155,15 +156,11 @@ Ext.define('Ext.list.TreeItem', {
         var me = this,
             itemContainer = me.itemContainer;
 
-        // stopAnimation is called on destroy, so don't
-        // bother continuing if we don't need to
-        if (!me.destroying && !me.destroyed) {
-            me.collapsing = null;
-            itemContainer.dom.style.display = '';
-            itemContainer.setHeight(null);
+        me.collapsing = null;
+        itemContainer.dom.style.display = '';
+        itemContainer.setHeight(null);
 
-            me.nodeCollapseEnd(me.collapsingForExpand);
-        }
+        me.nodeCollapseEnd(me.collapsingForExpand);
     },
 
     nodeExpandBegin: function (animation) {
@@ -210,24 +207,12 @@ Ext.define('Ext.list.TreeItem', {
         this.callParent([ node, oldNode ]);
     },
 
-    updateExpandable: function (expandable) {
-        var node = this.getNode();
-
+    updateExpandable: function () {
         this.updateExpandCls();
-
-        if (node) {
-            node.set('expandable', expandable);
-        }
     },
 
-    updateExpanded: function (expanded) {
-        var node = this.getNode();
-
+    updateExpanded: function () {
         this.updateExpandCls();
-
-        if (node) {
-            node.set('expanded', expanded);
-        }
     },
 
     updateIconCls: function (iconCls, oldIconCls) {
@@ -238,7 +223,6 @@ Ext.define('Ext.list.TreeItem', {
         me.doIconCls(me.toolElement, iconCls, oldIconCls);
 
         el.toggleCls(me.withIconCls, !!iconCls);
-        // Blank iconCls leaves room for icon to line up w/sibling items
         el.toggleCls(me.hideIconCls, iconCls === null);
     },
 
@@ -351,9 +335,4 @@ Ext.define('Ext.list.TreeItem', {
             this.callParent([ value, oldValue ]);
         }
     }
-}, function(TreeItem) {
-    TreeItem.prototype.floatedCls = [
-        Ext.Widget.prototype.floatedCls,
-        Ext.baseCSSPrefix + 'treelist-item-floated'
-    ];
 });

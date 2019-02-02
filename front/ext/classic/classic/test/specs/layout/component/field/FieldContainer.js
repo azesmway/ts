@@ -1,4 +1,5 @@
-topSuite("Ext.layout.component.field.FieldContainer", ['Ext.form.field.*'], function() {
+describe("Ext.layout.component.field.FieldContainer", function() {
+
     var fc;
 
     afterEach(function() {

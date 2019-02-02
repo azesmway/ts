@@ -102,12 +102,12 @@ Ext.define('Ext.util.Region', function() {
 
         // Shrink the adjacent edge to create overlap for the anchor to center in.
         calculateAnchorPosition = function(target, result, relativePosition, anchorSize, inside) {
-            var anchorWidth = Math.ceil(anchorSize.x),
-                minOverlap = Math.ceil(anchorWidth / 2) + 3,
-                min, max,
+            var minOverlap = Math.ceil(anchorSize.x / 2) + 2,
                 anchorPos,
                 isBefore,
                 overlapLine,
+                overlapLength,
+                beforeStart,
                 x, y;
 
             // target is out of bounds. We can't show an anchor
@@ -118,94 +118,111 @@ Ext.define('Ext.util.Region', function() {
             if (relativePosition != null) {
                 // The result is to the left or right of the target
                 if (relativePosition & 1) {
-                    // Not enough height to support a side anchor
-                    if (result.getHeight() < anchorWidth + 4) {
-                        return;
-                    }
-
-                    //
-                    //               +------+ <--- min
-                    //               |      |
-                    //               |      |
-                    //  +---------+ <       | <-anchorMax
-                    //  |         |  +------+
-                    //  |         |
-                    //  |         |
-                    //  |         |
-                    //  |         |
-                    //  |         | +-------+ <--- max
-                    //  +---------+ <       | <-anchorMin
-                    //              |       |
-                    //              |       |
-                    //              +-------+
-                    //
-                    // Coerce the result's top to create enough overlap with target.
-                    // Needs at least anchorWidth / 2 + 2 to look right.
-                    min = target.top + minOverlap - result.height;
-                    max = target.bottom - minOverlap - 1;
-                    result.setPosition(result.x, Math.min(Math.max(result.y, min), max));
-
-                    // Now calculate the min & max permissible anchor top so that the
-                    // anchor baseline clears the result's corner by ar least 2px.
-                    min = result.top + 2;
-                    max = result.bottom - (anchorWidth + 2);
-
+                    anchorPos = new ExtUtil.Region(0, 0, 0, 0).setWidth(anchorSize.y).setHeight(anchorSize.x);
                     isBefore = relativePosition === 3;
                     x = isBefore ? result.right : result.left;
                     overlapLine = new ExtUtil.Region(Math.max(result.top, target.top), x, Math.min(result.bottom, target.bottom), x);
 
-                    // Align to the centre of the overlap line, wherever that may be
-                    anchorPos = new ExtUtil.Region(0, 0, 0, 0).setWidth(anchorSize.y).setHeight(anchorWidth).alignTo({
+                    if (target.getHeight() > minOverlap) {
+                        overlapLength = overlapLine.getHeight();
+
+                        // Not enough vertical intersection to make the anchor display correctly
+                        if (overlapLength < target.width && overlapLength < anchorSize.x + 4) {
+                            if (overlapLength < minOverlap) {
+                                if (overlapLine.getAnchorPoint_c()[1] > target.getAnchorPoint_c()[1]) {
+                                    y = target.bottom - minOverlap;
+                                } else {
+                                    beforeStart = true;
+                                    y = target.top + minOverlap - result.getHeight();
+                                }
+                                if (inside) {
+                                    y = Math.min(Math.max(y, inside.top), inside.bottom - result.getHeight());
+                                }
+
+                                // Move result, within constraints to attempt to create enough overlap.
+                                result.setPosition(result.x, y);
+                                overlapLine = new ExtUtil.Region(Math.max(result.top, target.top), x, Math.min(result.bottom, target.bottom), x);
+                                overlapLength = overlapLine.getHeight();
+
+                                // Not created enough overlap to display the anchor.
+                                if (overlapLength < minOverlap) {
+                                    return;
+                                }
+
+                                if (beforeStart) {
+                                    overlapLine.setPosition(x, target.y - anchorSize.x / 2 - 2);
+                                }
+                            }
+                            overlapLine.setHeight(Math.max(overlapLength, anchorSize.x + 4));
+
+                            // Arrow would be off the edge
+                            if (inside && !inside.contains(overlapLine)) {
+                                return;
+                            }
+                        }
+                    }
+                    result.anchor = anchorPos.alignTo({
                         target: overlapLine,
                         align: isBefore ? 'l-r' : 'r-l',
                         overlap: true
                     });
-
-                    // Coerce the anchor into the bounds of the result.
-                    anchorPos.setPosition(anchorPos.x, Math.min(Math.max(anchorPos.y, min), max));
-                    anchorPos.position = isBefore ? 'right' : 'left';
+                    result.anchor.position = isBefore ? 'right' : 'left';
                 }
                 // The result is above or below the target.
                 else {
-                    // Not enough width to support a top/bottom anchor
-                    if (result.getWidth() < anchorWidth + 4) {
-                        return;
-                    }
-
-                    // Coerce the result's left to create enough overlap with target.
-                    // Needs at least anchorWidth / 2 + 2 to look right.
-                    min = target.left + minOverlap - result.width;
-                    max = target.right - minOverlap - 1;
-                    result.setPosition(Math.min(Math.max(result.x, min), max), result.y);
-
-                    // Now calculate the min & max permissible anchor left so that the
-                    // anchor baseline clears the result's corner by ar least 2px.
-                    min = result.left + 2;
-                    max = result.right - (anchorWidth + 2);
-
-                    // If there is not enough overlap. coerce the result to create enough overlap
+                    anchorPos = new ExtUtil.Region(0, 0, 0, 0).setWidth(anchorSize.x).setHeight(anchorSize.y);
                     isBefore = relativePosition === 0;
                     y = isBefore ? result.bottom : result.top;
                     overlapLine = new ExtUtil.Region(y, Math.min(result.right, target.right), y, Math.max(result.left, target.left));
 
-                    // Align to the centre of the overlap line, wherever that may be
-                    anchorPos = new ExtUtil.Region(0, 0, 0, 0).setWidth(anchorWidth).setHeight(anchorSize.y).alignTo({
+                    if (target.getWidth() > minOverlap) {
+                        overlapLength = overlapLine.getWidth();
+
+                        // Not enough horizontal intersection to make the anchor display correctly
+                        if (overlapLength < target.height && overlapLength < anchorSize.x + 4) {
+                            if (overlapLength < minOverlap) {
+                                if (overlapLine.getAnchorPoint_c()[0] > target.getAnchorPoint_c()[0]) {
+                                    x = target.right - minOverlap;
+                                } else {
+                                    beforeStart = true;
+                                    x = target.left + minOverlap - result.getWidth();
+                                }
+                                if (inside) {
+                                    x = Math.min(Math.max(x, inside.left), inside.right - result.getWidth());
+                                }
+
+                                // Move result, within constraints to attempt to create enough overlap.
+                                result.setPosition(x, result.y);
+                                overlapLine = new ExtUtil.Region(y, Math.min(result.right, target.right), y, Math.max(result.left, target.left));
+                                overlapLength = overlapLine.getWidth();
+
+                                // We could not move the target into enough overlap because of constraints
+                                if (overlapLength < minOverlap) {
+                                    return;
+                                }
+
+                                if (beforeStart) {
+                                    overlapLine.setPosition(target.x - anchorSize.x / 2 - 2, y);
+                                }
+                            }
+                            overlapLine.setWidth(Math.max(overlapLength, anchorSize.x + 4));
+
+                            // Arrow would be off the edge
+                            if (inside && !inside.contains(overlapLine)) {
+                                return;
+                            }
+                        }
+                    }
+                    result.anchor = anchorPos.alignTo({
                         target: overlapLine,
                         align: isBefore ? 't-b' : 'b-t',
                         overlap: true
                     });
-
-                    // Coerce the anchor into the bounds of the result.
-                    anchorPos.setPosition(Math.min(Math.max(anchorPos.x, min), max), anchorPos.y);
-                    anchorPos.position = isBefore ? 'bottom' : 'top';
+                    result.anchor.position = isBefore ? 'bottom' : 'top';
                 }
-                // If anchor is outside constrain region it cannot be shown.
-                if (inside && !inside.contains(anchorPos)) {
-                    return;
-                }
-                result.anchor = anchorPos;
                 result.anchor.align = relativePosition;
             }
+            return result;
         },
         checkMinHeight = function(minHeight, result, target, inside) {
             var newHeight;
@@ -288,7 +305,7 @@ Ext.define('Ext.util.Region', function() {
          * So tl-br becomes {myEdge:'t', offset:0}, {otherEdge:'b', offset:100}
          *
          * This not only allows more flexibility in the alignment possibilities,
-         * but it also resolves any ambiguity as to which two edges are desired
+         * but it also resolves any ambiguity as to chich two edges are desired
          * to be adjacent if an anchor pointer is required.
          * 
          * @param {String} align The align spec, eg `"tl-br"`
@@ -319,7 +336,7 @@ Ext.define('Ext.util.Region', function() {
                     sourceClass: 'Ext.util.Region',
                     sourceMethod: 'getAlignInfo',
                     position: align,
-                    msg: 'Attempted to align an element with an invalid position: "' + align + '"'
+                    msg: 'Attemmpted to align an element with an invalid position: "' + align + '"'
                 });
             }
             //</debug>
@@ -333,7 +350,7 @@ Ext.define('Ext.util.Region', function() {
             };
 
             // t-l, b-r etc.
-            // Convert points to edge and offset.
+            // Convert points to egde and offset.
             if (parts[3]) {
                 result.myEdge = parts[3][0];
                 result.myOffset = offsetFactors[parts[3][1]];
@@ -375,8 +392,8 @@ Ext.define('Ext.util.Region', function() {
 
     /**
      * Translates this Region to the specified position
-     * @param {Number} x The new X position.
-     * @param {Number} y The new Y position.
+     * @param {type} x The new X position.
+     * @param {type} y The new Y position.
      * @returns {Ext.util.Region} This region after translation.
      */
     setPosition: function(x, y) {
@@ -450,8 +467,6 @@ Ext.define('Ext.util.Region', function() {
         me.bottom = constrain(me.bottom, targetRegion.y, targetRegion.bottom);
         me.left = me.x = constrain(me.left, targetRegion.x, targetRegion.right);
         me.right = constrain(me.right, targetRegion.x, targetRegion.right);
-        me.height = me.bottom - me.top;
-        me.width = me.right - me.left;
         return me;
     },
 
@@ -469,8 +484,6 @@ Ext.define('Ext.util.Region', function() {
         me.left = me.x += left||0;
         me.right += right||0;
         me.bottom += bottom||0;
-        me.height = me.bottom - me.top;
-        me.width = me.right - me.left;
         return me;
     },
 
@@ -701,7 +714,7 @@ Ext.define('Ext.util.Region', function() {
      * @param {Array/Ext.util.Position} [options.position] The position at which to place the
      * resulting region before being excluded from the target area and aligned to the closest
      * edge which allows conformity with any passed `inside` option. Used instead of the `align` option.
-     * @param {Ext.util.Offset/Number[]} [options.offset] An offset by which to adjust the result.
+     * @param {Ext.util.Offset/Number[]} [options.offset] An extra exclusion zone round the target.
      * @param {Ext.util.Offset/Number[]} [options.anchorSize] The width and height of any external anchor
      * element. This is used to calculate the true bounds of the Region inclusive of the anchor.
      * The `x` dimension is the height of the arrow in all orientations, and the `y` dimension
@@ -713,8 +726,8 @@ Ext.define('Ext.util.Region', function() {
      * @param {Boolean} [options.overlap] Pass `true` to allow this rectangle to overlap
      * the target.
      * @param {Boolean} [options.rtl] Pass `true` to swap left/right alignment.
-     * @param {Ext.util.Region/Ext.dom.Element} [options.inside] The rectangle to
-     * which this rectangle is constrained.
+     * @param {Ext.util.Region} [options.inside] The rectangle to which this rectangle is
+     * constrained.
      * @param {Number} [options.minHeight] Used when this Region is to be aligned directly
      * below or above  the target. Gives the option to reduce the height to fit in the
      * available space.
@@ -722,14 +735,13 @@ Ext.define('Ext.util.Region', function() {
      * only take place along the major align axis. That is, if `align: "l-r"` is being used, and
      * `axisLock: true` is used, then if constraints fail, only fallback to `r-l` is considered.
      * @return {Ext.util.Region} The Region that will align this rectangle. Note that if
-     * a `minHeight` option was passed, and alignment is either above or below the target,
+     * a `minHeight` option was passed, and aligment is either above or below the target,
      * the Region might be reduced to fit within the space.
      */
     alignTo: function (options) {
         var me = this,
             Region = me.self,
             Offset = ExtUtil.Offset,
-            Element = Ext.Element,
             target = parseRegion(options.target),
             targetPlusAnchorOffset,
             rtl = options.rtl,
@@ -741,7 +753,8 @@ Ext.define('Ext.util.Region', function() {
             position = options.position,
             allowXTranslate = options.allowXTranslate,
             allowYTranslate = options.allowYTranslate,
-            wasConstrained, result, initialPosition, constrainedPosition;
+            wasConstrained,
+            result;
 
         if (offset) {
             offset = Offset.fromObject(offset);
@@ -758,14 +771,6 @@ Ext.define('Ext.util.Region', function() {
                 Ext.raise('anchorSize option must be an Ext.util.Offset');
             }
             //</debug>
-        }
-    
-        if (inside && !inside.isRegion) {
-            if (Ext.getDom(inside) === document.body) {
-                inside = new Region(0, Element.getDocumentWidth(), Element.getDocumentHeight(), 0);
-            } else {
-                inside = Ext.fly(inside).getRegion();
-            }
         }
 
         // Position the region using an exact position.
@@ -832,8 +837,6 @@ Ext.define('Ext.util.Region', function() {
 
         // If we are constraining Region...
         if (inside) {
-            initialPosition = result.copy();
-
             // Constrain to within left boundary
             if (result.left < inside.left) {
                 result.translateBy(inside.left - result.left, 0);
@@ -889,13 +892,10 @@ Ext.define('Ext.util.Region', function() {
 
                 // If edge aligning, we must completely exclude the region
                 else {
-                    constrainedPosition = result.copy();
-
                     if (result.intersect(targetPlusAnchorOffset)) {
                         // This will also exclude any additional anchor even if the region itself
                         // does not intersect.
                         align.position = target.exclude(result, {
-                            initialPosition: initialPosition,
                             defaultPosition: align.position,
                             inside: inside,
                             minHeight: options.minHeight,
@@ -917,19 +917,10 @@ Ext.define('Ext.util.Region', function() {
                     }
                     result.align = align;
 
-                    if (inside.contains(result)) {
-                        // Calculate the anchor position.
-                        // This also forces the adjacent edges to overlap enough to create space for the anchor arrow.
-                        if (anchorSize) {
-                            calculateAnchorPosition(target, result, align.position, anchorSize, inside);
-                        }
-                    }
-                    // We tried everything, but couldn't fit in the "inside" region.
-                    // Fall back to the constrained position overlapping the target.
-                    // Usually happens on a phone where there's not enough space to edge-align
-                    // and insist on no overlapping of align target    .
-                    else {
-                        result = constrainedPosition;
+                    // Calculate the anchor position.
+                    // This also forces the adjacent edges to overlap enough to create space for the anchor arrow.
+                    if (anchorSize) {
+                        calculateAnchorPosition(target, result, align.position, anchorSize, inside);
                     }
                 }
             }
@@ -943,19 +934,17 @@ Ext.define('Ext.util.Region', function() {
      * translation. If an "inside" Region is passed, the exclusion also honours
      * that constraint.
      * @param {Region} other The Region to move so that it does not intersect this Region.
-     * @param {Object} options Object of options passed to exclude.
-     * @param {Region} options.inside A Region into which the other Region must be constrained.
-     * @param {Number} [options.minHeight] If passed, indicates that the height may be reduced up
+     * @param {Region} inside A Region into which the other Region must be constrained.
+     * @param {Number} [minHeight] If passed, indicates that the height may be reduced up
      * to a point to fit the "other" region below or above the target but within the "inside" Region.
-     * @param {Boolean} [options.allowX=true] Pass `false` to disallow translation along the X axis.
-     * @param {Boolean} [options.allowY=true] Pass `false` to disallow translation along the Y axis.
+     * @param {Boolean} [allowX=true] Pass `false` to disallow translation along the X axis.
+     * @param {Boolean} [allowY=true] Pass `false` to disallow translation along the Y axis.
      * @return {Number} The edge it is now aligned to, 0=top, 1=right, 2=bottom, 3=left.
      */
     exclude: function(other, options) {
         options = options || {};
 
         var me = this,
-            initialPosition = options.initialPosition || other,
             inside = options.inside,
             defaultPosition = options.defaultPosition,
             centerOnSideChange = options.centerOnSideChange,
@@ -974,18 +963,15 @@ Ext.define('Ext.util.Region', function() {
             offset = zeroOffset;
         }
 
-        // Calculate vectors to move the "other" region by to fully clear this region.
-        // Store the total moved distance, (element [4]) as the distance from the initially
-        // desired position, not the constrained, overlapped position.
         if (allowY) {
-            translations.push([0, me.top - other.bottom - anchorHeight + offset.y, 'b-t', 0, Math.abs(me.top - initialPosition.bottom - anchorHeight + offset.y)]);
-            translations.push([0, me.bottom - other.top + anchorHeight + offset.y, 't-b', 2, Math.abs(me.bottom - initialPosition.top + anchorHeight + offset.y)]);
+            translations.push([0, t = me.top - other.bottom - anchorHeight + offset.y, 'b-t', 0, Math.abs(t)]);
+            translations.push([0, t = me.bottom - other.top + anchorHeight + offset.y, 't-b', 2, Math.abs(t)]);
         } else {
             centerOnSideChange = false;
         }
         if (allowX) {
-            translations.push([me.left - other.right - anchorHeight + offset.x, 0, 'r-l', 3, Math.abs(me.left - initialPosition.right - anchorHeight + offset.x)]);
-            translations.push([me.right - other.left + anchorHeight + offset.x, 0, 'l-r', 1, Math.abs(me.right - initialPosition.left + anchorHeight + offset.x)]);
+            translations.push([t = me.left - other.right - anchorHeight + offset.x, 0, 'r-l', 3, Math.abs(t)]);
+            translations.push([t = me.right - other.left + anchorHeight + offset.x, 0, 'l-r', 1, Math.abs(t)]);
         } else {
             centerOnSideChange = false;
         }
@@ -1163,10 +1149,6 @@ Ext.define('Ext.util.Region', function() {
         return [this.x + Math.round(this.getWidth() / 2), this.y + Math.round(this.getHeight() / 2)];
     },
 
-    getCenter: function () {
-        return [ this.x + this.width / 2, this.y + this.height / 2 ];
-    },
-
     getHeight: function () {
         return this.bottom - this.y;
     },
@@ -1180,13 +1162,11 @@ Ext.define('Ext.util.Region', function() {
     },
 
     setHeight: function(h) {
-        this.height = h;
         this.bottom = this.top + h;
         return this;
     },
 
     setWidth: function(w) {
-        this.width = w;
         this.right = this.left + w;
         return this;
     },
@@ -1201,15 +1181,6 @@ Ext.define('Ext.util.Region', function() {
             width: this.right - this.x,
             height: this.bottom - this.y
         };
-    },
-
-    setSize: function (w, h) {
-        if (h === undefined) {
-            h = w;
-        }
-
-        this.setWidth(w);
-        return this.setHeight(h);
     },
 
     /**
@@ -1232,7 +1203,7 @@ Ext.define('Ext.util.Region', function() {
         me.bottom = p.bottom;
         me.left = me.x = me[0] = p.x;
 
-        return me;
+        return this;
     },
 
     /*
@@ -1305,22 +1276,6 @@ Ext.define('Ext.util.Region', function() {
             y: this.y - offsetsTo.y
         };
     }
-
-    //<debug>
-    ,highlight: function() {
-        var highlightEl = Ext.getBody().createChild({
-            style: 'background-color:#52a0db;opacity:0.4;position:absolute;z-index:9999999'
-        });
-
-        highlightEl.setBox(this);
-        
-        Ext.defer(function() {
-            highlightEl.destroy();
-        }, 5000);
-        
-        return highlightEl;
-    }
-    //</debug>
 };
 },
 function (Region) {

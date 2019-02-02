@@ -1,5 +1,5 @@
 /**
- * The VBox (short for vertical box) layout makes it easy to position items vertically in a
+ * The VBox (short for vertical box) layout makes it easy to position items horizontally in a
  * {@link Ext.Container Container}. It can size items based on a fixed height or a fraction of the total height
  * available.
  *
@@ -30,7 +30,7 @@
  * We can also specify fixed heights for child items, or mix fixed heights and flexes. For example, here we have 3
  * items - one at the top and bottom with flex: 1, and one in the center with a fixed width of 100px:
  *
- *     @example
+ *     @example preview portrait
  *     Ext.create('Ext.Container', {
  *         fullscreen: true,
  *         layout: 'vbox',
@@ -53,7 +53,7 @@
  *     });
  */
 Ext.define('Ext.layout.VBox', {
-    extend: 'Ext.layout.Box',
+    extend: 'Ext.layout.FlexBox',
 
     alias: 'layout.vbox',
 

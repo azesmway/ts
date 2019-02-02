@@ -1,4 +1,4 @@
-topSuite('Ext.parse.Tokenizer', function () {
+describe('Ext.parse.Tokenizer', function () {
     var tokenizer,
         OPERATORS = {
             '+': { type: 'operator', value: '+', is: { operator: true, plus: true } },

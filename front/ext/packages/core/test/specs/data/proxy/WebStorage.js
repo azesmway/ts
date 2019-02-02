@@ -1,6 +1,4 @@
-topSuite("Ext.data.proxy.WebStorage",
-    ['Ext.data.ArrayStore', 'Ext.data.TreeStore', 'Ext.data.identifier.*'],
-function() {
+describe("Ext.data.proxy.WebStorage", function() {
     var proxy, config;
 
     var fakeStorageObject = {

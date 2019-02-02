@@ -1,52 +1,30 @@
 /**
- * A floated panel which animates in and out from the side of the screen when shown.
- * Used as the base class for {@link Ext.ActionSheet Action Sheets} and
- * {@link Ext.picker.Picker Pickers}
+ * A general sheet class. This renderable container provides base support for orientation-aware transitions for popup or
+ * side-anchored sliding Panels.
+ *
+ * In most cases, you should use {@link Ext.ActionSheet}, {@link Ext.MessageBox}, {@link Ext.picker.Picker}, or {@link Ext.picker.Date}.
  */
 Ext.define('Ext.Sheet', {
     extend: 'Ext.Panel',
 
     xtype: 'sheet',
 
-    requires: [
-        'Ext.viewport.Viewport',
-        'Ext.Mask',
-        'Ext.fx.Animation'
-    ],
-
-    /**
-     * @hide
-     */
-    isViewportMenu: false,
-
-    /**
-     * 
-     * @hide
-     */
-    hidden: true,
+    requires: ['Ext.fx.Animation'],
 
     config: {
         /**
-         * @cfg {Boolean} reveal
-         * Set to true to display the menu using reveal style. The Viewport will slide up,
-         * down, left or right to make room for the menu to be seen.
+         * @cfg
+         * @inheritdoc
          */
-        reveal: null,
+        modal: true,
 
         /**
-         * @cfg {Boolean} cover
-         * Set to true to display the menu using cover style. The menu will be shown over
-         * the Viewport from the specified side.  By default, the menu will be modal,
-         * displaying a mask over the rest of the Viewport, and the user may tap on the
-         * mask to dismiss the menu.
+         * @cfg {Boolean} centered
+         * Whether or not this component is absolutely centered inside its container.
+         * @accessor
+         * @evented
          */
-        cover: null,
-
-        /**
-         * @cfg {"left"/"right"/"top"/"bottom"}
-         * The side of the viewport where the menu will be positioned.
-         */
-        side: null,
+        centered: true,
 
         /**
          * @cfg {Boolean} stretchX `true` to stretch this sheet horizontally.
@@ -59,63 +37,51 @@ Ext.define('Ext.Sheet', {
         stretchY: null,
 
         /**
-         * @cfg {'top'/'bottom'/'left'/'right'} enter
-         * The viewport side used as the enter point when shown.
+         * @cfg {String} enter
+         * The viewport side used as the enter point when shown. Valid values are 'top', 'bottom', 'left', and 'right'.
          * Applies to sliding animation effects only.
          */
         enter: 'bottom',
 
         /**
-         * @cfg {'top'/'bottom'/'left'/'right'} exit
-         * The viewport side used as the exit point when hidden.
+         * @cfg {String} exit
+         * The viewport side used as the exit point when hidden. Valid values are 'top', 'bottom', 'left', and 'right'.
          * Applies to sliding animation effects only.
          */
-        exit: 'bottom'
+        exit: 'bottom',
+
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        showAnimation: {
+            type: 'slideIn',
+            duration: 250,
+            easing: 'ease-out'
+        },
+
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        hideAnimation: {
+            type: 'slideOut',
+            duration: 250,
+            easing: 'ease-in'
+        }
     },
 
-    translatable: {
-        type: 'csstransform'
-    },
-    showAnimation: {
-        type: 'slideIn',
-        duration: 250,
-        easing: 'ease-out'
-    },
-    hideAnimation: {
-        type: 'slideOut',
-        duration: 250,
-        easing: 'ease-in'
-    },
-    modal: true,
-    hideOnMaskTap: true,
+    baseCls: Ext.baseCSSPrefix + 'sheet',
 
-    /**
-     * @cfg {Boolean} centered
-     * Whether or not this component is absolutely centered inside its container.
-     * @accessor
-     * @evented
-     */
-    centered: true,
+    border: null,
 
-    classCls: Ext.baseCSSPrefix + 'sheet',
-
-    manageBorders: false,
-
-    autoSize: null,
-    border: true,
     bodyBorder: false,
 
     floated: true,
 
+    manageBorders: false,
+
     isInputRegex: /^(input|textarea|select|a)$/i,
-
-    destroy: function() {
-        var me = this;
-
-        me.setSide(null);
-
-        me.callParent();
-    },
 
     applyHideAnimation: function(config) {
         var exit = this.getExit(),
@@ -135,7 +101,8 @@ Ext.define('Ext.Sheet', {
         if (anim) {
             if (exit === 'bottom') {
                 direction = 'down';
-            } else if (exit === 'top') {
+            }
+            if (exit === 'top') {
                 direction = 'up';
             }
             anim.setDirection(direction);
@@ -172,53 +139,6 @@ Ext.define('Ext.Sheet', {
             anim.setDirection(direction);
         }
         return anim;
-    },
-
-    hide: function(animation) {
-        var side = this.getSide();
-
-        if (side) {
-            Ext.Viewport.hideMenu(side, animation);
-        } else {
-            this.callParent([animation]);
-        }
-    },
-
-    show: function(animation, options) {
-        var me = this,
-            VP = Ext.Viewport,
-
-            // Allow side: null to bypass the Viewport menu show to do a default show operation
-            side = options && ('side' in options) ? options.side : me.getSide();
-
-        if (side) {
-            VP.setMenu(me);
-            VP.showMenu(side);
-        } else {
-            me.callParent([animation, options]);
-        }
-    },
-
-    updateSide: function(newSide, oldSide) {
-        var me = this,
-            reShow = !me.isConfiguring && me.isVisible();
-
-        me.isViewportMenu = !!newSide;
-
-        if (oldSide) {
-            Ext.Viewport.removeMenu(oldSide);
-        }
-
-        if (newSide) {
-            Ext.Viewport.setMenu(me, {
-                side: newSide
-            });
-            
-            // We're flipping sides while shown.
-            if (reShow) {
-                me.show();
-            }
-        }
     },
 
     updateStretchX: function(newStretchX) {

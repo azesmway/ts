@@ -1,4 +1,4 @@
-topSuite("Ext.ux.PreviewPlugin", ['Ext.grid.Panel'], function() {
+describe('Ext.ux.PreviewPlugin', function() {
     it('should not throw an error', function() {
         // See EXTJSIV-12783.
         var grid;

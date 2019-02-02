@@ -91,7 +91,7 @@ Ext.define('Ext.chart.legend.sprite.Item', {
         label.setAttributes({
             textBaseline: 'middle'
         });
-        me.addSprite(label);
+        me.add(label);
         me.scheduleUpdater(me.attr, 'layout');
     },
 
@@ -117,7 +117,7 @@ Ext.define('Ext.chart.legend.sprite.Item', {
         // time from default values to the values specified in the marker
         // config. But the 'legenditem' sprite needs final values
         // to properly layout its children.
-        delete config.animation;
+        delete config.fx;
 
         if (config.type === 'image') {
             delete config.width;
@@ -162,7 +162,7 @@ Ext.define('Ext.chart.legend.sprite.Item', {
         var me = this;
 
         me.removeSprite(oldMarker);
-        me.addSprite(marker);
+        me.add(marker);
         me.scheduleUpdater(me.attr, 'layout');
     },
 
@@ -185,7 +185,7 @@ Ext.define('Ext.chart.legend.sprite.Item', {
         }
     },
 
-    layoutUpdater: function () {
+    layoutUpdater: function (attr) {
         var me = this,
             attr = me.attr,
             label = me.getLabel(),

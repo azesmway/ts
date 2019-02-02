@@ -1,6 +1,4 @@
-/* global Ext, expect, jasmine */
-
-topSuite("Ext.form.CheckboxGroup", ['Ext.app.ViewModel'], function() {
+describe("Ext.form.CheckboxGroup", function() {
     var component;
 
     function makeComponent(config) {
@@ -100,7 +98,7 @@ topSuite("Ext.form.CheckboxGroup", ['Ext.app.ViewModel'], function() {
             });
             expect(component.getHeight()).toBe(100);
         });
-    });
+    })
 
     it("should fire the change event when a sub-checkbox is changed", function() {
         makeComponent({

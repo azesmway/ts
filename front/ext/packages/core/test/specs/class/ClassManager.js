@@ -1,4 +1,4 @@
-topSuite("Ext.ClassManager", function() {
+describe("Ext.ClassManager", function() {
     var manager = Ext.ClassManager,
         cls, emptyFn = function(){};
 
@@ -314,7 +314,7 @@ topSuite("Ext.ClassManager", function() {
                         this.foo = 1;
                         this.T = Self;
                     }
-                };
+                }
             });
             
             var obj = new T();

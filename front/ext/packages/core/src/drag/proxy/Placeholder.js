@@ -43,34 +43,41 @@ Ext.define('Ext.drag.proxy.Placeholder', {
     placeholderCls: Ext.baseCSSPrefix + 'drag-proxy-placeholder',
 
     /**
-     * @method cleanup
      * @inheritdoc
      */
     cleanup: function() {
-        this.element = Ext.destroy(this.element);
+        var el = this.element;
+        if (el) {
+            el.hide();
+        }
     },
 
     /**
-     * @method getElement
      * @inheritdoc
      */
-    getElement: function() {
-        var el = Ext.getBody().createChild({
-            cls: this.getCls(),
-            html: this.getHtml()
-        });
-        el.addCls(this.placeholderCls);
+    getElement: function(source) {
+        var me = this,
+            el = me.element;
 
-        el.setTouchAction({
-            panX: false,
-            panY: false
-        });
+        if (!el) {
+            me.element = el = Ext.getBody().createChild({
+                cls: me.getCls(),
+                html: me.getHtml()
+            });
+            el.addCls(me.placeholderCls);
+            
+            el.setTouchAction({
+                panX: false,
+                panY: false
+            });
+
+        }
+        el.show();
 
         return el;
     },
 
     /**
-     * @method update
      * @inheritdoc
      */
     update: function(info) {
@@ -123,7 +130,6 @@ Ext.define('Ext.drag.proxy.Placeholder', {
 
     privates: {
         /**
-         * @method adjustCursorOffset
          * @inheritdoc
          */
         adjustCursorOffset: function(info, xy) {

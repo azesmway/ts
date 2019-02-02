@@ -23,10 +23,6 @@ Ext.define('Ext.dom.GarbageCollector', {
 
         me.lastTime = Ext.now();
         me.onTick = me.onTick.bind(me);
-        
-        //<debug>
-        me.onTick.$skipTimerCheck = true;
-        //</debug>
 
         me.resume();
     },
@@ -88,7 +84,6 @@ Ext.define('Ext.dom.GarbageCollector', {
             }
             
             if (isGarbage) {
-                isGarbage = false;
                 if (el && el.dom) {
                     //<debug>
                     tagName = el.dom.tagName;
@@ -138,7 +133,7 @@ Ext.define('Ext.dom.GarbageCollector', {
 
         if (timerId) {
             this.timerId = null;
-            Ext.undefer(timerId);
+            clearTimeout(timerId);
         }
     },
 

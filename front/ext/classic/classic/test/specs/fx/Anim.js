@@ -1,4 +1,4 @@
-topSuite("Ext.fx.Anim", function() {
+describe("Ext.fx.Anim", function() {
     var anim, target, animEndSpy;
 
     beforeEach(function() {

@@ -1,4 +1,4 @@
-topSuite("Ext.layout.container.Dashboard", ['Ext.Panel'], function() {
+describe("Ext.layout.container.Dashboard", function() {
     var panel;
 
     function makeItem (itemConfig) {

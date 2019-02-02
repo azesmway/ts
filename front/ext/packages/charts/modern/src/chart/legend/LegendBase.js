@@ -9,6 +9,9 @@ Ext.define('Ext.chart.legend.LegendBase', {
         ],
         inline: true,
 
+        horizontalHeight: 64,
+        verticalWidth: 150,
+
         scrollable: false // for IE11 vertical align
     },
 
@@ -25,27 +28,30 @@ Ext.define('Ext.chart.legend.LegendBase', {
     },
 
     updateDocked: function (docked, oldDocked) {
-        var me = this,
-            el = me.el;
+        var me = this;
 
         me.callParent([docked, oldDocked]);
 
         switch (docked) {
             case 'top':
             case 'bottom':
-                el.addCls(me.horizontalCls);
-                el.removeCls(me.verticalCls);
+                me.addCls(me.horizontalCls);
+                me.removeCls(me.verticalCls);
+                me.setWidth(null);
+                me.setHeight(me.getHorizontalHeight());
                 break;
             case 'left':
             case 'right':
-                el.addCls(me.verticalCls);
-                el.removeCls(me.horizontalCls);
+                me.addCls(me.verticalCls);
+                me.removeCls(me.horizontalCls);
+                me.setWidth(me.getVerticalWidth());
+                me.setHeight(null);
                 break;
         }
     },
 
-    onChildTap: function (view, context) {
-        this.callParent([view, context]);
-        this.toggleItem(context.viewIndex);
+    onItemTap: function (container, target, index, e) {
+        this.callParent(arguments);
+        this.toggleItem(index);
     }
 });

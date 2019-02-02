@@ -4,10 +4,6 @@
 Ext.define('Ext.chart.MarkerHolder', {
     extend: 'Ext.Mixin',
 
-    requires: [
-        'Ext.chart.Markers'
-    ],
-
     mixinConfig: {
         id: 'markerHolder',
         after: {
@@ -151,18 +147,20 @@ Ext.define('Ext.chart.MarkerHolder', {
     },
 
     putMarker: function (name, attr, index, bypassNormalization, keepRevision) {
-        var marker = this.boundMarkers[name];
+        var marker = this.boundMarkers[name],
+            id = this.getId();
 
         if (marker) {
-            marker.putMarkerFor(this.getId(), attr, index, bypassNormalization, keepRevision);
+            marker.putMarkerFor(id, attr, index, bypassNormalization, keepRevision);
         }
     },
 
     getMarkerBBox: function (name, index, isWithoutTransform) {
-        var marker = this.boundMarkers[name];
+        var marker = this.boundMarkers[name],
+            id = this.getId();
 
         if (marker) {
-            return marker.getMarkerBBoxFor(this.getId(), index, isWithoutTransform);
+            return marker.getMarkerBBoxFor(id, index, isWithoutTransform);
         }
     },
 

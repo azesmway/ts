@@ -222,7 +222,7 @@ Ext.define('Ext.chart.interactions.CrossZoom', {
     },
 
     getSurface: function () {
-        return this.getChart() && this.getChart().getSurface('overlay');
+        return this.getChart() && this.getChart().getSurface('main');
     },
     
     setSeriesOpacity: function (opacity) {
@@ -374,7 +374,7 @@ Ext.define('Ext.chart.interactions.CrossZoom', {
                 me.zoomAnimationInProgress = true;
 
                 chart.suspendThicknessChanged();
-                me.selectionRect.getAnimation().on('animationend', function () {
+                me.selectionRect.fx.on('animationend', function () {
                     chart.resumeThicknessChanged();
 
                     surface.remove(me.selectionRect);

@@ -1,9 +1,4 @@
-topSuite("Ext.chart.legend.sprite.Item", ['Ext.draw.Container'], function() {
-    beforeEach(function() {
-        // Silence warnings about Sencha download server
-        spyOn(Ext.log, 'warn');
-    });
-    
+describe("Ext.chart.legend.sprite.Item", function () {
     describe("layoutUpdater", function () {
         it("should have top-left of the bounding box at (0,0)", function () {
             // Should place children sprites so that the composite's bounding box

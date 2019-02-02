@@ -27,14 +27,12 @@
 // Default rules for focused tools when they are used in other contexts
 // than a panel header. They must still look like panel header tools
 .#{$prefix}tool-focus {
-    .#{$prefix}keyboard-mode & {
-        @include css-outline(
-            $width: $tool-focus-outline-width,
-            $style: $tool-focus-outline-style,
-            $color: $tool-focus-outline-color,
-            $offset: $tool-focus-outline-offset
-        );
-    }
+    @include css-outline(
+        $width: $tool-focus-outline-width,
+        $style: $tool-focus-outline-style,
+        $color: $tool-focus-outline-color,
+        $offset: $tool-focus-outline-offset
+    );
 }
 
 .#{$prefix}tool-img {
@@ -48,7 +46,7 @@
 .#{$prefix}tool-close {
     @if $enable-font-icons and ($tool-close-glyph != null) {
         @include font-icon($tool-close-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 0;
     }
@@ -84,7 +82,7 @@
 .#{$prefix}tool-toggle {
     @if $enable-font-icons and ($tool-toggle-up-glyph != null) {
         @include font-icon($tool-toggle-up-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -4);
     }
@@ -92,7 +90,7 @@
     .#{$prefix}panel-collapsed & {
         @if $enable-font-icons and ($tool-toggle-down-glyph != null) {
             @include font-icon($tool-toggle-down-glyph);
-            background: none !important;
+            background: none;
         } @else {
             background-position: 0 ($tool-size * -5);
         }
@@ -102,7 +100,7 @@
 .#{$prefix}tool-gear {
     @if $enable-font-icons and ($tool-gear-glyph != null) {
         @include font-icon($tool-gear-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -6);
     }
@@ -111,7 +109,7 @@
 .#{$prefix}tool-prev {
     @if $enable-font-icons and ($tool-prev-glyph != null) {
         @include font-icon($tool-prev-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -7);
     }
@@ -120,7 +118,7 @@
 .#{$prefix}tool-next {
     @if $enable-font-icons and ($tool-next-glyph != null) {
         @include font-icon($tool-next-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -8);
     }
@@ -129,7 +127,7 @@
 .#{$prefix}tool-pin {
     @if $enable-font-icons and ($tool-pin-glyph != null) {
         @include font-icon($tool-pin-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -9);
     }
@@ -138,7 +136,7 @@
 .#{$prefix}tool-unpin {
     @if $enable-font-icons and ($tool-unpin-glyph != null) {
         @include font-icon($tool-unpin-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -10);
     }
@@ -147,7 +145,7 @@
 .#{$prefix}tool-right {
     @if $enable-font-icons and ($tool-right-glyph != null) {
         @include font-icon($tool-right-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -11);
     }
@@ -156,7 +154,7 @@
 .#{$prefix}tool-left {
     @if $enable-font-icons and ($tool-left-glyph != null) {
         @include font-icon($tool-left-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -12);
     }
@@ -165,7 +163,7 @@
 .#{$prefix}tool-down {
     @if $enable-font-icons and ($tool-down-glyph != null) {
         @include font-icon($tool-down-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -13);
     }
@@ -174,7 +172,7 @@
 .#{$prefix}tool-up {
     @if $enable-font-icons and ($tool-up-glyph != null) {
         @include font-icon($tool-up-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -14);
     }
@@ -183,7 +181,7 @@
 .#{$prefix}tool-refresh {
     @if $enable-font-icons and ($tool-refresh-glyph != null) {
         @include font-icon($tool-refresh-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -15);
     }
@@ -192,7 +190,7 @@
 .#{$prefix}tool-plus {
     @if $enable-font-icons and ($tool-plus-glyph != null) {
         @include font-icon($tool-plus-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -16);
     }
@@ -201,7 +199,7 @@
 .#{$prefix}tool-minus {
     @if $enable-font-icons and ($tool-minus-glyph != null) {
         @include font-icon($tool-minus-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -17);
     }
@@ -210,7 +208,7 @@
 .#{$prefix}tool-search {
     @if $enable-font-icons and ($tool-search-glyph != null) {
         @include font-icon($tool-search-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -18);
     }
@@ -219,7 +217,7 @@
 .#{$prefix}tool-save {
     @if $enable-font-icons and ($tool-save-glyph != null) {
         @include font-icon($tool-save-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -19);
     }
@@ -228,7 +226,7 @@
 .#{$prefix}tool-help {
     @if $enable-font-icons and ($tool-help-glyph != null) {
         @include font-icon($tool-help-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -20);
     }
@@ -237,7 +235,7 @@
 .#{$prefix}tool-print {
     @if $enable-font-icons and ($tool-print-glyph != null) {
         @include font-icon($tool-print-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -21);
     }
@@ -246,7 +244,7 @@
 .#{$prefix}tool-expand {
     @if $enable-font-icons and ($tool-expand-glyph != null) {
         @include font-icon($tool-expand-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -22);
     }
@@ -255,7 +253,7 @@
 .#{$prefix}tool-collapse {
     @if $enable-font-icons and ($tool-collapse-glyph != null) {
         @include font-icon($tool-collapse-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -23);
     }
@@ -264,7 +262,7 @@
 .#{$prefix}tool-resize {
     @if $enable-font-icons and ($tool-resize-glyph != null) {
         @include font-icon($tool-resize-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -24);
     }
@@ -273,7 +271,7 @@
 .#{$prefix}tool-move {
     @if $enable-font-icons and ($tool-move-glyph != null) {
         @include font-icon($tool-move-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -25);
     }
@@ -282,7 +280,7 @@
 .#{$prefix}tool-expand-bottom {
     @if $enable-font-icons and ($tool-expand-bottom-glyph != null) {
         @include font-icon($tool-expand-bottom-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -13);
     }
@@ -291,7 +289,7 @@
 .#{$prefix}tool-collapse-bottom {
     @if $enable-font-icons and ($tool-collapse-bottom-glyph != null) {
         @include font-icon($tool-collapse-bottom-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -13);
     }
@@ -300,7 +298,7 @@
 .#{$prefix}tool-expand-top {
     @if $enable-font-icons and ($tool-expand-top-glyph != null) {
         @include font-icon($tool-expand-top-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -14);
     }
@@ -309,7 +307,7 @@
 .#{$prefix}tool-collapse-top {
     @if $enable-font-icons and ($tool-collapse-top-glyph != null) {
         @include font-icon($tool-collapse-top-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -14);
     }
@@ -318,7 +316,7 @@
 .#{$prefix}tool-expand-left {
     @if $enable-font-icons and ($tool-expand-left-glyph != null) {
         @include font-icon($tool-expand-left-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -12);
     }
@@ -327,7 +325,7 @@
 .#{$prefix}tool-collapse-left {
     @if $enable-font-icons and ($tool-collapse-left-glyph != null) {
         @include font-icon($tool-collapse-left-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -12);
     }
@@ -336,7 +334,7 @@
 .#{$prefix}tool-expand-right {
     @if $enable-font-icons and ($tool-expand-right-glyph != null) {
         @include font-icon($tool-expand-right-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -11);
     }
@@ -345,7 +343,7 @@
 .#{$prefix}tool-collapse-right {
     @if $enable-font-icons and ($tool-collapse-right-glyph != null) {
         @include font-icon($tool-collapse-right-glyph);
-        background: none !important;
+        background: none;
     } @else {
         background-position: 0 ($tool-size * -11);
     }
@@ -356,7 +354,7 @@
         &.#{$prefix}tool-expand-left {
             @if $enable-font-icons and ($tool-expand-right-glyph != null) {
                 @include font-icon($tool-expand-right-glyph);
-                background: none !important;
+                background: none;
             } @else {
                 background-position: 0 ($tool-size * -11);
             }
@@ -365,7 +363,7 @@
         &.#{$prefix}tool-collapse-left {
             @if $enable-font-icons and ($tool-collapse-right-glyph != null) {
                 @include font-icon($tool-collapse-right-glyph);
-                background: none !important;
+                background: none;
             } @else {
                 background-position: 0 ($tool-size * -11);
             }
@@ -374,7 +372,7 @@
         &.#{$prefix}tool-expand-right {
             @if $enable-font-icons and ($tool-expand-left-glyph != null) {
                 @include font-icon($tool-expand-left-glyph);
-                background: none !important;
+                background: none;
             } @else {
                 background-position: 0 ($tool-size * -12);
             }
@@ -383,7 +381,7 @@
         &.#{$prefix}tool-collapse-right {
             @if $enable-font-icons and ($tool-collapse-left-glyph != null) {
                 @include font-icon($tool-collapse-left-glyph);
-                background: none !important;
+                background: none;
             } @else {
                 background-position: 0 ($tool-size * -12);
             }

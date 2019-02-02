@@ -130,7 +130,8 @@ Ext.define('Ext.util.HashMap', {
      * the HashMap will be able to *derive* the key for the new item.
      * In this case just pass the new item in this parameter.
      *
-     * @param {Object} [value] The item to add.
+     * @param {Object} [o] The item to add.
+     *
      * @return {Object} The item added.
      */
     add: function(key, value) {

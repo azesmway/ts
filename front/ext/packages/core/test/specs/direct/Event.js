@@ -1,4 +1,4 @@
-topSuite("Ext.direct.Event", ['Ext.direct.*'], function() {
+describe("Ext.direct.Event", function() {
     var event;
     
     describe("Event", function() {

@@ -1,4 +1,4 @@
-topSuite("Ext.form.field.Hidden", function() {
+describe("Ext.form.field.Hidden", function() {
     var component, makeComponent, render;
 
     beforeEach(function() {

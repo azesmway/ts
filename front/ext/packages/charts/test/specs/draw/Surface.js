@@ -1,6 +1,4 @@
-/* global expect, Ext */
-
-topSuite("Ext.draw.Surface", function() {
+describe('Ext.draw.Surface', function () {
 
     describe('add', function () {
         it("should not add the same sprite to the surface twice", function () {
@@ -104,13 +102,13 @@ topSuite("Ext.draw.Surface", function() {
             id = sprite.getId();
             result = surface.remove(sprite);
             expect(result).toEqual(sprite);
-            expect(sprite.destroyed).toBe(false);
+            expect(sprite.isDestroyed).toBe(undefined);
             expect(surface.getItems().length).toBe(1);
             expect(surface.get(id)).toBe(undefined);
 
             result = surface.remove(givenId);
             expect(result).toEqual(spriteId);
-            expect(spriteId.destroyed).toBe(false);
+            expect(spriteId.isDestroyed).toBe(undefined);
             expect(surface.getItems().length).toBe(0);
             expect(surface.get(givenId)).toBe(undefined);
 
@@ -130,12 +128,12 @@ topSuite("Ext.draw.Surface", function() {
 
             result = surface.remove(sprite, true);
             expect(result).toEqual(sprite);
-            expect(result.destroyed).toBe(true);
+            expect(result.isDestroyed).toBe(true);
             expect(surface.getItems().length).toBe(1);
 
             result = surface.remove('testing', true);
             expect(result).toEqual(spriteId);
-            expect(result.destroyed).toBe(true);
+            expect(result.isDestroyed).toBe(true);
             expect(surface.getItems().length).toBe(0);
 
             surface.destroy();
@@ -162,8 +160,6 @@ topSuite("Ext.draw.Surface", function() {
             surface.destroy();
         });
 
-        // This spec is only "to do" in modern browsers
-        TODO(Object.setPrototypeOf && jasmine.CLEAR_PROTOTYPE, 'Make it work with prototype clearing').
         it("if passed an already destroyed sprite, should return it without doing anything", function () {
             var deadSprite = new Ext.draw.sprite.Rect({}),
                 surface = new Ext.draw.Surface({}),
@@ -200,11 +196,11 @@ topSuite("Ext.draw.Surface", function() {
 
             result = surface2.remove(sprite);
             expect(result).toEqual(sprite);
-            expect(result.destroyed).toBe(false);
+            expect(result.isDestroyed).toBe(undefined);
 
             result = surface2.remove(sprite, true);
             expect(result).toEqual(sprite);
-            expect(result.destroyed).toBe(true);
+            expect(result.isDestroyed).toBe(true);
 
             surface1.destroy();
             surface2.destroy();

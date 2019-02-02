@@ -8,7 +8,7 @@ Ext.define('Ext.chart.series.sprite.Scatter', {
     alias: 'sprite.scatterSeries',
     extend: 'Ext.chart.series.sprite.Cartesian',
 
-    renderClipped: function (surface, ctx, dataClipRect, surfaceClipRect) {
+    renderClipped: function (surface, ctx, clip, clipRect) {
         if (this.cleanRedraw) {
             return;
         }
@@ -19,7 +19,6 @@ Ext.define('Ext.chart.series.sprite.Scatter', {
             labels = attr.labels,
             series = me.getSeries(),
             isDrawLabels = labels && me.getMarker('labels'),
-            surfaceMatrix = me.surfaceMatrix,
             matrix = me.attr.matrix,
             xx = matrix.getXX(),
             yy = matrix.getYY(),
@@ -31,41 +30,39 @@ Ext.define('Ext.chart.series.sprite.Scatter', {
             x, y, i;
 
         if (attr.flipXY) {
-            left = surfaceClipRect[1] - xx * xScalingDirection;
-            right = surfaceClipRect[1] + surfaceClipRect[3] + xx * xScalingDirection;
-            top = surfaceClipRect[0] - yy;
-            bottom = surfaceClipRect[0] + surfaceClipRect[2] + yy;
+            left = clipRect[1] - xx * xScalingDirection;
+            right = clipRect[1] + clipRect[3] + xx * xScalingDirection;
+            top = clipRect[0] - yy;
+            bottom = clipRect[0] + clipRect[2] + yy;
         } else {
-            left = surfaceClipRect[0] - xx * xScalingDirection;
-            right = surfaceClipRect[0] + surfaceClipRect[2] + xx * xScalingDirection;
-            top = surfaceClipRect[1] - yy;
-            bottom = surfaceClipRect[1] + surfaceClipRect[3] + yy;
+            left = clipRect[0] - xx * xScalingDirection;
+            right = clipRect[0] + clipRect[2] + xx * xScalingDirection;
+            top = clipRect[1] - yy;
+            bottom = clipRect[1] + clipRect[3] + yy;
         }
 
         for (i = 0; i < dataX.length; i++) {
-
             x = dataX[i];
             y = dataY[i];
             x = x * xx + dx;
             y = y * yy + dy;
-
             if (left <= x && x <= right && top <= y && y <= bottom) {
                 if (attr.renderer) {
                     markerCfg = {
-                        type: 'markers',
-                        translationX: surfaceMatrix.x(x, y),
-                        translationY: surfaceMatrix.y(x, y)
+                        type: 'items',
+                        translationX: x,
+                        translationY: y
                     };
                     params = [me, markerCfg, {store: me.getStore()}, i];
                     changes = Ext.callback(attr.renderer, null, params, 0, series);
                     markerCfg = Ext.apply(markerCfg, changes);
                 } else {
-                    markerCfg.translationX = surfaceMatrix.x(x, y);
-                    markerCfg.translationY = surfaceMatrix.y(x, y);
+                    markerCfg.translationX = x;
+                    markerCfg.translationY = y;
                 }
-                me.putMarker('markers', markerCfg, i, !attr.renderer);
+                me.putMarker('items', markerCfg, i, !attr.renderer);
                 if (isDrawLabels && labels[i]) {
-                    me.drawLabel(labels[i], x, y, i, surfaceClipRect);
+                    me.drawLabel(labels[i], x, y, i, clipRect);
                 }
             }
         }

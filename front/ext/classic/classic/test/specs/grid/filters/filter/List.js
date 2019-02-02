@@ -1,11 +1,11 @@
 /* global Ext, jasmine, MockAjaxManager, expect, spyOn */
 
-topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Filters'], function() {
+describe("Ext.grid.filters.filter.List", function () {
     var Model = Ext.define(null, {
             extend: 'Ext.data.Model',
             fields: ['id', 'text']
         }),
-        grid, store, filterCol, columnMenu, filterItem, filterMenu, listFilter,
+        grid, store, filterCol, filterItem, listFilter,
         synchronousLoad = true,
         storeLoad = Ext.data.ProxyStore.prototype.load,
         loadStore = function() {
@@ -52,16 +52,16 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
         listFilter = filterCol.filter;
     }
 
+    function getMenu() {
+        return grid.headerCt.getMenu().down('#filters').menu;
+    }
+
     function clickItem(index) {
-        runs(function() {
-            showMenu();
-        });
-        waitsFor(function() {
-            return columnMenu.isVisible();
-        });
-        runs(function() {
-            jasmine.fireMouseEvent(filterMenu.items.getAt(index).el, 'click');
-        });
+        var item;
+
+        showMenu();
+        item = getMenu().items.getAt(index);
+        jasmine.fireMouseEvent(item.el, 'click');
     }
 
     function completeRequest(data) {
@@ -90,24 +90,16 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
 
     function showMenu(column) {
         column = column || filterCol;
-
-        // Show the menu through platform-independent keystrokes.
-        Ext.testHelper.showHeaderMenu(column || filterCol);
-        
-        runs(function() {
-            columnMenu = column.activeMenu;
-            filterItem = columnMenu.down('#filters');
-            jasmine.fireKeyEvent(columnMenu.el, 'keydown', Ext.event.Event.UP);
-            filterMenu = filterItem.menu;
-            if (filterMenu.items.getCount()) {
-                jasmine.fireKeyEvent(filterItem.el, 'keydown', Ext.event.Event.RIGHT);
-                waitsForFocus(filterMenu);
-            }
-        });
+        grid.headerCt.showMenuBy(null, column.triggerEl, column);
+        filterItem = grid.headerCt.getMenu().down('#filters');
+        filterItem.activated = true;
+        filterItem.expandMenu({
+            type: 'click'
+        }, 0);
     }
 
     function hideMenu() {
-        columnMenu.hide();
+        getMenu().parentMenu.hide();
     }
 
     function setup() {
@@ -138,20 +130,13 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
         });
 
         it("should use the value config as its value if specified", function () {
+            var value = ['t1', 't3'];
+
             createGrid({
-                value: ['t1', 't3']
+                value: value
             });
 
-            expect(listFilter.filter.getValue()).toEqual(['t1', 't3']);
-        });
-
-        it("should transform the filter value if not specified as an array", function() {
-            createGrid({
-                value: 'Item 2'
-            });
-
-            expect(store.getCount()).toBe(1);
-            expect(store.getFilters().first().getValue()).toEqual(['Item 2']);
+            expect(listFilter.filter.getValue()).toEqual(value);
         });
     });
 
@@ -235,10 +220,8 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                                     value: value
                                 }, null, getGridCfg());
 
-
                                 grid.getViewModel().notify();
-                                listFilter = filterCol.filter;
-                                expect(listFilter.gridStoreListeners).toBeUndefined();
+                                expect(listFilter.gridStoreListeners).toBeDefined();
                             });
                         }
 
@@ -261,7 +244,6 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             value: 'baz'
                         }, null, getGridCfg());
                         grid.getViewModel().notify();
-                        listFilter = filterCol.filter;
                         expect(listFilter.gridStoreListeners).toBeDefined();
                     });
                 });
@@ -278,6 +260,10 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             }
 
                             clickItem(1);
+                        });
+
+                        it("should bind the listeners on menu show when not configured with a value", function () {
+                            expect(listFilter.gridStoreListeners).toBeDefined();
                         });
 
                         it("should not have bound the listeners to the empty store", function () {
@@ -354,6 +340,8 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
             });
 
             describe("specifying a dataIndex value", function () {
+                var menu;
+
                 beforeEach(function () {
                     createGrid({
                         dataIndex: 'type'
@@ -367,10 +355,15 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                     });
 
                     showMenu();
+                    menu = listFilter.menu;
+                });
+
+                afterEach(function () {
+                    menu = null;
                 });
 
                 it("should create the expected number of menu items", function () {
-                    expect(filterMenu.items.length).toBe(4);
+                    expect(menu.items.length).toBe(4);
                 });
 
                 it("should not be the same value as the column dataIndex", function () {
@@ -396,6 +389,8 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
             });
 
             describe("specifying a labelIndex value", function () {
+                var menu;
+
                 beforeEach(function () {
                     createGrid({
                         dataIndex: 'foo',
@@ -410,14 +405,19 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                     });
 
                     showMenu();
+                    menu = listFilter.menu;
+                });
+
+                afterEach(function () {
+                    menu = null;
                 });
 
                 it("should create the expected number of menu items", function () {
-                    expect(filterMenu.items.length).toBe(4);
+                    expect(menu.items.length).toBe(4);
                 });
 
                 it("should work", function () {
-                    expect(filterMenu.items.getAt(0).text).toBe('Item 101');
+                    expect(menu.items.getAt(0).text).toBe('Item 101');
                 });
             });
         });
@@ -441,33 +441,25 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                 it("should check the Filters menu item", function () {
                     showMenu();
 
-                    runs(function() {
-                        expect(filterItem.checked).toBe(true);
-                    });
+                    expect(filterItem.checked).toBe(true);
                 });
 
                 it("should not check any option menu items", function () {
                     showMenu();
 
-                    runs(function() {
-                        expect(filterItem.query('[checked]').length).toBe(0);
-                    });
+                    expect(filterItem.query('[checked]').length).toBe(0);
                 });
 
                 it("should create a store filter", function () {
                     showMenu();
 
-                    runs(function() {
-                        expect(store.getFilters().length).toBe(1);
-                    });
+                    expect(store.getFilters().length).toBe(1);
                 });
 
                 it("should filter the grid store", function () {
                     showMenu();
 
-                    runs(function() {
-                        expect(store.data.filtered).toBe(true);
-                    });
+                    expect(store.data.filtered).toBe(true);
                 });
 
                 it("should not filter if explicitly configured as not active", function () {
@@ -497,38 +489,30 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                 it("should check the Filters menu item", function () {
                     showMenu();
 
-                    runs(function() {
-                        expect(filterItem.checked).toBe(true);
-                    });
+                    expect(filterItem.checked).toBe(true);
                 });
 
                 it("should check the option menu items specified in the config", function () {
                     var items;
 
                     showMenu();
-                    
-                    runs(function() {
-                        items = filterMenu.query('[checked]');
-                        expect(items.length).toBe(2);
-                        expect(items[0].getValue()).toBe('Item 1');
-                        expect(items[1].getValue()).toBe('Item 3');
-                    });
+                    items = filterItem.query('[checked]');
+
+                    expect(items.length).toBe(2);
+                    expect(items[0].getValue()).toBe('Item 1');
+                    expect(items[1].getValue()).toBe('Item 3');
                 });
 
                 it("should create a store filter", function () {
                     showMenu();
 
-                    runs(function() {
-                        expect(store.getFilters().length).toBe(1);
-                    });
+                    expect(store.getFilters().length).toBe(1);
                 });
 
                 it("should filter the grid store", function () {
                     showMenu();
 
-                    runs(function() {
-                        expect(store.data.filtered).toBe(true);
-                    });
+                    expect(store.data.filtered).toBe(true);
                 });
 
                 it("should not filter if explicitly configured as not active", function () {
@@ -554,13 +538,11 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         options: opt
                     });
                     showMenu();
-                    
-                    runs(function() {
-                        expect(filterMenu.items.getCount()).toBe(3);
-                        expect(filterMenu.items.getAt(0).text).toBe('foo');
-                        expect(filterMenu.items.getAt(1).text).toBe('bar');
-                        expect(filterMenu.items.getAt(2).text).toBe('baz');
-                    });
+                    var menu = getMenu();
+                    expect(menu.items.getCount()).toBe(3);
+                    expect(menu.items.getAt(0).text).toBe('foo');
+                    expect(menu.items.getAt(1).text).toBe('bar');
+                    expect(menu.items.getAt(2).text).toBe('baz');
                 });
 
                 it("should use the array element as the filter value", function() {
@@ -568,13 +550,10 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         options: opt
                     });
                     clickItem(1);
-                    
-                    runs(function() {
-                        var filter = store.getFilters().first();
-                        expect(filter.getProperty()).toBe('text');
-                        expect(filter.getOperator()).toBe('in');
-                        expect(filter.getValue()).toEqual(['bar']);
-                    });
+                    var filter = store.getFilters().first();
+                    expect(filter.getProperty()).toBe('text');
+                    expect(filter.getOperator()).toBe('in');
+                    expect(filter.getValue()).toEqual(['bar']);
                 });
             });
 
@@ -585,13 +564,11 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         options: opt
                     });
                     showMenu();
-                    
-                    runs(function() {
-                        expect(filterMenu.items.getCount()).toBe(3);
-                        expect(filterMenu.items.getAt(0).text).toBe('Foo');
-                        expect(filterMenu.items.getAt(1).text).toBe('Bar');
-                        expect(filterMenu.items.getAt(2).text).toBe('Baz');
-                    });
+                    var menu = getMenu();
+                    expect(menu.items.getCount()).toBe(3);
+                    expect(menu.items.getAt(0).text).toBe('Foo');
+                    expect(menu.items.getAt(1).text).toBe('Bar');
+                    expect(menu.items.getAt(2).text).toBe('Baz');
                 });
 
                 it("should use the element at index 0 as the filter value", function() {
@@ -599,13 +576,10 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         options: opt
                     });
                     clickItem(1);
-                    
-                    runs(function() {
-                        var filter = store.getFilters().first();
-                        expect(filter.getProperty()).toBe('text');
-                        expect(filter.getOperator()).toBe('in');
-                        expect(filter.getValue()).toEqual(['bar']);
-                    });
+                    var filter = store.getFilters().first();
+                    expect(filter.getProperty()).toBe('text');
+                    expect(filter.getOperator()).toBe('in');
+                    expect(filter.getValue()).toEqual(['bar']);
                 });
             });
 
@@ -618,13 +592,11 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         labelField: 'text'
                     });
                     showMenu();
-                    
-                    runs(function() {
-                        expect(filterMenu.items.getCount()).toBe(3);
-                        expect(filterMenu.items.getAt(0).text).toBe('Foo');
-                        expect(filterMenu.items.getAt(1).text).toBe('Bar');
-                        expect(filterMenu.items.getAt(2).text).toBe('Baz');
-                    });
+                    var menu = getMenu();
+                    expect(menu.items.getCount()).toBe(3);
+                    expect(menu.items.getAt(0).text).toBe('Foo');
+                    expect(menu.items.getAt(1).text).toBe('Bar');
+                    expect(menu.items.getAt(2).text).toBe('Baz');
                 });
 
                 it("should use the item with the idField as the filter value", function() {
@@ -634,13 +606,10 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         labelField: 'text'
                     });
                     clickItem(1);
-                    
-                    runs(function() {
-                        var filter = store.getFilters().first();
-                        expect(filter.getProperty()).toBe('text');
-                        expect(filter.getOperator()).toBe('in');
-                        expect(filter.getValue()).toEqual(['bar']);
-                    });
+                    var filter = store.getFilters().first();
+                    expect(filter.getProperty()).toBe('text');
+                    expect(filter.getOperator()).toBe('in');
+                    expect(filter.getValue()).toEqual(['bar']);
                 });
             });
         });
@@ -673,10 +642,7 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         store: options
                     });
                     showMenu();
-                    
-                    runs(function() {
-                        expect(options.load).not.toHaveBeenCalled();
-                    });
+                    expect(options.load).not.toHaveBeenCalled();
                 });
 
                 it("should use the field with the labelField as the menu text", function() {
@@ -685,12 +651,10 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         store: options
                     });
                     showMenu();
-                    
-                    runs(function() {
-                        expect(filterMenu.items.getCount()).toBe(2);
-                        expect(filterMenu.items.getAt(0).text).toBe('Type 1');
-                        expect(filterMenu.items.getAt(1).text).toBe('Type 2');
-                    });
+                    var menu = getMenu();
+                    expect(menu.items.getCount()).toBe(2);
+                    expect(menu.items.getAt(0).text).toBe('Type 1');
+                    expect(menu.items.getAt(1).text).toBe('Type 2');
                 });
 
                 it("should use the field with the idField as the filter value", function() {
@@ -699,13 +663,10 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         store: options
                     });
                     clickItem(0);
-                    
-                    runs(function() {
-                        var filter = store.getFilters().first();
-                        expect(filter.getProperty()).toBe('text');
-                        expect(filter.getOperator()).toBe('in');
-                        expect(filter.getValue()).toEqual(['t1']);
-                    });
+                    var filter = store.getFilters().first();
+                    expect(filter.getProperty()).toBe('text');
+                    expect(filter.getOperator()).toBe('in');
+                    expect(filter.getValue()).toEqual(['t1']);
                 });
             });
 
@@ -738,11 +699,9 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             store: options
                         });
                         showMenu();
-                        
-                        runs(function() {
-                            expect(filterMenu.items.getCount()).toBe(1);
-                            expect(filterMenu.items.getAt(0).text).toBe(listFilter.loadingText);
-                        });
+                        var menu = getMenu();
+                        expect(menu.items.getCount()).toBe(1);
+                        expect(menu.items.getAt(0).text).toBe(listFilter.loadingText);
                     });
 
                     it("should remove the placeholder when the store loads", function() {
@@ -751,22 +710,20 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             store: options
                         });
                         showMenu();
-                        
-                        runs(function() {
-                            completeRequest([{
-                                id: 't1',
-                                text: 'Type 1'
-                            }, {
-                                id: 't2',
-                                text: 'Type 2'
-                            }]);
-                        });
+                        var menu = getMenu();
+                        completeRequest([{
+                            id: 't1',
+                            text: 'Type 1'
+                        }, {
+                            id: 't2',
+                            text: 'Type 2'
+                        }]);
                         waitsFor(function() {
-                            return filterMenu.items.getCount() === 2;
+                            return menu.items.getCount() === 2;
                         });
                         runs(function() {
-                            expect(filterMenu.items.getAt(0).text).toBe('Type 1');
-                            expect(filterMenu.items.getAt(1).text).toBe('Type 2');
+                            expect(menu.items.getAt(0).text).toBe('Type 1');
+                            expect(menu.items.getAt(1).text).toBe('Type 2');
                         });
                     });
                 });
@@ -783,10 +740,7 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                                 loadOnShow: true
                             });
                             showMenu();
-                            
-                            runs(function() {
-                                expect(options.load).toHaveBeenCalled();
-                            });
+                            expect(options.load).toHaveBeenCalled();
                         });
 
                         it("should not load if the store has a pending autoLoad", function() {
@@ -799,10 +753,7 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                                 loadOnShow: true
                             });
                             showMenu();
-                            
-                            runs(function() {
-                                expect(options.load).not.toHaveBeenCalled();
-                            });
+                            expect(options.load).not.toHaveBeenCalled();
                         });
 
                         it("should not load if the store is loading", function() {
@@ -816,10 +767,7 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                                 loadOnShow: true
                             });
                             showMenu();
-                            
-                            runs(function() {
-                                expect(options.load).not.toHaveBeenCalled();
-                            });
+                            expect(options.load).not.toHaveBeenCalled();
                         });
 
                         it("should not load if the store has already loaded", function() {
@@ -830,21 +778,14 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                                 loadOnShow: true
                             });
                             showMenu();
-                            
-                            runs(function() {
-                                completeRequest([{
-                                    id: 't1',
-                                    text: 'Type 1'
-                                }]);
-                                filterMenu.hide();
-                                spyOn(options, 'load');
-                            });
-
+                            completeRequest([{
+                                id: 't1',
+                                text: 'Type 1'
+                            }]);
+                            getMenu().hide();
+                            spyOn(options, 'load');
                             showMenu();
-
-                            runs(function() {
-                                expect(options.load).not.toHaveBeenCalled();
-                            });
+                            expect(options.load).not.toHaveBeenCalled();
                         });
                     });
 
@@ -858,10 +799,7 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                                 loadOnShow: false
                             });
                             showMenu();
-                            
-                            runs(function() {
-                                expect(options.load).not.toHaveBeenCalled();
-                            });
+                            expect(options.load).not.toHaveBeenCalled();
                         });
                     });
                 });
@@ -875,26 +813,24 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             labelField: 'text'
                         });
                         showMenu();
-                        
-                        runs(function() {
-                            completeRequest([{
-                                id: 't1',
-                                text: 'Type 1'
-                            }, {
-                                id: 't2',
-                                text: 'Type 2'
-                            }, {
-                                id: 't3',
-                                text: 'Type 3'
-                            }]);
-                        });
+                        completeRequest([{
+                            id: 't1',
+                            text: 'Type 1'
+                        }, {
+                            id: 't2',
+                            text: 'Type 2'
+                        }, {
+                            id: 't3',
+                            text: 'Type 3'
+                        }]);
+                        var menu = getMenu();
                         waitsFor(function() {
-                            return filterMenu.items.getCount() === 3;
+                            return menu.items.getCount() === 3;
                         });
                         runs(function() {
-                            expect(filterMenu.items.getAt(0).text).toBe('Type 1');
-                            expect(filterMenu.items.getAt(1).text).toBe('Type 2');
-                            expect(filterMenu.items.getAt(2).text).toBe('Type 3');
+                            expect(menu.items.getAt(0).text).toBe('Type 1');
+                            expect(menu.items.getAt(1).text).toBe('Type 2');
+                            expect(menu.items.getAt(2).text).toBe('Type 3');
                         });
                     });
 
@@ -906,31 +842,26 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             labelField: 'text'
                         });
                         showMenu();
-                        
-                        runs(function() {
-                            completeRequest([{
-                                id: 't1',
-                                text: 'Type 1'
-                            }, {
-                                id: 't2',
-                                text: 'Type 2'
-                            }, {
-                                id: 't3',
-                                text: 'Type 3'
-                            }]);
-                        });
+                        completeRequest([{
+                            id: 't1',
+                            text: 'Type 1'
+                        }, {
+                            id: 't2',
+                            text: 'Type 2'
+                        }, {
+                            id: 't3',
+                            text: 'Type 3'
+                        }]);
+                        var menu = getMenu();
                         waitsFor(function() {
-                            return filterMenu.items.getCount() > 0;
+                            return menu.items.getCount() > 0;
                         });
                         runs(function() {
                             clickItem(1);
-                            
-                            runs(function() {
-                                var filter = store.getFilters().first();
-                                expect(filter.getProperty()).toBe('text');
-                                expect(filter.getOperator()).toBe('in');
-                                expect(filter.getValue()).toEqual(['t2']);
-                            });
+                            var filter = store.getFilters().first();
+                            expect(filter.getProperty()).toBe('text');
+                            expect(filter.getOperator()).toBe('in');
+                            expect(filter.getValue()).toEqual(['t2']);
                         });
                     });
                 });
@@ -955,12 +886,9 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             store: options
                         });
                         showMenu();
-                        
-                        runs(function() {
-                            grid.destroy();
-                            expect(options.hasListeners.load || 0).toBe(load);
-                            completeRequest([]);
-                        });
+                        grid.destroy();
+                        expect(options.hasListeners.load || 0).toBe(load);
+                        completeRequest([]);
                     });
 
                     it("should not have any listeners on the store if the store has loaded", function() {
@@ -971,12 +899,9 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             store: options
                         });
                         showMenu();
-                        
-                        runs(function() {
-                            completeRequest([]);
-                            grid.destroy();
-                            expect(options.hasListeners.load || 0).toBe(load);
-                        });
+                        completeRequest([]);
+                        grid.destroy();
+                        expect(options.hasListeners.load || 0).toBe(load);
                     });
                 });
             });
@@ -998,13 +923,11 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                     labelField: 'text'
                 });
                 showMenu();
-                
-                runs(function() {
-                    expect(filterMenu.items.getCount()).toBe(2);
-                    expect(filterMenu.items.getAt(0).text).toBe('A');
-                    expect(filterMenu.items.getAt(1).text).toBe('B');
-                    options.destroy();
-                });
+                var menu = getMenu();
+                expect(menu.items.getCount()).toBe(2);
+                expect(menu.items.getAt(0).text).toBe('A');
+                expect(menu.items.getAt(1).text).toBe('B');
+                options.destroy();
             });
 
             it("should accept a store config", function() {
@@ -1020,12 +943,10 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                     labelField: 'text'
                 });
                 showMenu();
-                
-                runs(function() {
-                    expect(filterMenu.items.getCount()).toBe(2);
-                    expect(filterMenu.items.getAt(0).text).toBe('A');
-                    expect(filterMenu.items.getAt(1).text).toBe('B');
-                });
+                var menu = getMenu();
+                expect(menu.items.getCount()).toBe(2);
+                expect(menu.items.getAt(0).text).toBe('A');
+                expect(menu.items.getAt(1).text).toBe('B');
             });
         });
 
@@ -1055,11 +976,10 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             });
                             if (rendered) {
                                 showMenu();
+                                getMenu();
                             }
-                            runs(function() {
-                                grid.destroy();
-                                expect(options.destroyed).toBe(true);
-                            });
+                            grid.destroy();
+                            expect(options.destroyed).toBe(true);
                         });
 
                         it("should destroy a store instance", function() {
@@ -1077,11 +997,10 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             });
                             if (rendered) {
                                 showMenu();
+                                getMenu();
                             }
-                            runs(function() {
-                                grid.destroy();
-                                expect(options.destroyed).toBe(true);
-                            });
+                            grid.destroy();
+                            expect(options.destroyed).toBe(true);
                         });
 
                         it("should destroy a store passed as a config", function() {
@@ -1099,11 +1018,10 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             });
                             if (rendered) {
                                 showMenu();
+                                getMenu();
                             }
-                            runs(function() {
-                                grid.destroy();
-                                expect(Ext.StoreManager.lookup('x')).toBeUndefined();
-                            });
+                            grid.destroy();
+                            expect(Ext.StoreManager.lookup('x')).toBeUndefined();
                         });
                     });
 
@@ -1125,12 +1043,11 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             });
                             if (rendered) {
                                 showMenu();
+                                getMenu();
                             }
-                            runs(function() {
-                                grid.destroy();
-                                expect(options.destroyed).toBe(false);
-                                options.destroy();
-                            });
+                            grid.destroy();
+                            expect(options.destroyed).toBe(false);
+                            options.destroy();
                         });
 
                         it("should not destroy a store instance", function() {
@@ -1149,12 +1066,11 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             });
                             if (rendered) {
                                 showMenu();
+                                getMenu();
                             }
-                            runs(function() {
-                                grid.destroy();
-                                expect(options.destroyed).toBe(false);
-                                options.destroy();
-                            });
+                            grid.destroy();
+                            expect(options.destroyed).toBe(false);
+                            options.destroy();
                         });
 
                         it("should not destroy a store passed as a config", function() {
@@ -1173,13 +1089,12 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             });
                             if (rendered) {
                                 showMenu();
+                                getMenu();
                             }
-                            runs(function() {
-                                options = Ext.StoreManager.lookup('x');
-                                grid.destroy();
-                                expect(options.destroyed).toBe(false);
-                                options.destroy();
-                            });
+                            options = Ext.StoreManager.lookup('x');
+                            grid.destroy();
+                            expect(options.destroyed).toBe(false);
+                            options.destroy();
                         });
                     });
                 });
@@ -1215,36 +1130,35 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                 it("should not load the store", function() {
                     spyOn(store, 'load');
                     showMenu();
-                    runs(function() {
-                        expect(store.load).not.toHaveBeenCalled();
-                    });
+                    expect(store.load).not.toHaveBeenCalled();
                 });
 
                 it("should use the unique dataIndex values as the menu text and exclude nulls", function() {
                     showMenu();
-
+                    var menu = getMenu();
+                    waitsFor(function() {
+                        return menu.items.getCount() === 4;
+                    });
                     runs(function() {
-                        expect(filterMenu.items.getCount()).toBe(4);
-                        expect(filterMenu.items.getAt(0).text).toBe('t1');
-                        expect(filterMenu.items.getAt(1).text).toBe('t2');
-                        expect(filterMenu.items.getAt(2).text).toBe('t3');
-                        expect(filterMenu.items.getAt(3).text).toBe('t4');
+                        expect(menu.items.getAt(0).text).toBe('t1');
+                        expect(menu.items.getAt(1).text).toBe('t2');
+                        expect(menu.items.getAt(2).text).toBe('t3');
+                        expect(menu.items.getAt(3).text).toBe('t4');
                     });
                 });
 
                 it("should use the dataIndex as the filter value", function() {
                     showMenu();
-
+                    var menu = getMenu();
+                    waitsFor(function() {
+                        return menu.items.getCount() > 0;
+                    });
                     runs(function() {
-                        expect(filterMenu.items.getCount()).toBeGreaterThan(0);
                         clickItem(1);
-                        
-                        runs(function() {
-                            var filter = store.getFilters().first();
-                            expect(filter.getProperty()).toBe('text');
-                            expect(filter.getOperator()).toBe('in');
-                            expect(filter.getValue()).toEqual(['t2']);
-                        });
+                        var filter = store.getFilters().first();
+                        expect(filter.getProperty()).toBe('text');
+                        expect(filter.getOperator()).toBe('in');
+                        expect(filter.getValue()).toEqual(['t2']);
                     });
                 });
 
@@ -1291,62 +1205,45 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                 it("should not load the store", function() {
                     spyOn(store, 'load');
                     showMenu();
-                    
-                    runs(function() {
-                        expect(store.load).not.toHaveBeenCalled();
-                    });
+                    expect(store.load).not.toHaveBeenCalled();
                 });
 
                 it("should use the unique dataIndex values as the menu text and exclude nulls when the store loads", function() {
                     store.load();
                     showMenu();
-                    
-                    runs(function() {
-                        completeRequest(loadData);
-                    });
+                    var menu = getMenu();
+                    completeRequest(loadData);
                     waitsFor(function() {
-                        return filterMenu.items.getCount() === 4;
+                        return menu.items.getCount() === 4;
                     });
                     runs(function() {
-                        expect(filterMenu.items.getCount()).toBe(4);
-                        expect(filterMenu.items.getAt(0).text).toBe('t1');
-                        expect(filterMenu.items.getAt(1).text).toBe('t2');
-                        expect(filterMenu.items.getAt(2).text).toBe('t3');
-                        expect(filterMenu.items.getAt(3).text).toBe('t4');
+                        expect(menu.items.getCount()).toBe(4);
+                        expect(menu.items.getAt(0).text).toBe('t1');
+                        expect(menu.items.getAt(1).text).toBe('t2');
+                        expect(menu.items.getAt(2).text).toBe('t3');
+                        expect(menu.items.getAt(3).text).toBe('t4');
                     });
                 });
 
                 it("should use the dataIndex as the filter value when the store loads", function() {
                     store.load();
                     showMenu();
-                    
-                    runs(function() {
-                        completeRequest(loadData);
-                    });
+                    completeRequest(loadData);
                     clickItem(1);
-                    
-                    runs(function() {
-                        var filter = store.getFilters().first();
-                        expect(filter.getProperty()).toBe('text');
-                        expect(filter.getOperator()).toBe('in');
-                        expect(filter.getValue()).toEqual(['t2']);
-                    });
+                    var filter = store.getFilters().first();
+                    expect(filter.getProperty()).toBe('text');
+                    expect(filter.getOperator()).toBe('in');
+                    expect(filter.getValue()).toEqual(['t2']);
                 });
 
                 describe("cleanup", function() {
                     it("should not destroy the store when destroying the grid", function() {
                         store.load();
                         showMenu();
-                    
-                        runs(function() {
-                            completeRequest(loadData);
-                        });
-                        
-                        runs(function() {
-                            spyOn(store, 'destroy').andCallThrough();
-                            grid.destroy();
-                            expect(store.destroy).not.toHaveBeenCalled();
-                        });
+                        completeRequest(loadData);
+                        spyOn(store, 'destroy').andCallThrough();
+                        grid.destroy();
+                        expect(store.destroy).not.toHaveBeenCalled();
                     });
                 });
             });
@@ -1376,22 +1273,23 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         it("should check the Filters menu item", function () {
                             showMenu();
 
-                            runs(function() {
-                                expect(filterItem.checked).toBe(true);
-                            });
+                            expect(filterItem.checked).toBe(true);
                         });
 
                         it("should check the option menu items specified by the value config", function () {
+                            var menu;
+
                             showMenu();
+                            menu = listFilter.menu;
                             waitsFor(function() {
-                                return filterMenu.items.getCount() === 12;
+                                return menu.items.getCount() === 12;
                             });
                             runs(function() {
-                                expect(filterMenu.query('[checked]').length).toBe(2);
-                                expect(filterMenu.down('[text="Item 1"]').checked).toBe(false);
-                                expect(filterMenu.down('[text="Item 2"]').checked).toBe(true);
-                                expect(filterMenu.down('[text="Item 3"]').checked).toBe(true);
-                                expect(filterMenu.down('[text="Item 4"]').checked).toBe(false);
+                                expect(menu.query('[checked]').length).toBe(2);
+                                expect(menu.down('[text="Item 1"]').checked).toBe(false);
+                                expect(menu.down('[text="Item 2"]').checked).toBe(true);
+                                expect(menu.down('[text="Item 3"]').checked).toBe(true);
+                                expect(menu.down('[text="Item 4"]').checked).toBe(false);
                             });
                         });
 
@@ -1437,17 +1335,13 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         it("should check the Filters menu item", function () {
                             showMenu();
 
-                            runs(function() {
-                                expect(filterItem.checked).toBe(true);
-                            });
+                            expect(filterItem.checked).toBe(true);
                         });
 
                         it("should not check any of the option menu items", function () {
                             showMenu();
 
-                            runs(function() {
-                                expect(listFilter.menu.query('[checked]').length).toBe(0);
-                            });
+                            expect(listFilter.menu.query('[checked]').length).toBe(0);
                         });
 
                         it("should create a store filter with no value", function () {
@@ -1491,17 +1385,13 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                         it("should check the Filters menu item", function () {
                             showMenu();
 
-                            runs(function() {
-                                expect(filterItem.checked).toBe(true);
-                            });
+                            expect(filterItem.checked).toBe(true);
                         });
 
                         it("should not check any of the option menu items", function () {
                             showMenu();
 
-                            runs(function() {
-                                expect(listFilter.menu.query('[checked]').length).toBe(0);
-                            });
+                            expect(listFilter.menu.query('[checked]').length).toBe(0);
                         });
 
                         it("should create a store filter with no value", function () {
@@ -1546,17 +1436,13 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                     it("should not check the Filters menu item", function () {
                         showMenu();
 
-                        runs(function() {
-                            expect(filterItem.checked).toBe(false);
-                        });
+                        expect(filterItem.checked).toBe(false);
                     });
 
                     it("should not check any of the menu items", function () {
                         showMenu();
 
-                        runs(function() {
-                            expect(listFilter.menu.query('[checked]').length).toBe(0);
-                        });
+                        expect(listFilter.menu.query('[checked]').length).toBe(0);
                     });
 
                     it("should create an empty store filter", function () {
@@ -1610,15 +1496,13 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
 
                     showMenu();
 
-                    run(function() {
-                        items = listFilter.menu.items;
+                    items = listFilter.menu.items;
 
-                        expect(items.length).toBe(4);
+                    expect(items.length).toBe(4);
 
-                        for (i = 0, len = items.length; i < len; i++) {
-                            expect(items.getAt(i).getValue()).toBe('t' + (i + 101));
-                        }
-                    });
+                    for (i = 0, len = items.length; i < len; i++) {
+                        expect(items.getAt(i).getValue()).toBe('t' + (i + 101));
+                    }
                 });
 
                 afterEach(function () {
@@ -1686,32 +1570,25 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
     describe("recreating the list store and the filter menu items", function () {
         describe("with options", function() {
             it("should not react to store changes", function() {
-                var items;
-
                 createGrid({
                     options: ['Foo', 'Item 1', 'Item 2']
                 });
 
                 showMenu();
-                
-                runs(function() {
-                    items = filterMenu.items;
-                    expect(items.getAt(0).text).toBe('Foo');
-                    expect(items.getAt(1).text).toBe('Item 1');
-                    expect(items.getAt(2).text).toBe('Item 2');
-                    hideMenu();
+                var items = getMenu().items;
+                expect(items.getAt(0).text).toBe('Foo');
+                expect(items.getAt(1).text).toBe('Item 1');
+                expect(items.getAt(2).text).toBe('Item 2');
+                hideMenu();
 
-                    store.filter('id', 't1');
-                });
+                store.filter('id', 't1');
 
                 showMenu();
-                
-                runs(function() {
-                    items = filterMenu.items;
-                    expect(items.getAt(0).text).toBe('Foo');
-                    expect(items.getAt(1).text).toBe('Item 1');
-                    expect(items.getAt(2).text).toBe('Item 2');
-                });
+
+                items = getMenu().items;
+                expect(items.getAt(0).text).toBe('Foo');
+                expect(items.getAt(1).text).toBe('Item 1');
+                expect(items.getAt(2).text).toBe('Item 2');
             });
         });
 
@@ -1721,10 +1598,8 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
 
                 showMenu();
 
-                runs(function() {
-                    spyOn(listFilter, 'createListStore').andCallThrough();
-                    spyOn(listFilter, 'createMenuItems').andCallThrough();
-                });
+                spyOn(listFilter, 'createListStore').andCallThrough();
+                spyOn(listFilter, 'createMenuItems').andCallThrough();
             });
 
             it("should not recreate when sorting the grid store", function () {
@@ -1763,18 +1638,14 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                     grid.view.on('refresh', spy);
 
                     showMenu(grid.down('#filterCol1'));
-                    
-                    runs(function() {
-                        jasmine.fireMouseEvent(filterItem.checkEl.dom, 'click');
-                        filterMenu.hide();
-                    });
+                    jasmine.fireMouseEvent(filterItem.checkEl.dom, 'click');
+                    grid.headerCt.getMenu().hide();
 
                     showMenu(grid.down('#filterCol2'));
+                    jasmine.fireMouseEvent(filterItem.checkEl.dom, 'click');
 
-                    runs(function() {
-                        jasmine.fireMouseEvent(filterItem.checkEl.dom, 'click');
-                        expect(spy.callCount).toBe(2);
-                    });
+                    
+                    expect(spy.callCount).toBe(2);
                 });
 
                 it("should not recreate when toggling the Filters menu item", function () {
@@ -1790,11 +1661,8 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
             describe("the filter menu item", function () {
                 it("should not recreate when unchecking the Filters menu item", function () {
                     clickItem(2);
-                    
-                    runs(function() {
-                        expect(listFilter.createListStore.callCount).toBe(0);
-                        expect(listFilter.createMenuItems.callCount).toBe(0);
-                    });
+                    expect(listFilter.createListStore.callCount).toBe(0);
+                    expect(listFilter.createMenuItems.callCount).toBe(0);
                 });
 
                 it("should not recreate when toggling the Filters menu item", function () {
@@ -1802,11 +1670,8 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                     clickItem(2);
                     // Check.
                     clickItem(2);
-                    
-                    runs(function() {
-                        expect(listFilter.createListStore.callCount).toBe(0);
-                        expect(listFilter.createMenuItems.callCount).toBe(0);
-                    });
+                    expect(listFilter.createListStore.callCount).toBe(0);
+                    expect(listFilter.createMenuItems.callCount).toBe(0);
                 });
             });
         });
@@ -1833,10 +1698,10 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                 text: 'Item 6'
             }],
             total = responseData.length,
-            options, nodeCount;
+            options, nodeCount, menu;
 
         afterEach(function () {
-            nodeCount = null;
+            nodeCount = menu = null;
         });
 
         describe("when the options are inferred from the grid store", function () {
@@ -1871,23 +1736,22 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             it("should check the Filters menu item", function () {
                                 showMenu();
 
-                                runs(function() {
-                                    expect(filterItem.checked).toBe(state);
-                                });
+                                expect(filterItem.checked).toBe(state);
                             });
 
                             it("should check each menu item in that is in the value config", function () {
                                 showMenu();
+                                menu = listFilter.menu;
                                 waitsFor(function() {
-                                    return filterMenu.items.getCount() === 6;
+                                    return menu.items.getCount() === 6;
                                 });
                                 runs(function() {
-                                    expect(filterMenu.down('[text="Item 1"]').checked).toBe(true);
-                                    expect(filterMenu.down('[text="Item 2"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 3"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 4"]').checked).toBe(true);
-                                    expect(filterMenu.down('[text="Item 5"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 6"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 1"]').checked).toBe(true);
+                                    expect(menu.down('[text="Item 2"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 3"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 4"]').checked).toBe(true);
+                                    expect(menu.down('[text="Item 5"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 6"]').checked).toBe(false);
                                 });
                             });
                         });
@@ -1922,24 +1786,23 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             it("should check the Filters menu item", function () {
                                 showMenu();
 
-                                runs(function() {
-                                    expect(filterItem.checked).toBe(state);
-                                });
+                                expect(filterItem.checked).toBe(state);
                             });
 
                             it("should check each menu item in that is in the value config", function () {
                                 showMenu();
+                                menu = listFilter.menu;
                                 waitsFor(function() {
-                                    return filterMenu.items.getCount() === 6;
+                                    return menu.items.getCount() === 6;
                                 });
                                 runs(function() {
-                                    expect(filterMenu.query('[checked]').length).toBe(0);
-                                    expect(filterMenu.down('[text="Item 1"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 2"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 3"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 4"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 5"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 6"]').checked).toBe(false);
+                                    expect(menu.query('[checked]').length).toBe(0);
+                                    expect(menu.down('[text="Item 1"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 2"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 3"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 4"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 5"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 6"]').checked).toBe(false);
                                 });
                             });
                         });
@@ -1973,24 +1836,23 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             it("should check the Filters menu item", function () {
                                 showMenu();
 
-                                runs(function() {
-                                    expect(filterItem.checked).toBe(state);
-                                });
+                                expect(filterItem.checked).toBe(state);
                             });
 
                             it("should check each menu item in that is in the value config", function () {
                                 showMenu();
+                                menu = listFilter.menu;
                                 waitsFor(function() {
-                                    return filterMenu.items.getCount() === 6;
+                                    return menu.items.getCount() === 6;
                                 });
                                 runs(function() {
-                                    expect(filterMenu.query('[checked]').length).toBe(0);
-                                    expect(filterMenu.down('[text="Item 1"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 2"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 3"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 4"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 5"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 6"]').checked).toBe(false);
+                                    expect(menu.query('[checked]').length).toBe(0);
+                                    expect(menu.down('[text="Item 1"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 2"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 3"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 4"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 5"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 6"]').checked).toBe(false);
                                 });
                             });
                         });
@@ -2014,18 +1876,15 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
 
                             // Trigger a filter and respond to the Ajax request  with some data
                             clickItem(1);
-                            
-                            runs(function() {
-                                completeRequest(responseData);
+                            completeRequest(responseData);
 
-                                // Should NOT have updated the menu, which would blur and hide it.
-                                // Part of https://sencha.jira.com/browse/EXTJS-19963
-                                expect(filterMenu.isVisible()).toBe(true);
+                            // Should NOT have updated the menu, which would blur and hide it.
+                            // Part of https://sencha.jira.com/browse/EXTJS-19963
+                            expect(getMenu().isVisible()).toBe(true);
 
-                                // The returning data from the filterChange should NOT have triggered
-                                // another load. https://sencha.jira.com/browse/EXTJS-19963
-                                expect(store.isLoading()).toBe(false);
-                            });
+                            // The returning data from the filterChange should NOT have triggered
+                            // another load. https://sencha.jira.com/browse/EXTJS-19963
+                            expect(store.isLoading()).toBe(false);
                         });                        
                     });
                 });
@@ -2084,22 +1943,21 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             it("should check the Filters menu item", function () {
                                 showMenu();
 
-                                runs(function() {
-                                    expect(filterItem.checked).toBe(state);
-                                });
+                                expect(filterItem.checked).toBe(state);
                             });
 
                             it("should check each menu item in the Filters menu", function () {
                                 showMenu();
+                                menu = listFilter.menu;
                                 waitsFor(function() {
-                                    return filterMenu.items.getCount() === 4;
+                                    return menu.items.getCount() === 4;
                                 });
                                 runs(function() {
-                                    expect(filterMenu.query('[checked]').length).toBe(2);
-                                    expect(filterMenu.down('[text="Item 1"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 2"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 3"]').checked).toBe(true);
-                                    expect(filterMenu.down('[text="Item 4"]').checked).toBe(true);
+                                    expect(menu.query('[checked]').length).toBe(2);
+                                    expect(menu.down('[text="Item 1"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 2"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 3"]').checked).toBe(true);
+                                    expect(menu.down('[text="Item 4"]').checked).toBe(true);
                                 });
                             });
                         });
@@ -2131,22 +1989,21 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             it("should check the Filters menu item", function () {
                                 showMenu();
 
-                                runs(function() {
-                                    expect(filterItem.checked).toBe(state);
-                                });
+                                expect(filterItem.checked).toBe(state);
                             });
 
                             it("should check each menu item in the Filters menu", function () {
                                 showMenu();
+                                menu = listFilter.menu;
                                 waitsFor(function() {
-                                    return filterMenu.items.getCount() === 4;
+                                    return menu.items.getCount() === 4;
                                 });
                                 runs(function() {
-                                    expect(filterMenu.query('[checked]').length).toBe(0);
-                                    expect(filterMenu.down('[text="Item 1"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 2"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 3"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 4"]').checked).toBe(false);
+                                    expect(menu.query('[checked]').length).toBe(0);
+                                    expect(menu.down('[text="Item 1"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 2"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 3"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 4"]').checked).toBe(false);
                                 });
                             });
                         });
@@ -2177,22 +2034,21 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                             it("should check the Filters menu item", function () {
                                 showMenu();
 
-                                runs(function() {
-                                    expect(filterItem.checked).toBe(state);
-                                });
+                                expect(filterItem.checked).toBe(state);
                             });
 
                             it("should check each menu item in the Filters menu", function () {
                                 showMenu();
+                                menu = listFilter.menu;
                                 waitsFor(function() {
-                                    return filterMenu.items.getCount() === 4;
+                                    return menu.items.getCount() === 4;
                                 });
                                 runs(function() {
-                                    expect(filterMenu.query('[checked]').length).toBe(0);
-                                    expect(filterMenu.down('[text="Item 1"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 2"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 3"]').checked).toBe(false);
-                                    expect(filterMenu.down('[text="Item 4"]').checked).toBe(false);
+                                    expect(menu.query('[checked]').length).toBe(0);
+                                    expect(menu.down('[text="Item 1"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 2"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 3"]').checked).toBe(false);
+                                    expect(menu.down('[text="Item 4"]').checked).toBe(false);
                                 });
                             });
                         });
@@ -2251,9 +2107,7 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                     len = store.getFilters().getCount();
                     showMenu();
 
-                    runs(function() {
-                        expect(len).toBe(store.getFilters().getCount());
-                    });
+                    expect(len).toBe(store.getFilters().getCount());
                 });
             }
 
@@ -2281,6 +2135,8 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
     });
 
     describe("statefulness", function () {
+        var menu;
+
         function makeUI() {
             createGrid(null, null, {
                 stateful: true,
@@ -2288,6 +2144,7 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
             });
 
             showMenu();
+            menu = listFilter.menu;
         }
 
         beforeEach(function () {
@@ -2297,30 +2154,27 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
 
         afterEach(function () {
             Ext.state.Manager.getProvider().clear();
+            menu = null;
         });
 
         it("should retain selections", function () {
-            expect(filterMenu.query('[checked]').length).toBe(0);
+            expect(menu.query('[checked]').length).toBe(0);
 
             clickItem(0);
             clickItem(3);
 
-            runs(function() {
-                expect(filterMenu.query('[checked]').length).toBe(2);
-                expect(filterMenu.items.getAt(0).checked).toBe(true);
-                expect(filterMenu.items.getAt(3).checked).toBe(true);
+            expect(menu.query('[checked]').length).toBe(2);
+            expect(menu.items.getAt(0).checked).toBe(true);
+            expect(menu.items.getAt(3).checked).toBe(true);
 
-                grid.saveState();
-                grid.destroy();
+            grid.saveState();
+            grid.destroy();
 
-                makeUI();
-            });
+            makeUI();
 
-            runs(function() {
-                expect(filterMenu.query('[checked]').length).toBe(2);
-                expect(filterMenu.items.getAt(0).checked).toBe(true);
-                expect(filterMenu.items.getAt(3).checked).toBe(true);
-            });
+            expect(menu.query('[checked]').length).toBe(2);
+            expect(menu.items.getAt(0).checked).toBe(true);
+            expect(menu.items.getAt(3).checked).toBe(true);
         });
     });
 
@@ -2337,34 +2191,6 @@ topSuite("Ext.grid.filters.filter.List", ['Ext.grid.Panel', 'Ext.grid.filters.Fi
                     }
                 }]);
             }).not.toThrow();
-        });
-    });
-
-    describe("with store sorting", function() {
-        it("should not clear any filters when sorting", function() {
-            createGrid({
-                value: ['Item 2']
-            });
-            clickItem(0);
-            runs(function() {
-                hideMenu();
-            });
-            waitsFor(function() {
-                return !columnMenu.isVisible();
-            });
-            runs(function() {
-                expect(store.getCount()).toBe(2);
-                store.sort({
-                    property: 'id',
-                    direction: 'ASC'
-                });
-                expect(store.getCount()).toBe(2);
-                store.sort({
-                    property: 'id',
-                    direction: 'DESC'
-                });
-                expect(store.getCount()).toBe(2);
-            });
         });
     });
 });

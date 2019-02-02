@@ -141,62 +141,53 @@ Ext.define('Ext.form.field.HtmlEditor', {
      * Enable the bold, italic and underline buttons
      */
     enableFormat: true,
-
     /**
      * @cfg {Boolean} enableFontSize
      * Enable the increase/decrease font size buttons
      */
     enableFontSize: true,
-
     /**
      * @cfg {Boolean} enableColors
      * Enable the fore/highlight color buttons
      */
     enableColors: true,
-
     /**
      * @cfg {Boolean} enableAlignments
      * Enable the left, center, right alignment buttons
      */
     enableAlignments: true,
-
     /**
      * @cfg {Boolean} enableLists
      * Enable the bullet and numbered list buttons. Not available in Safari 2.
      */
     enableLists: true,
-
     /**
      * @cfg {Boolean} enableSourceEdit
      * Enable the switch to source edit button. Not available in Safari 2.
      */
     enableSourceEdit: true,
-
     /**
      * @cfg {Boolean} enableLinks
      * Enable the create link button. Not available in Safari 2.
      */
     enableLinks: true,
-
     /**
      * @cfg {Boolean} enableFont
      * Enable font selection. Not available in Safari 2.
      */
     enableFont: true,
-
+    //<locale>
     /**
      * @cfg {String} createLinkText
      * The default text for the create link prompt
-     * @locale
      */
     createLinkText: 'Please enter the URL for the link:',
-
+    //</locale>
     /**
      * @cfg {String} [defaultLinkValue='http://']
      * The default value for the create link prompt
      */
     defaultLinkValue: 'http:/'+'/',
-
     /**
      * @cfg {String[]} fontFamilies
      * An array of available font families
@@ -208,7 +199,6 @@ Ext.define('Ext.form.field.HtmlEditor', {
         'Times New Roman',
         'Verdana'
     ],
-
     /**
      * @cfg {String} defaultValue
      * A default value to be put into the editor to resolve focus issues.
@@ -234,12 +224,12 @@ Ext.define('Ext.form.field.HtmlEditor', {
      * @cfg {Object} buttonDefaults
      * A config object to apply to the toolbar's {@link Ext.button.Button buttons} to affect how they operate, eg:
      *
-     *     buttonDefaults: {
-     *         tooltip: {
-     *             align: 't-b',
-     *             anchor: true
-     *         }
-     *     }
+     *    buttonDefaults: {
+     *        tooltip: {
+     *            align: 't-b',
+     *            anchor: true
+     *        }
+     *    }
      *
      * @since 6.2.0
      */
@@ -269,11 +259,6 @@ Ext.define('Ext.form.field.HtmlEditor', {
      * @private
      */
     hideMode:'offsets',
-    
-    layout: {
-        type: 'vbox',
-        align: 'stretch'
-    },
 
     maskOnDisable: true,
 
@@ -342,6 +327,11 @@ Ext.define('Ext.form.field.HtmlEditor', {
         var me = this;
 
         me.items = [me.createToolbar(), me.createInputCmp()];
+
+        me.layout = {
+            type: 'vbox',
+            align: 'stretch'
+        };
 
         // No value set, we must report empty string
         if (me.value == null) {
@@ -417,7 +407,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
         }
 
 
-        if (me.enableFont) {
+        if (me.enableFont && !Ext.isSafari2) {
             fontSelectItem = Ext.widget('component', {
                 itemId: 'fontSelect',
                 renderTpl: [
@@ -495,7 +485,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
                             plain: true,
                             clickEvent: 'mousedown',
                             handler: function(cp, color) {
-                                me.relayCmd('forecolor', Ext.isWebKit || Ext.isIE || Ext.isEdge ? '#'+color : color);
+                                me.relayCmd('forecolor', Ext.isWebKit || Ext.isIE ? '#'+color : color);
                                 this.up('menu').hide();
                             }
                         }]
@@ -524,7 +514,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
                                     me.execCmd('useCSS', true);
                                     me.deferFocus();
                                 } else {
-                                    me.relayCmd(Ext.isOpera ? 'hilitecolor' : 'backcolor', Ext.isWebKit || Ext.isIE || Ext.isEdge || Ext.isOpera ? '#'+color : color);
+                                    me.relayCmd(Ext.isOpera ? 'hilitecolor' : 'backcolor', Ext.isWebKit || Ext.isIE || Ext.isOpera ? '#'+color : color);
                                 }
                                 this.up('menu').hide();
                             }
@@ -543,27 +533,29 @@ Ext.define('Ext.form.field.HtmlEditor', {
             );
         }
 
-        if (me.enableLinks) {
-            items.push(
-                '-',
-                btn('createlink', false, me.createLink)
-            );
-        }
+        if (!Ext.isSafari2) {
+            if (me.enableLinks) {
+                items.push(
+                    '-',
+                    btn('createlink', false, me.createLink)
+                );
+            }
 
-        if (me.enableLists) {
-            items.push(
-                '-',
-                btn('insertorderedlist'),
-                btn('insertunorderedlist')
-            );
-        }
-        if (me.enableSourceEdit) {
-            items.push(
-                '-',
-                btn('sourceedit', true, function(){
-                    me.toggleSourceEdit(!me.sourceEditMode);
-                })
-            );
+            if (me.enableLists) {
+                items.push(
+                    '-',
+                    btn('insertorderedlist'),
+                    btn('insertunorderedlist')
+                );
+            }
+            if (me.enableSourceEdit) {
+                items.push(
+                    '-',
+                    btn('sourceedit', true, function(){
+                        me.toggleSourceEdit(!me.sourceEditMode);
+                    })
+                );
+            }
         }
         
         // Everything starts disabled.
@@ -665,7 +657,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
      */
     getEditorBody: function() {
         var doc = this.getDoc();
-        return doc && doc.body;
+        return doc.body || doc.documentElement;
     },
 
     /**
@@ -753,46 +745,48 @@ Ext.define('Ext.form.field.HtmlEditor', {
             me.initDefaultFont();
         }
 
-        // Start polling to step through the phases of document readiness.
-        me.initPhase = 0;
-        me.initializeTask = Ext.TaskManager.start({
-            run: me.initFrameDoc,
+        // Start polling for when the iframe document is ready to be manipulated
+        me.monitorTask = Ext.TaskManager.start({
+            run: me.checkDesignMode,
             scope: me,
-            interval: 10,
-            duration: 5000
+            interval: 100
         });
     },
 
     initFrameDoc: function() {
         var me = this,
-            doc = me.getDoc();
+            doc, task;
 
-        // Destroying the component during initialization cancels initialization.
-        if (me.destroying || me.destroyed) {
-             return Ext.TaskManager.stop(me.initializeTask);
-        }
+        Ext.TaskManager.stop(me.monitorTask);
 
-        switch (me.initPhase) {
-            case 0:
-                if (doc) {
-                    me.win = me.getWin();
-                    doc.open();
-                    doc.write(me.getDocMarkup());
-                    doc.close();
-                    me.initPhase++;
-                }
-                break;
+        doc = me.getDoc();
+        me.win = me.getWin();
 
-            case 1:
+        doc.open();
+        doc.write(me.getDocMarkup());
+        doc.close();
+
+        task = { // must defer to wait for browser to be ready
+            run: function() {
+                var doc = me.getDoc();
                 if (doc.body || doc.readyState === 'complete') {
+                    Ext.TaskManager.stop(task);
                     me.setDesignMode(true);
-                    me.initPhase++;
+                    Ext.defer(me.initEditor, 10, me);
                 }
-                break;
+            },
+            interval: 10,
+            duration:10000,
+            scope: me
+        };
+        Ext.TaskManager.start(task);
+    },
 
-            case 2:
-                me.initEditor();
-                Ext.TaskManager.stop(me.initializeTask);
+    checkDesignMode: function() {
+        var me = this,
+            doc = me.getDoc();
+        if (doc && (!doc.editorInitialized || me.getDesignMode() !== 'on')) {
+            me.initFrameDoc();
         }
     },
 
@@ -807,7 +801,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
             if (me.readOnly) {
                 mode = false;
             }
-            doc.designMode = (/on|true/i).test(String(mode).toLowerCase()) ? 'on' : 'off';
+            doc.designMode = (/on|true/i).test(String(mode).toLowerCase()) ?'on':'off';
         }
     },
 
@@ -943,7 +937,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
      */
     syncValue: function(){
         var me = this,
-            body, changed, html, bodyStyleText, match, textElDom;
+            body, changed, html, bodyStyle, match, textElDom;
 
         if (me.initialized) {
             body = me.getEditorBody();
@@ -951,8 +945,8 @@ Ext.define('Ext.form.field.HtmlEditor', {
             textElDom = me.textareaEl.dom;
 
             if (Ext.isWebKit) {
-                bodyStyleText = body.style.cssText; // Safari puts text-align styles on the body element!
-                match = bodyStyleText.match(me.textAlignRE);
+                bodyStyle = body.getAttribute('style'); // Safari puts text-align styles on the body element!
+                match = bodyStyle.match(me.textAlignRE);
                 if (match && match[1]) {
                     html = '<div style="' + match[0] + '">' + html + '</div>';
                 }
@@ -1001,8 +995,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
     pushValue: function() {
         var me = this,
             v;
-
-        if (me.initialized) {
+        if(me.initialized){
             v = me.textareaEl.dom.value || '';
             if (!me.activated && v.length < 1) {
                 v = me.defaultValue;
@@ -1050,17 +1043,34 @@ Ext.define('Ext.form.field.HtmlEditor', {
      * @private
      */
     initEditor: function(){
+
         var me = this,
-            dbody = me.getEditorBody(),
-            ss = me.textareaEl.getStyle(['font-size', 'font-family', 'background-image', 'background-repeat', 'background-color', 'color']),
-            doc = me.getDoc(),
-            docEl = Ext.get(doc),
-            fn;
+            dbody, ss, doc, docEl, fn;
+
+        //Destroying the component during/before initEditor can cause issues.
+        if (me.destroying || me.destroyed) {
+             return;
+        }
+
+        dbody = me.getEditorBody();
+
+        // IE has a null reference when it first comes online.
+        if (!dbody) {
+            setTimeout(function () {
+                me.initEditor();
+            }, 10);
+            return;
+        }
+
+        ss = me.textareaEl.getStyle(['font-size', 'font-family', 'background-image', 'background-repeat', 'background-color', 'color']);
 
         ss['background-attachment'] = 'fixed'; // w3c
         dbody.bgProperties = 'fixed'; // ie
 
         Ext.DomHelper.applyStyles(dbody, ss);
+
+        doc = me.getDoc();
+        docEl = Ext.get(doc);
 
         if (docEl) {
             try {
@@ -1068,15 +1078,19 @@ Ext.define('Ext.form.field.HtmlEditor', {
             } catch(e) {}
 
             /*
-             * Update toolbar state on a buffered timer when document changes.
+             * We need to use createDelegate here, because when using buffer, the delayed task is added
+             * as a property to the function. When the listener is removed, the task is deleted from the function.
+             * Since onEditorEvent is shared on the prototype, if we have multiple html editors, the first time one of the editors
+             * is destroyed, it causes the fn to be deleted from the prototype, which causes errors. Essentially, we're just anonymizing the function.
              */
-            fn = Ext.Function.createBuffered(me.updateToolbar, 100, me);
+            fn = me.onEditorEvent.bind(me);
             docEl.on({
                 mousedown: fn,
                 dblclick: fn,
                 click: fn,
                 keyup: fn,
-                delegated: false
+                delegated: false,
+                buffer:100
             });
 
             // These events need to be relayed from the inner document (where they stop
@@ -1128,6 +1142,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
 
             // We need to be sure we remove all our events from the iframe on unload or we're going to LEAK!
             Ext.getWin().on('unload', me.destroyEditor, me);
+            doc.editorInitialized = true;
 
             me.initialized = true;
             me.pushValue();
@@ -1141,11 +1156,11 @@ Ext.define('Ext.form.field.HtmlEditor', {
      */
     destroyEditor: function(){
         var me = this,
-            initializeTask = me.initializeTask,
+            monitorTask = me.monitorTask,
             doc, prop;
 
-        if (initializeTask) {
-            Ext.TaskManager.stop(initializeTask, true);
+        if (monitorTask) {
+            Ext.TaskManager.stop(monitorTask);
         }
         if (me.rendered) {
             Ext.getWin().un('unload', me.destroyEditor, me);
@@ -1172,6 +1187,11 @@ Ext.define('Ext.form.field.HtmlEditor', {
                     }
                 }
             }
+
+            delete me.iframeEl;
+            delete me.textareaEl;
+            delete me.toolbar;
+            delete me.inputCmp;
         }
     },
 
@@ -1293,6 +1313,13 @@ Ext.define('Ext.form.field.HtmlEditor', {
     },
 
     /**
+     * @private
+     */
+    onEditorEvent: function() {
+        this.updateToolbar();
+    },
+
+    /**
      * Triggers a toolbar update by reading the markup state of the current selection in the editor.
      * @protected
      */
@@ -1313,7 +1340,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
         btns = me.getToolbar().items.map;
         doc = me.getDoc();
 
-        if (me.enableFont) {
+        if (me.enableFont && !Ext.isSafari2) {
             // When querying the fontName, Chrome may return an Array of font names
             // with those containing spaces being placed between single-quotes.
             queriedName = doc.queryCommandValue('fontName');
@@ -1348,7 +1375,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
         if(me.enableAlignments){
             updateButtons('justifyleft', 'justifycenter', 'justifyright');
         }
-        if(me.enableLists){
+        if(!Ext.isSafari2 && me.enableLists){
             updateButtons('insertorderedlist', 'insertunorderedlist');
         }
 
@@ -1411,13 +1438,13 @@ Ext.define('Ext.form.field.HtmlEditor', {
                 switch (c) {
                     case 'b':
                         cmd = 'bold';
-                        break;
+                    break;
                     case 'i':
                         cmd = 'italic';
-                        break;
+                    break;
                     case 'u':
                         cmd = 'underline';
-                        break;
+                    break;
                 }
                 if (cmd) {
                     me.win.focus();
@@ -1582,6 +1609,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
         return this.toolbar;
     },
 
+    //<locale>
     /**
      * @property {Object} buttonTips
      * Object collection of toolbar tooltips for the buttons in the editor. The key is the command id associated with
@@ -1600,7 +1628,6 @@ Ext.define('Ext.form.field.HtmlEditor', {
      *         }
      *         // ...
      *     }
-     * @locale
      */
     buttonTips: {
         bold: {
@@ -1674,59 +1701,60 @@ Ext.define('Ext.form.field.HtmlEditor', {
             cls: Ext.baseCSSPrefix + 'html-editor-tip'
         }
     },
+    //</locale>
 
     // hide stuff that is not compatible
     /**
      * @event blur
-     * @hide
+     * @private
      */
     /**
      * @event focus
-     * @hide
+     * @private
      */
     /**
      * @event specialkey
-     * @hide
+     * @private
      */
     /**
      * @cfg {String} fieldCls
-     * @hide
+     * @private
      */
     /**
      * @cfg {String} focusCls
-     * @hide
+     * @private
      */
     /**
      * @cfg {String} autoCreate
-     * @hide
+     * @private
      */
     /**
      * @cfg {String} inputType
-     * @hide
+     * @private
      */
     /**
      * @cfg {String} invalidCls
-     * @hide
+     * @private
      */
     /**
      * @cfg {String} invalidText
-     * @hide
+     * @private
      */
     /**
      * @cfg {Boolean} allowDomMove
-     * @hide
+     * @private
      */
     /**
      * @cfg {String} readOnly
-     * @hide
+     * @private
      */
     /**
      * @cfg {String} tabIndex
-     * @hide
+     * @private
      */
     /**
      * @method validate
-     * @hide
+     * @private
      */
 
     privates: {

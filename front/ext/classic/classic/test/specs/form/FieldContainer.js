@@ -1,14 +1,19 @@
-topSuite("Ext.form.FieldContainer", ['Ext.form.field.*', 'Ext.form.Panel'], function() {
-    var component, makeComponent = function(config) {
-        config = config || {};
-        component = new Ext.form.FieldContainer(config);
-    };
+describe("Ext.form.FieldContainer", function() {
+
+    var component, makeComponent;
+
+    beforeEach(function() {
+        makeComponent = function(config) {
+            config = config || {};
+            component = new Ext.form.FieldContainer(config);
+        };
+    });
 
     afterEach(function() {
         if (component) {
             component.destroy();
         }
-        component = null;
+        component = makeComponent = null;
     });
 
     describe("FieldAncestor", function(){
@@ -43,37 +48,6 @@ topSuite("Ext.form.FieldContainer", ['Ext.form.field.*', 'Ext.form.Panel'], func
         });  
     });
 
-    describe("enable/disable", function() {
-        var form;
-
-        beforeEach(function() {
-            makeComponent({ items: [{ xtype: 'textfield'}] });
-
-            form = new Ext.form.Panel({
-                renderTo: document.body,
-                width: 100,
-                items: [component]
-            });
-        });
-
-        afterEach(function() {
-            form.destroy();
-        });
-
-        it("should be disabled when disabling the form panel", function() {
-            form.disable();
-
-            expect(component.isDisabled()).toBe(true);
-        });
-
-        it("should be enabled when enabling the form panel", function() {
-            form.disable();
-            form.enable();
-
-            expect(component.isDisabled()).toBe(false);
-        });
-    });
-
     describe("label", function() {
         it("should not hide child labels when the field container label is not visible", function() {
             makeComponent({
@@ -98,35 +72,6 @@ topSuite("Ext.form.FieldContainer", ['Ext.form.field.*', 'Ext.form.Panel'], func
                 }]
             });
             expect(component.containerEl.hasCls(component.layout.targetCls)).toBe(true);
-        });
-
-        it("should wrap it's items width", function() {
-            var panel, textfield, displayfield;
-
-            makeComponent({
-                renderTo: null,
-                layout: 'hbox',
-                items: [{
-                    xtype: 'textfield',
-                    fieldLabel: 'Email'
-                },{
-                    xtype: 'displayfield',
-                    value: 'foo'
-                }]
-            });
-
-            panel = Ext.widget('panel',{
-                renderTo: document.body,
-                layout: 'vbox',
-                items: [component]
-            });
-
-            textfield = panel.down('textfield');
-            displayfield = panel.down('displayfield');
-
-            expect(component.getWidth()).toBe(textfield.getWidth() + displayfield.getWidth());
-            expect(component.getWidth()).toBeGreaterThan(0);
-            panel.destroy();
         });
     });
 

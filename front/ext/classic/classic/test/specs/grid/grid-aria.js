@@ -1,7 +1,4 @@
-topSuite("grid-aria",
-    [false, 'Ext.grid.Panel', 'Ext.grid.plugin.CellEditing', 'Ext.grid.plugin.RowEditing',
-     'Ext.grid.selection.SpreadsheetModel'],
-function() {
+describe("grid-aria", function() {
     var stdStore = {
             type: 'array',
             fields: ['field1', 'field2', 'field3', 'field4', 'field5'],
@@ -129,7 +126,7 @@ function() {
             
             it("should have no role on the cell inner div", function() {
                 var cell = view.getCell(0, col),
-                    innerDiv = cell.firstChild;
+                    innerDiv = cell.dom.firstChild;
                 
                 expect(innerDiv).not.toHaveAttr('role');
             });
@@ -181,7 +178,7 @@ function() {
             
             it("should have no role on the cell inner div", function() {
                 var cell = view.getCell(0, col),
-                    innerDiv = cell.firstChild;
+                    innerDiv = cell.dom.firstChild;
                 
                 expect(innerDiv).not.toHaveAttr('role');
             });

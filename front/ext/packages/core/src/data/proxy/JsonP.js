@@ -113,7 +113,7 @@
  *
  * ASP.net:
  *
- *     String jsonString = "{"success": true}";
+ *     String jsonString = "{success: true}";
  *     String cb = Request.Params.Get("callback");
  *     String responseString = "";
  *     if (!String.IsNullOrEmpty(cb)) {
@@ -136,7 +136,7 @@ Ext.define('Ext.data.proxy.JsonP', {
          */
         callbackKey : 'callback',
 
-       /**
+        /**
         * @cfg {String} [recordParam]
         * The HTTP parameter name to use when passing records to the server and the {@link #writer Json writer} is not configured
         * to {@link Ext.data.writer.Json#encode encode} records into a parameter.
@@ -145,7 +145,7 @@ Ext.define('Ext.data.proxy.JsonP', {
         */
         recordParam: 'records',
 
-       /**
+        /**
         * @cfg {Boolean} autoAppendParams
         * True to automatically append the request's params to the generated url. Defaults to true
         */

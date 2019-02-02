@@ -53,7 +53,7 @@
  *     });
  */
 Ext.define('Ext.layout.HBox', {
-    extend: 'Ext.layout.Box',
+    extend: 'Ext.layout.FlexBox',
 
     alias: 'layout.hbox',
 

@@ -1,4 +1,4 @@
-topSuite("Ext.app.EventDomain", function() {
+describe("Ext.app.EventDomain", function() {
     it("should register all EventDomain singletons", function() {
         var instances = Ext.app.EventDomain.instances;
         

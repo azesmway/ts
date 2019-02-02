@@ -1,38 +1,35 @@
-.#{$prefix}indexbar {
+.#{$prefix}indexbar-wrapper {
     pointer-events: none;
-    position: relative;
+    @include st-box-pack(end);
 
-    > .#{$prefix}body-el {
-        cursor: pointer;
-        display: flex;
-        pointer-events: auto;
-        position: absolute;
-        transition: .4s opacity;
+    &.#{$prefix}horizontal {
+        @include st-box-orient(horizontal);
+        @include st-box-pack(center);
+        @include st-box-align(end);
+    }
+}
 
-        right: 0;
-        bottom: 0;
+.#{$prefix}indexbar {
+    pointer-events: auto;
+    z-index: 2;
 
-        &.#{$prefix}horizontal {
-            flex-direction: row;
-            left: 0;
-        }
+    @include st-box-flex(0, auto, important);
+    @include st-box;
 
-        &.#{$prefix}vertical {
-            flex-direction: column;
-            top: 0;
-        }
+    &.#{$prefix}vertical {
+        @include st-box-orient(vertical);
+    }
+
+    &.#{$prefix}horizontal {
+        width: auto;
+        @include st-box-orient(horizontal);
     }
 }
 
 .#{$prefix}indexbar-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.#{$prefix}indexbar-indicator {
-    position: absolute;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    line-height: 0;
+    @include st-box-flex;
+    @include st-box;
+    @include st-box-align(center);
+    @include st-box-pack(center);
 }

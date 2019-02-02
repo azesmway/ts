@@ -1,4 +1,5 @@
-topSuite("Ext.data.validator.Email", function() {
+describe("Ext.data.validator.Email", function() {
+    
     var v;
     
     function validate(value) {

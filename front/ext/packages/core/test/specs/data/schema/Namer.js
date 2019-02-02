@@ -1,4 +1,5 @@
-topSuite("Ext.data.schema.Namer", ['Ext.data.ArrayStore'], function() {
+describe("Ext.data.schema.Namer", function() {
+    
     var Base, Company, Department, User, Group, Ticket, Comment,
         schema, associationNames, entityNames;
 

@@ -1,4 +1,4 @@
-topSuite("Ext.util.Point", function() {
+describe("Ext.util.Point", function() {
     var Point = Ext.util.Point,
         point;
 

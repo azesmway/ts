@@ -93,8 +93,7 @@ Ext.define('Ext.form.field.FileButton', {
             keydown: me.handlePrompt,
             change: me.fireChange,
             focus: me.onFileFocus,
-            blur: me.onFileBlur,
-            destroyable: true
+            blur: me.onFileBlur
         };
         
         if (me.useTabGuards) {
@@ -124,27 +123,7 @@ Ext.define('Ext.form.field.FileButton', {
             listeners.keydown = me.onFileInputKeydown;
         }
         
-        me.fileInputElListeners = me.fileInputEl.on(listeners);
-    },
-    
-    doDestroy: function() {
-        var me = this;
-        
-        if (me.fileInputElListeners) {
-            me.fileInputElListeners.destroy();
-        }
-        
-        if (me.beforeInputGuard) {
-            me.beforeInputGuard.destroy();
-            me.beforeInputGuard = null;
-        }
-        
-        if (me.afterInputGuard) {
-            me.afterInputGuard.destroy();
-            me.afterInputGuard = null;
-        }
-        
-        me.callParent();
+        me.fileInputEl.on(listeners);
     },
     
     fireChange: function(e) {
@@ -263,9 +242,9 @@ Ext.define('Ext.form.field.FileButton', {
                 
                 // In IE focus events are asynchronous so we can't enable focus event
                 // in the same event loop.
-                Ext.defer(function() {
+                setTimeout(function() {
                     focusTo.resumeEvent('focus');
-                }, 1);
+                }, 0);
             }
         } else if (key === e.ENTER || key === e.SPACE) {
             this.handlePrompt(e);

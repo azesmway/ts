@@ -1,16 +1,17 @@
-topSuite("Ext.grid.column.Number", ['Ext.grid.Panel'], function() {
+describe("Ext.grid.column.Number", function() {
+    
     var grid, store, colRef;
     
     function getCell(rowIdx, colIdx) {
         return grid.getView().getCellInclusive({
             row: rowIdx,
             column: colIdx
-        }, true);
+        });
     }
     
     function getCellText(rowIdx, colIdx) {
         var cell = getCell(rowIdx, colIdx);
-        return cell.querySelector(grid.getView().innerSelector).innerHTML;
+        return Ext.fly(cell).down(grid.getView().innerSelector).dom.innerHTML;
     }
     
     function makeGrid(value) {
@@ -48,7 +49,7 @@ topSuite("Ext.grid.column.Number", ['Ext.grid.Panel'], function() {
         });
     });
     
-    afterEach(function() {
+    afterEach(function(){
         Ext.destroy(grid, store);
         colRef = store = grid = null;
         Ext.undefine('spec.TestModel');

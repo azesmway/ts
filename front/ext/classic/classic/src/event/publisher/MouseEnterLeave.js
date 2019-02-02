@@ -21,7 +21,7 @@ Ext.define('Ext.event.publisher.MouseEnterLeave', {
                 var target, relatedTarget, id, el, type, event;
 
                 // call parent to dispatch the native browser event first (mouseover, mouseout)
-                this.callParent([e]);
+                e = this.callParent([e]);
 
                 target = e.getTarget();
                 relatedTarget = e.getRelatedTarget();

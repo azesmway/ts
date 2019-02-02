@@ -6,13 +6,7 @@
 Ext.define('Ext.data.ChainedStore', {
     extend: 'Ext.data.AbstractStore',
     alias: 'store.chained',
-
-    /**
-     * @property {Boolean} isChainedStore
-     * `true` in this class to identify an object as an instantiated ChainedStore, or subclass thereof.
-     */
-    isChainedStore: true,
-
+    
     config: {
         /**
          * @cfg {Ext.data.Store/String} source
@@ -48,21 +42,11 @@ Ext.define('Ext.data.ChainedStore', {
     
     remove: function() {
         var source = this.getSource();
-        //<debug>
-        if (!source) {
-            Ext.raise('Cannot remove records with no source.');
-        }
-        //</debug>
         return source.remove.apply(source, arguments);
     },
 
     removeAll: function() {
         var source = this.getSource();
-        //<debug>
-        if (!source) {
-            Ext.raise('Cannot remove records with no source.');
-        }
-        //</debug>
         return source.removeAll();
     },
     
@@ -81,7 +65,7 @@ Ext.define('Ext.data.ChainedStore', {
     },
 
     getSession: function() {
-        return this.getSourceValue('getSession', null);
+        return this.getSource().getSession();
     },
 
     applySource: function(source) {
@@ -126,7 +110,7 @@ Ext.define('Ext.data.ChainedStore', {
      * @return {Ext.data.Model} The model
      */
     getModel: function() {
-        return this.getSourceValue('getModel', null);
+        return this.getSource().getModel();
     },
 
     getProxy: function() {
@@ -137,18 +121,11 @@ Ext.define('Ext.data.ChainedStore', {
         var me = this,
             records = info.items,
             lastChunk = !info.next;
-
+        
         if (me.ignoreCollectionAdd) {
             return;
         }
-
-        // Collection add changes the items reference of the collection, and that array
-        // object if directly referenced by Ranges. The ranges have to refresh themselves
-        // upon add.
-        if (me.activeRanges) {
-            me.syncActiveRanges();
-        }
-
+        
         me.fireEvent('add', me, records, info.at);
         // If there is a next property, that means there is another range that needs
         // to be removed after this. Wait until everything is gone before firign datachanged
@@ -170,7 +147,6 @@ Ext.define('Ext.data.ChainedStore', {
         // is an descendant of a collapsed node, and so *will not be contained by this store
         me.onUpdate(record, type, modifiedFieldNames, info);
         me.fireEvent('update', me, record, type, modifiedFieldNames, info);
-        me.fireEvent('datachanged', me);
     },
     
     onCollectionUpdateKey: function(source, details) {
@@ -200,12 +176,10 @@ Ext.define('Ext.data.ChainedStore', {
 
     onSourceBeforeLoad: function(source, operation) {
         this.fireEvent('beforeload', this, operation);
-        this.callObservers('BeforeLoad', [operation]);
     },
 
     onSourceAfterLoad: function(source, records, successful, operation) {
         this.fireEvent('load', this, records, successful, operation);
-        this.callObservers('AfterLoad', [records, successful, operation]);
     },
 
     onFilterEndUpdate: function() {
@@ -258,15 +232,15 @@ Ext.define('Ext.data.ChainedStore', {
     },
     
     hasPendingLoad: function() {
-        return this.getSourceValue('hasPendingLoad', false);
+        return this.getSource().hasPendingLoad();
     },
     
     isLoaded: function() {
-        return this.getSourceValue('isLoaded', false);
+        return this.getSource().isLoaded();
     },
 
     isLoading: function() {
-        return this.getSourceValue('isLoading', false);
+        return this.getSource().isLoading();
     },
 
     doDestroy: function() {
@@ -281,16 +255,6 @@ Ext.define('Ext.data.ChainedStore', {
     },
 
     privates: {
-        getSourceValue: function(method, defaultValue) {
-            var source = this.getSource(),
-                val = defaultValue;
-
-            if (source && !source.destroyed) {
-                val = source[method]();
-            }
-            return val;
-        },
-
         isMoving: function () {
             var source = this.getSource();
             return source.isMoving ? source.isMoving.apply(source, arguments) : false;

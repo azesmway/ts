@@ -1,4 +1,4 @@
-topSuite("Ext.data.reader.Array", ['Ext.data.Model'], function() {
+describe("Ext.data.reader.Array", function() {
     var reader, data, records;
 
     beforeEach(function() {
