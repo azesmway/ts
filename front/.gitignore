@@ -2,3 +2,4 @@ build
 .sencha
 .idea
 cordova/platforms
+*.log
