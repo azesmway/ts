@@ -151,18 +151,21 @@ Ext.define('Ext.rtl.dom.Element', {
             body = doc.body,
             scroll = me.getScroll(),
             left = scroll.left,
+            flag = me._rtlScrollFlag,
             isDocOrBody = (dom === doc || dom === body);
 
-        if (isDocOrBody ? (3 & me._rtlDocScrollFlag) : (me._rtlScrollFlag === 1)) { // jshint ignore:line
+        if (isDocOrBody ? (3 & me._rtlDocScrollFlag) : (flag === 1)) { // jshint ignore:line
             // If the browser reports scrollLeft as the number of pixels from left
             // (same as ltr) we need to convert it to a rtl position by subtracting it
             // from scrollWidth
             if (isDocOrBody) {
                 dom = body;
             }
-            
+
             left = dom.scrollWidth - left -
                 (isDocOrBody ? Ext.Element.getViewportWidth() : dom.clientWidth);
+        } else if (!isDocOrBody && flag === 0) {
+            left = -left;
         }
         scroll.left = left;
 
@@ -176,7 +179,7 @@ Ext.define('Ext.rtl.dom.Element', {
     rtlNormalizeScrollLeft: function(left){
         var dom = this.dom,
             flag = this._rtlScrollFlag;
-            
+
         if (flag === 0) {
             left = -left;
         } else if (flag === 1) {
@@ -349,7 +352,7 @@ Ext.define('Ext.rtl.dom.Element', {
     },
 
     wrap: function() {
-        var parent = this.parent(),
+        var wrapFly = (this.wrapFly || (this.wrapFly = new Ext.dom.Fly())).attach(this.dom.parentNode),
             rtlCls = Ext.baseCSSPrefix + 'rtl',
             ltrCls = Ext.baseCSSPrefix + 'ltr',
             wrapEl = this.callParent(arguments),
@@ -358,15 +361,15 @@ Ext.define('Ext.rtl.dom.Element', {
         // if the parentNode of the element being wrapped has the "x-rtl" or "x-ltr" css
         // class, then add that class to the wrapper as well.  This ensures that descendant
         // and child selectors still apply e.g. ".x-rtl > .x-foo" or ".x-ltr .x-foo"
-        if (parent.hasCls(rtlCls)) {
+        if (wrapFly.hasCls(rtlCls)) {
             cls = rtlCls;
-        } else if (parent.hasCls(ltrCls)) {
+        } else if (wrapFly.hasCls(ltrCls)) {
             cls = ltrCls;
         }
 
         if (cls) {
             // superclass method may return dom, so use fly() to access the wrap el
-            Ext.fly(wrapEl, '_internal').addCls(cls);
+            wrapFly.attach(wrapEl).addCls(cls);
         }
 
         return wrapEl;
@@ -410,7 +413,7 @@ Ext.define('Ext.rtl.dom.Element', {
             }
         }
 
-        // Make content overflow vertically to see where the vertical scsrollbar is
+        // Make content overflow vertically to see where the vertical scrollbar is
         inner.style.width = '30px';
         inner.style.height = '150px';
 
@@ -436,7 +439,7 @@ Ext.define('Ext.rtl.dom.Element', {
      *    b. number of pixels offset from right expressed as a positive number
      *       (IE8 - IE10)
      *
-     * The following logic feture detects the handling of scrollLeft and sets the 
+     * The following logic feature detects the handling of scrollLeft and sets the
      * _rtlDocScrollFlag property on this class' prototype as a bit flag which has 
      * the following values:
      * 

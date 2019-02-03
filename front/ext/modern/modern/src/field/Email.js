@@ -45,24 +45,21 @@ Ext.define('Ext.field.Email', {
 
     config: {
         /**
-         * @cfg
-         * @inheritdoc
-         */
-        component: {
-	        type: 'email'
-	    },
-
-        /**
-         * @cfg
+         * @cfg autoCapitalize
          * @inheritdoc
          */
         autoCapitalize: false
     },
+    
+    /**
+     * @cfg inputType
+     * @inheritdoc
+     */
+    inputType: 'email',
 
+    /**
+     * @property classCls
+     * @inheritdoc
+     */
     classCls: Ext.baseCSSPrefix + 'emailfield'
 });
-
-
-
-
-

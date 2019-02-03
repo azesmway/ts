@@ -1,4 +1,4 @@
-describe("Ext.util.Positionable", function() {
+topSuite("Ext.util.Positionable", 'Ext.Component', function() {
     var wrap, positionable;
 
     function createElement(cfg) {
@@ -111,6 +111,18 @@ describe("Ext.util.Positionable", function() {
                         expect(xy[1]).toBe(alignToPositions[alignToPos][1] + alignPositions[pos][1]);
                     });
                 });
+            });
+
+            it("should respect scrolling when align to body", function() {
+                var positions = positionable.el.getAlignToRegion(Ext.getBody()),
+                    positionsAfter;
+
+                alignToEl.setHeight(2000);
+                Ext.getViewportScroller().scrollBy(0, 100);
+
+                positionsAfter = positionable.el.getAlignToRegion(Ext.getBody());
+
+                expect(positions.top).toBe(positionsAfter.top - 100);
             });
         });
 

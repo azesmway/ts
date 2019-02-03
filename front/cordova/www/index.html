@@ -7,47 +7,8 @@
 
     <title>etp</title>
 
-    <!--
-    <script type="text/javascript">
-        var Ext = Ext || {}; // Ext namespace won't be defined yet...
-
-        // This function is called by the Microloader after it has performed basic
-        // device detection. The results are provided in the "tags" object. You can
-        // use these tags here or even add custom tags. These can be used by platform
-        // filters in your manifest or by platformConfig expressions in your app.
-        //
-        Ext.beforeLoad = function (tags) {
-            var s = location.search,  // the query string (ex "?foo=1&bar")
-                profile;
-
-            // For testing look for "?classic" or "?modern" in the URL to override
-            // device detection default.
-            //
-            if (s.match(/\bclassic\b/)) {
-                profile = 'classic';
-            }
-            else if (s.match(/\bmodern\b/)) {
-                profile = 'modern';
-            }
-            else {
-                profile = tags.desktop ? 'classic' : 'modern';
-                //profile = tags.phone ? 'modern' : 'classic';
-            }
-
-            Ext.manifest = profile; // this name must match a build profile name
-
-            // This function is called once the manifest is available but before
-            // any data is pulled from it.
-            //
-            //return function (manifest) {
-                // peek at / modify the manifest object
-            //};
-        };
-    </script>
-    -->
-
     <!-- The line below must be kept intact for Sencha Cmd to build your application -->
-    <script id="microloader" data-app="9055ba18-cd4e-4ec5-9d45-c982a9105848" type="text/javascript">var Ext=Ext||{};Ext.manifest=Ext.manifest||'native-ios.json';Ext=Ext||{};
+    <script id="microloader" data-app="4394cd49-364d-438a-961c-4adfab078883" type="text/javascript">var Ext=Ext||{};Ext.manifest=Ext.manifest||'native-ios.json';Ext=Ext||{};
 Ext.Boot=Ext.Boot||function(emptyFn){function Request(cfg){if(cfg.$isRequest)return cfg;cfg=cfg.url?cfg:{url:cfg};var url=cfg.url;url=url.charAt?[url]:url;var charset=cfg.charset||Boot.config.charset;_apply(this,cfg);delete this.url;this.urls=url;this.charset=charset}function Entry(cfg){if(cfg.$isEntry)return cfg;var charset=cfg.charset||Boot.config.charset,manifest=Ext.manifest;manifest=manifest&&manifest.loader;var cache=void 0!==cfg.cache?cfg.cache:manifest&&manifest.cache,buster;Boot.config.disableCaching&&
 (void 0===cache&&(cache=!Boot.config.disableCaching),!1===cache?buster=+new Date:!0!==cache&&(buster=cache),buster&&(manifest=manifest&&manifest.cacheParam||Boot.config.disableCachingParam,buster=manifest+'\x3d'+buster));_apply(this,cfg);this.charset=charset;this.buster=buster;this.requests=[]}var doc=document,_emptyArray=[],_config={disableCaching:/[?&](?:cache|disableCacheBuster)\b/i.test(location.search)||!/http[s]?\:/i.test(location.href)||/(^|[ ;])ext-cache=1/.test(doc.cookie)?!1:!0,disableCachingParam:'_dc',
 loadDelay:!1,preserveScripts:!0,charset:'UTF-8'},cssRe=/\.css(?:\?|$)/i,resolverEl=doc.createElement('a'),isBrowser='undefined'!==typeof window,_environment={browser:isBrowser,node:!isBrowser&&'function'===typeof require,phantom:window&&(window._phantom||window.callPhantom)||/PhantomJS/.test(window.navigator.userAgent)},_tags=Ext.platformTags={},_apply=function(object,config,defaults){defaults&&_apply(object,defaults);if(object&&config&&'object'===typeof config)for(var i in config)object[i]=config[i];

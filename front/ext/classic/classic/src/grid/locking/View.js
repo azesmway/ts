@@ -14,7 +14,7 @@ Ext.define('Ext.grid.locking.View', {
     mixins: [
         'Ext.util.Observable',
         'Ext.util.StoreHolder',
-        'Ext.util.Focusable'
+        'Ext.mixin.Focusable'
     ],
 
     /**
@@ -168,6 +168,10 @@ Ext.define('Ext.grid.locking.View', {
         me.rendered = true;
         me.fireEvent('render', me);
 
+        // Here we should set the maskElement to scrollBody so the loadMask cover both views
+        // but not the headers and grid title bar.
+        me.ownerGrid.maskElement = 'scrollBody';
+
         if (mask) {
             // either a config object 
             if (Ext.isObject(mask)) {
@@ -204,7 +208,7 @@ Ext.define('Ext.grid.locking.View', {
     },
 
     getEl: function(column){
-        return this.getViewForColumn(column).getEl();
+        return column.getView().getEl();
     },
 
     getCellSelector: function() {
@@ -213,20 +217,6 @@ Ext.define('Ext.grid.locking.View', {
 
     getItemSelector: function () {
         return this.normalView.getItemSelector();
-    },
-
-    getViewForColumn: function(column) {
-        var view = this.lockedView,
-            inLocked;
-
-        view.headerCt.cascade(function(col){
-            if (col === column) {
-                inLocked = true;
-                return false;
-            }
-        });
-
-        return inLocked ? view : this.normalView;
     },
 
     onItemMouseEnter: function(view, record){
@@ -289,7 +279,7 @@ Ext.define('Ext.grid.locking.View', {
      * @param {Ext.data.Store} store The store to bind to this view
      * @since 3.4.0
      */
-    onBindStore : function(store, initial, propName) {
+    onBindStore : function(store) {
         var me = this,
             lockedView = me.lockedView,
             normalView = me.normalView;
@@ -373,6 +363,7 @@ Ext.define('Ext.grid.locking.View', {
     /**
      * Toggles ARIA actionable mode on/off
      * @param {Boolean} enabled
+     * @param {Ext.grid.CellContext} position
      * @return {Boolean} Returns `false` if the request failed.
      * @private
      */
@@ -408,7 +399,7 @@ Ext.define('Ext.grid.locking.View', {
                 return false;
             }
         } else {
-            this.relayFn('setActionableMode', [false]);
+            this.relayFn('setActionableMode', [false, position]);
         }
     },
 
@@ -479,11 +470,11 @@ Ext.define('Ext.grid.locking.View', {
         return this.normalView.getRow(nodeInfo);
     },
 
-    getCell: function(record, column) {
-        var view = this.getViewForColumn(column),
-            row = view.getRow(record);
-            
-        return Ext.fly(row).down(column.getCellSelector());
+    getCell: function(record, column, returnElement) {
+        var row = column.getView().getRow(record),
+            cell = row.querySelector(column.getCellSelector());
+
+        return returnElement ? Ext.get(cell) : cell;
     },
 
     indexOf: function(record) {
@@ -519,6 +510,11 @@ Ext.define('Ext.grid.locking.View', {
 
     onRowFocus: function() {
         this.relayFn('onRowFocus', arguments);
+    },
+    
+    cancelFocusTask: function() {
+        this.lockedView.cancelFocusTask();
+        this.normalView.cancelFocusTask();
     },
 
     isVisible: function(deep) {
@@ -635,8 +631,7 @@ Ext.define('Ext.grid.locking.View', {
         // Unbind from the dataSource we bound to in constructor
         me.bindStore(null, false, 'dataSource');
         
-        Ext.destroy(me.selModel, me.navigationModel, me.loadMask,
-                    me.lockedViewEventRelayers, me.normalViewEventRelayers);
+        Ext.destroy(me.selModel, me.navigationModel, me.loadMask);
         
         me.lockedView.lockingPartner = me.normalView.lockingPartner = null;
         

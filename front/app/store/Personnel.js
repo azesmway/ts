@@ -3,9 +3,7 @@ Ext.define('etp.store.Personnel', {
 
     alias: 'store.personnel',
 
-    fields: [
-        'name', 'email', 'phone'
-    ],
+    model: 'etp.model.Personnel',
 
     data: { items: [
         { name: 'Jean Luc', email: "jeanluc.picard@enterprise.com", phone: "555-111-1111" },

@@ -42,7 +42,16 @@ Ext.define('Ext.form.field.Base', {
         'Ext.XTemplate'
     ],
     
+    /**
+     * @property focusable
+     * @inheritdoc
+     */
     focusable: true,
+    
+    /**
+     * @cfg shrinkWrap
+     * @inheritdoc
+     */
     shrinkWrap: true,
 
     /**
@@ -65,14 +74,22 @@ Ext.define('Ext.form.field.Base', {
                 '<tpl foreach="ariaElAttributes"> {$}="{.}"</tpl>',
             '</tpl>',
             '<tpl foreach="inputElAriaAttributes"> {$}="{.}"</tpl>',
-        ' class="{fieldCls} {typeCls} {typeCls}-{ui} {editableCls} {inputCls}" autocomplete="off"/>',
+        ' class="{fieldCls} {typeCls} {typeCls}-{ui} {editableCls} {inputCls} {fixCls}" autocomplete="off"/>',
         {
             disableFormats: true
         }
     ],
 
+    /**
+     * @property defaultBindProperty
+     * @inheritdoc
+     */
     defaultBindProperty: 'value',
     
+    /**
+     * @cfg autoEl
+     * @inheritdoc
+     */
     autoEl: {
         role: 'presentation'
     },
@@ -87,6 +104,10 @@ Ext.define('Ext.form.field.Base', {
         'inputAttrTpl'
     ],
 
+    /**
+     * @cfg childEls
+     * @inheritdoc
+     */
     childEls: [
         /**
          * @property {Ext.dom.Element} inputEl
@@ -133,16 +154,15 @@ Ext.define('Ext.form.field.Base', {
      * fields built via applyTo
      */
 
-    //<locale>
     /**
      * @cfg {String} invalidText
      * The error text to use when marking a field invalid and no message is provided
+     * @locale
      */
     invalidText : 'The value in this field is invalid',
-    //</locale>
 
     /**
-     * @cfg {String} [fieldCls='x-form-field']
+     * @cfg {String} fieldCls
      * The default CSS class for the field input
      */
     fieldCls : Ext.baseCSSPrefix + 'form-field',
@@ -153,9 +173,14 @@ Ext.define('Ext.form.field.Base', {
      * {@link Ext.dom.Element#applyStyles}. Defaults to undefined. See also the {@link #setFieldStyle} method for changing
      * the style after initialization.
      */
+    
+    /**
+     * @cfg [publishes=['rawValue', 'value', 'dirty']]
+     * @inheritdoc
+     */
 
     /**
-     * @cfg {String} [focusCls='x-form-focus']
+     * @cfg {String} focusCls
      * The CSS class to use when the field receives focus
      */
     focusCls: 'form-focus',
@@ -195,11 +220,15 @@ Ext.define('Ext.form.field.Base', {
 
     /**
      * @cfg {Number} checkChangeBuffer
-     * Defines a timeout in milliseconds for buffering {@link #checkChangeEvents} that fire in rapid succession.
+     * Defines a timeout in milliseconds for buffering {@link #cfg!checkChangeEvents} that fire in rapid succession.
      * Defaults to 50 milliseconds.
      */
     checkChangeBuffer: 50,
 
+    /**
+     * @cfg liquidLayout
+     * @inheritdoc
+     */
     liquidLayout: true,
 
     /**
@@ -221,34 +250,65 @@ Ext.define('Ext.form.field.Base', {
      */
 
     /**
-     * @cfg {Boolean} validateOnBlur
+     * @cfg {Boolean} [validateOnBlur=true]
      * Whether the field should validate when it loses focus. This will cause fields to be validated
      * as the user steps through the fields in the form regardless of whether they are making changes to those fields
      * along the way. See also {@link #validateOnChange}.
      */
     validateOnBlur: true,
     
-    //<locale>
     /**
-     * @cfg {String} formatText Helpful text describing acceptable format for field values.
-     * This text will be announced by Assistive Technologies such as screen readers when
-     * the field is focused.
+     * @cfg {Boolean} [validateOnFocusLeave=false] Set to `true` to validate the field
+     * when focus leaves the field's component hierarchy entirely.
+     *
+     * The difference between  {@link #validateOnBlur} and this option is that the former
+     * will happen when field's _input element_ blurs. In complex fields such as ComboBox
+     * or Date focus may leave the input element to the drop-down picker, which will cause
+     * {@link #validateOnBlur} to happen prematurely.
+     *
+     * Using this option is recommended for accessible applications. The default value
+     * is `false` for backwards compatibility; this option and {@link #validateOnBlur}
+     * are mutually exclusive.
+     *
+     * @since 6.5.3
+     */
+    validateOnFocusLeave: false,
+    
+    /**
+     * @cfg {String} formatText
+     * Helpful text describing acceptable format for field values. This text will be
+     * announced by Assistive Technologies such as screen readers when the field is
+     * focused.
      *
      * This option is superseded by {@link #ariaHelp}.
      *
-     * @deprecated 6.2.0
+     * @deprecated 6.2.0 This config is deprecated.
+     * @locale
      */
-    //</locale>
 
     /**
      * @private
      */
-    hasFocus : false,
+    hasFocus: false,
 
+    /**
+     * @cfg baseCls
+     * @inheritdoc
+     */
     baseCls: Ext.baseCSSPrefix + 'field',
 
+    /**
+     * @cfg fieldBodyCls
+     * @inheritdoc
+     */
     fieldBodyCls: Ext.baseCSSPrefix + 'field-body',
 
+    webkitBorderBoxBugCls: Ext.baseCSSPrefix + 'webkit-border-box-bug',
+
+    /**
+     * @property maskOnDisable
+     * @inheritdoc
+     */
     maskOnDisable: false,
     
     // Instructs the layout to stretch the inputEl to 100% width when laying
@@ -257,7 +317,17 @@ Ext.define('Ext.form.field.Base', {
     stretchInputElFixed: true,
     
     // Form fields render their ARIA attributes to the inputEl
+    /**
+     * @property ariaEl
+     * @inheritdoc
+     */
     ariaEl: 'inputEl',
+    
+    /**
+     * @property focusEl
+     * @inheritdoc
+     */
+    focusEl: 'inputEl',
     renderAriaElements: true,
     
     /**
@@ -312,6 +382,12 @@ Ext.define('Ext.form.field.Base', {
         me.initLabelable();
         me.initField();
         me.initDefaultName();
+        
+        // validateOnBlur and validateOnFocusLeave are mutually exclusive,
+        // with latter taking precedence
+        if (me.validateOnFocusLeave) {
+            me.validateOnBlur = false;
+        }
 
         // Add to protoEl before render
         if (me.readOnly) {
@@ -356,7 +432,16 @@ Ext.define('Ext.form.field.Base', {
             id = me.id,
             type = me.inputType,
             inputId = me.getInputId(),
+            inputCls = me.inputCls || '',
+            fixCls = '',
             data, ariaAttr, inputElAttr;
+
+        if (Ext.supports.WebKitInputTableBoxModelBug) {
+            // workaround for https://bugs.webkit.org/show_bug.cgi?id=137693
+            // Can't use inputCls or typeCls here since they will be appended
+            // with ui in different subclasses which breaks things.
+            fixCls += me.webkitBorderBoxBugCls;
+        }
 
         data = Ext.apply({
             ui: me.ui,
@@ -371,8 +456,9 @@ Ext.define('Ext.form.field.Base', {
             fieldStyle: me.getFieldStyle(),
             childElCls: fieldData.childElCls,
             tabIdx: me.tabIndex,
-            inputCls: me.inputCls,
+            inputCls: inputCls,
             typeCls: Ext.baseCSSPrefix + 'form-' + (me.isTextInput ? 'text' : type),
+            fixCls: fixCls,
             ariaEl: me.ariaEl
         }, me.subTplData);
         
@@ -504,6 +590,10 @@ Ext.define('Ext.form.field.Base', {
     },
 
     onFocusLeave: function(e) {
+        if (this.validateOnFocusLeave) {
+            this.validate();
+        }
+        
         this.callParent([e]);
         this.completeEdit();
     },
@@ -900,7 +990,8 @@ Ext.define('Ext.form.field.Base', {
     },
 
     /**
-     * @inheritdoc Ext.form.field.Field#markInvalid
+     * @method markInvalid
+     * @inheritdoc Ext.form.field.Field#method-markInvalid
      */
     markInvalid: function(errors) {
         // Save the message and fire the 'invalid' event

@@ -6,20 +6,19 @@ Ext.define('etp.controller.Main', {
   extend: 'Ext.app.Controller',
 
   routes: {
-    'home': {
-      before: 'onBeforeRoutes',
-      action: 'onHomeRoute'
+    '*': {
+      before: 'onBeforeRoutes'
     },
     'login': 'onLoginRoute'
   },
 
-  // listen: {
-  //   controller: {
-  //     loginMain: {
-  //       loggedin: 'onLoggedIn'
-  //     }
-  //   }
-  // },
+  listen: {
+    controller: {
+      loginMain: {
+        loggedin: 'onLoggedIn'
+      }
+    }
+  },
 
   /**
    * Запрошенный роут
@@ -63,24 +62,39 @@ Ext.define('etp.controller.Main', {
     var me = this;
 
     if (me.getApplication().initEtp !== true) {
-        me.getApplication().initEtp = true;
-        if (me.getApplication().isLoggedIn()) {
-          action.resume();
+      me.getApplication().initEtp = true;
+      if (me.getApplication().isLoggedIn()) {
+        action.resume();
+      } else {
+        if (location.hash !== '#login') {
+          action.stop();
+          me.redirectTo(me.getApplication().loginToken);
         } else {
-          if (location.hash !== '#login') {
-            action.stop();
-            me.redirectTo(me.getApplication().loginToken);
-          } else {
-            action.resume();
-          }
+          action.resume();
         }
+      }
     } else {
       action.resume();
     }
   },
 
+  /**
+   * Отображаем страницу авторизации
+   */
   onLoginRoute: function () {
-    Ext.Msg.confirm('Confirm', 'Are you sure?', 'onConfirm', this);
+    var me = this;
+
+    if (Ext.fly('loader')) {
+      Ext.fly('loader').destroy();
+    }
+
+    if (me.getApplication().isLoggedIn()) {
+      me.redirectTo(me.getApplication().getConfig('defaultToken'));
+    } else {
+      Ext.Viewport.removeAll(true, true);
+      me.getApplication().setMainView('etp.view.login.Main');
+      Ext.Viewport.add(me.getApplication().getMainView());
+    }
   },
 
   onHomeRoute: function () {
@@ -91,32 +105,32 @@ Ext.define('etp.controller.Main', {
     if (choice === 'yes') {
       //
     }
-  }
+  },
 
   /**
    * Срабатывает только при авторизации пользователя
    *
    * @param {object} user @see Main.user
    */
-  // onLoggedIn: function () {
-  //   var me = this, mainView;
-  //
-  //   Ext.Viewport.removeAll(true, true);
-  //   me.getApplication().setMainView('Etpgpb.view.main.Main');
-  //   mainView = me.getApplication().getMainView();
-  //   Ext.Viewport.add(mainView);
-  //
-  //   if (me.requestedToken !== me.getApplication().getConfig('defaultToken')) {
-  //     me.getApplication().getMainView().hide();
-  //   }
-  //
-  //   Ext.Viewport.setViewModel({
-  //     type: 'viewport'
-  //   });
-  //
-  //   Ext.Viewport.getViewModel().set('currentRoute', me.requestedToken);
-  //   me.redirectTo(me.requestedToken);
-  //   me.requestedToken = me.getApplication().getDefaultToken();
-  // }
+  onLoggedIn: function () {
+    var me = this, mainView;
+
+    Ext.Viewport.removeAll(true, true);
+    me.getApplication().setMainView('etp.view.main.Main');
+    mainView = me.getApplication().getMainView();
+    Ext.Viewport.add(mainView);
+
+    if (me.requestedToken !== me.getApplication().getConfig('defaultToken')) {
+      me.getApplication().getMainView().hide();
+    }
+
+    Ext.Viewport.setViewModel({
+      type: 'viewport'
+    });
+
+    Ext.Viewport.getViewModel().set('currentRoute', me.requestedToken);
+    me.redirectTo(me.requestedToken);
+    me.requestedToken = me.getApplication().getDefaultToken();
+  }
 
 });

@@ -35,7 +35,7 @@ Ext.define('Ext.app.bind.TemplateBinding', {
             me.multiBinding = new Ext.app.bind.Multi(tokens, owner, me.onBindData, me);
         } else {
             me.isStatic = true;
-            me.onData(tpl.text);
+            me.onData(tpl.getText());
         }
     },
     
@@ -57,6 +57,11 @@ Ext.define('Ext.app.bind.TemplateBinding', {
 
     getTemplateScope: function () {
         return null;
+    },
+
+    isAvailable: function() {
+        var multi = this.multiBinding;
+        return multi ? multi.isAvailable() : false;
     },
 
     isDescendantOf: function () {

@@ -24,6 +24,7 @@
             }
         }
     },
+
                 
     "name": "etp",
     "namespace": "etp",
@@ -75,7 +76,7 @@
      * Fashion build configuration properties.
      */
     "fashion": {
-
+        "missingParameters": "error",
         "inliner": {
             /**
              * Disable resource inliner. Production builds enable this by default.
@@ -229,9 +230,11 @@
      *
      */
     "js": [
-        {
-            "path": "${framework.dir}/build/ext-modern-all-debug.js"
-        },
+        /**
+//        {
+//            "path": "${framework.dir}/build/ext-modern-all-debug.js"
+//        },
+*/
         {
             "path": "app.js",
             "bundle": true
@@ -270,6 +273,7 @@
             // defined in .sencha/app/defaults.properties
             "path": "${build.out.css.path}",
             "bundle": true,
+            "update": "full",
             "exclude": ["fashion"]
         }
     ],
@@ -504,5 +508,5 @@
      * Uniquely generated id for this application, used as prefix for localStorage keys.
      * Normally you should never change this value.
      */
-    "id": "9055ba18-cd4e-4ec5-9d45-c982a9105848"
+    "id": "4394cd49-364d-438a-961c-4adfab078883"
 }

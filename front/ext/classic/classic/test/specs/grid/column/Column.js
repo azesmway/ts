@@ -1,4 +1,8 @@
-describe("Ext.grid.column.Column", function() {
+/* global Ext, expect, jasmine */
+
+topSuite("Ext.grid.column.Column",
+    ['Ext.grid.Panel', 'Ext.grid.plugin.CellEditing', 'Ext.form.field.Text'],
+function() {
 
     var defaultColumns = [
             { header: 'Name',  dataIndex: 'name', width: 100 },
@@ -205,19 +209,19 @@ describe("Ext.grid.column.Column", function() {
                 }],
                 width: 400,
                 renderTo: Ext.getBody(),
-                style: 'position:absolute;top:0;left:0',
-                xhooks: {
-                    afterRender: function() {
-                        this.callParent(arguments);
-                        this.headerCt.el.select('span.x-column-header-text').setStyle('display', 'block');
-                    }
-                }
+                style: 'position:absolute;top:0;left:0'
             });
 
+            // IE9m appears to need some time to correct the table layout of the headers.
+            // so let's force it with a repaint
+            if (Ext.isIE9m) {
+                grid.el.repaint();
+            }
+
             expect(grid.headerCt).toHaveLayout({
-               el: { xywh: '0 0 400 80' },
-               items: {
-                  0: {
+                el: { xywh: '0 0 400 80' },
+                items: {
+                   0: {
                      el: { xywh: '0 0 100 80' },
                      textEl: { xywh: '6 33 87 13' },
                      titleEl: { xywh: '0 0 99 80' }
@@ -261,7 +265,6 @@ describe("Ext.grid.column.Column", function() {
                }
             });
         });
-
     });
 
     describe("destruction", function() {
@@ -358,6 +361,29 @@ describe("Ext.grid.column.Column", function() {
             expect(grid.query('[isGroupHeader]').length).toBe(2);
         });
 
+        it('should seal all grouped columns when the grid is configured with sealedColumns true', function() {
+            var grouped, i;
+
+            createGrid({}, {
+                sealedColumns: true,
+                columns: [
+                    { header: 'Name',  columns: {
+                        header: 'Foo', dataIndex: 'foo'
+                    }},
+                    { header: 'Email', columns: {
+                        header: 'Bar', dataIndex: 'bar'
+                    }},
+                    { header: 'Phone', dataIndex: 'phone', flex: 1, hidden: true }
+                ]
+            });
+
+            grouped = grid.query('[isGroupHeader]');
+
+            for (i = 0; i < grouped.length; i++) {
+                expect(grouped[i].isSealed()).toBe(true);
+            }
+        });
+
         it('should not have any isGroupHeader matches if there are no column groups', function () {
             createGrid({}, {
                 columns: [
@@ -368,6 +394,18 @@ describe("Ext.grid.column.Column", function() {
             });
 
             expect(grid.query('[isGroupHeader]').length).toBe(0);
+        });
+    });
+
+    describe("align", function() {
+        it("should align text to right when set to end", function() {
+            createGrid({}, {
+                columns: [
+                    { header: 'Name',  dataIndex: 'name', width: 100 },
+                    { header: 'Email', dataIndex: 'email', flex: 1, align: 'end'}
+                ]
+            });
+            expect(Ext.fly(grid.view.getCell(0, colRef[1]).firstChild).getStyle('text-align')).toBe('right');
         });
     });
 

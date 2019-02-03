@@ -1,2 +1,2 @@
 // @tag full-page
-// @require /Users/azesm/Sites/ts/front/app.js
+// @require /Users/azesm/Sites/front/etp/app.js

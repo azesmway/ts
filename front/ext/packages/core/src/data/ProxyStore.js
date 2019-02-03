@@ -41,14 +41,15 @@ Ext.define('Ext.data.ProxyStore', {
          *
          * May also be the actual Model subclass.
          *
-         * This config is required for the store to be able to read data unless you have defined
-         * the {@link #fields} config which will create an anonymous `Ext.data.Model`.
+         * This config is required for the store to be able to read data unless you have
+         * defined the {@link #fields} config which will create an anonymous
+         * `Ext.data.Model`.
          */
         model: undefined,
 
         // @cmd-auto-dependency {aliasPrefix: "data.field."}
         /**
-         * @cfg {Object[]/String[]} fields
+         * @cfg fields
          * @inheritdoc Ext.data.Model#cfg-fields
          * 
          * @localdoc **Note:** In general, this configuration option should only be used 
@@ -65,16 +66,17 @@ Ext.define('Ext.data.ProxyStore', {
         // @cmd-auto-dependency {aliasPrefix : "proxy."}
         /**
          * @cfg {String/Ext.data.proxy.Proxy/Object} proxy
-         * The Proxy to use for this Store. This can be either a string, a config object or a Proxy instance -
-         * see {@link #setProxy} for details.
+         * The Proxy to use for this Store. This can be either a string, a config object
+         * or a Proxy instance - see {@link #setProxy} for details.
          * @since 1.1.0
          */
         proxy: undefined,
 
         /**
          * @cfg {Boolean/Object} autoLoad
-         * If data is not specified, and if autoLoad is true or an Object, this store's load method is automatically called
-         * after creation. If the value of autoLoad is an Object, this Object will be passed to the store's load method.
+         * If data is not specified, and if autoLoad is true or an Object, this store's
+         * load method is automatically called after creation. If the value of autoLoad
+         * is an Object, this Object will be passed to the store's load method.
          *
          * It's important to note that {@link Ext.data.TreeStore Tree Stores} will  
          * load regardless of autoLoad's value if expand is set to true on the 
@@ -86,44 +88,49 @@ Ext.define('Ext.data.ProxyStore', {
 
         /**
          * @cfg {Boolean} autoSync
-         * True to automatically sync the Store with its Proxy after every edit to one of its Records. Defaults to false.
+         * True to automatically sync the Store with its Proxy after every edit to one of
+         * its Records. Defaults to false.
          */
         autoSync: false,
 
         /**
          * @cfg {String} batchUpdateMode
-         * Sets the updating behavior based on batch synchronization. 'operation' (the default) will update the Store's
-         * internal representation of the data after each operation of the batch has completed, 'complete' will wait until
-         * the entire batch has been completed before updating the Store's data. 'complete' is a good choice for local
-         * storage proxies, 'operation' is better for remote proxies, where there is a comparatively high latency.
+         * Sets the updating behavior based on batch synchronization. 'operation' (the
+         * default) will update the Store's internal representation of the data after
+         * each operation of the batch has completed, 'complete' will wait until the
+         * entire batch has been completed before updating the Store's data. 'complete'
+         * is a good choice for local storage proxies, 'operation' is better for remote
+         * proxies, where there is a comparatively high latency.
          */
         batchUpdateMode: 'operation',
        
         /**
          * @cfg {Boolean} sortOnLoad
-         * If true, any sorters attached to this Store will be run after loading data, before the datachanged event is fired.
-         * Defaults to true, ignored if {@link Ext.data.Store#remoteSort remoteSort} is true
+         * If true, any sorters attached to this Store will be run after loading data,
+         * before the datachanged event is fired. Defaults to true, ignored if
+         * {@link Ext.data.Store#remoteSort remoteSort} is true
          */
         sortOnLoad: true,
 
         /**
-         * @cfg {Boolean} [trackRemoved=true]
+         * @cfg {Boolean} trackRemoved
          * This config controls whether removed records are remembered by this store for
          * later saving to the server.
          */
         trackRemoved: true,
 
         /**
-         * @cfg {Boolean} [asynchronousLoad]
-         * This defaults to `true` when this store's {@link #cfg-proxy} is asynchronous, such as an
-         * {@link Ext.data.proxy.Ajax Ajax proxy}.
+         * @cfg {Boolean} asynchronousLoad
+         * This defaults to `true` when this store's {@link #cfg-proxy} is asynchronous,
+         * such as an {@link Ext.data.proxy.Ajax Ajax proxy}.
          *
-         * When the proxy is synchronous, such as a {@link Ext.data.proxy.Memory} memory proxy, this
-         * defaults to `false`.
+         * When the proxy is synchronous, such as a {@link Ext.data.proxy.Memory} memory
+         * proxy, this defaults to `false`.
          *
-         * *NOTE:* This does not cause synchronous Ajax requests if configured `false` when an Ajax proxy
-         * is used. It causes immediate issuing of an Ajax request when {@link #method-load} is called
-         * rather than issuing the request at the end of the current event handler run.
+         * *NOTE:* This does not cause synchronous Ajax requests if configured `false`
+         * when an Ajax proxy is used. It causes immediate issuing of an Ajax request
+         * when {@link #method-load} is called rather than issuing the request at the end
+         * of the current event handler run.
          *
          * What this means is that when using an Ajax proxy, calls to 
          * {@link #method-load} do not fire the request to the remote resource 
@@ -157,15 +164,18 @@ Ext.define('Ext.data.ProxyStore', {
 
     /**
      * @private
-     * @property {Boolean}
-     * The class name of the model that this store uses if no explicit {@link #model} is given
+     * @property {Boolean} implicitModel
+     * The class name of the model that this store uses if no explicit {@link #model} is
+     * given
      */
     implicitModel: 'Ext.data.Model',
 
     /**
      * @property {Object} lastOptions
-     * Property to hold the last options from a {@link #method-load} method call. This object is used for the {@link #method-reload}
-     * to reuse the same options. Please see {@link #method-reload} for a simple example on how to use the lastOptions property.
+     * Property to hold the last options from a {@link #method-load} method call. This
+     * object is used for the {@link #method-reload} to reuse the same options. Please
+     * see {@link #method-reload} for a simple example on how to use the lastOptions
+     * property.
      */
 
     /**
@@ -175,73 +185,78 @@ Ext.define('Ext.data.ProxyStore', {
      */
     autoSyncSuspended: 0,
 
-    //documented above
+    /**
+     * @property {Ext.data.Model[]} removed
+     * Temporary cache in which removed model instances are kept until successfully
+     * synchronised with a Proxy, at which point this is cleared.
+     *
+     * This cache is maintained unless you set `trackRemoved` to `false`.
+     *
+     * @protected
+     * @readonly
+     */
+    removed: null,
+
+    /**
+     * @event beforeload
+     * Fires before a request is made for a new data object. If the beforeload handler returns false the load
+     * action will be canceled.
+     *
+     * **Note:** If you are using a buffered store, you should use
+     * {@link Ext.data.Store#beforeprefetch beforeprefetch}.
+     * @param {Ext.data.Store} store This Store
+     * @param {Ext.data.operation.Operation} operation The Ext.data.operation.Operation object that will be passed to the Proxy to
+     * load the Store
+     * @since 1.1.0
+     */
+
+    /**
+     * @event load
+     * Fires whenever the store reads data from a remote data source.
+     *
+     * **Note:** If you are using a buffered store, you should use
+     * {@link Ext.data.Store#prefetch prefetch}.
+     * @param {Ext.data.Store} this
+     * @param {Ext.data.Model[]} records An array of records
+     * @param {Boolean} successful True if the operation was successful.
+     * @param {Ext.data.operation.Read} operation The
+     * {@link Ext.data.operation.Read Operation} object that was used in the data
+     * load call
+     * @since 1.1.0
+     */
+
+    /**
+     * @event write
+     * Fires whenever a successful write has been made via the configured {@link #proxy Proxy}
+     * @param {Ext.data.Store} store This Store
+     * @param {Ext.data.operation.Operation} operation The {@link Ext.data.operation.Operation Operation} object that was used in
+     * the write
+     * @since 3.4.0
+     */
+
+    /**
+     * @event beforesync
+     * Fired before a call to {@link #sync} is executed. Return false from any listener to cancel the sync
+     * @param {Object} options Hash of all records to be synchronized, broken down into create, update and destroy
+     */
+
+    /**
+     * @event metachange
+     * Fires when this store's underlying reader (available via the proxy) provides new metadata.
+     * Metadata usually consists of new field definitions, but can include any configuration data
+     * required by an application, and can be processed as needed in the event handler.
+     * This event is currently only fired for JsonReaders.
+     * @param {Ext.data.Store} this
+     * @param {Object} meta The JSON metadata
+     * @since 1.1.0
+     */
+
     constructor: function(config) {
         var me = this;
 
-        // <debug>
+        //<debug>
         var configModel = me.model;
-        // </debug>
-
-        /**
-         * @event beforeload
-         * Fires before a request is made for a new data object. If the beforeload handler returns false the load
-         * action will be canceled.
-         * @param {Ext.data.Store} store This Store
-         * @param {Ext.data.operation.Operation} operation The Ext.data.operation.Operation object that will be passed to the Proxy to
-         * load the Store
-         * @since 1.1.0
-         */
-
-        /**
-         * @event load
-         * Fires whenever the store reads data from a remote data source.
-         * @param {Ext.data.Store} this
-         * @param {Ext.data.Model[]} records An array of records
-         * @param {Boolean} successful True if the operation was successful.
-         * @param {Ext.data.operation.Read} operation The 
-         * {@link Ext.data.operation.Read Operation} object that was used in the data 
-         * load call
-         * @since 1.1.0
-         */
-
-        /**
-         * @event write
-         * Fires whenever a successful write has been made via the configured {@link #proxy Proxy}
-         * @param {Ext.data.Store} store This Store
-         * @param {Ext.data.operation.Operation} operation The {@link Ext.data.operation.Operation Operation} object that was used in
-         * the write
-         * @since 3.4.0
-         */
-
-        /**
-         * @event beforesync
-         * Fired before a call to {@link #sync} is executed. Return false from any listener to cancel the sync
-         * @param {Object} options Hash of all records to be synchronized, broken down into create, update and destroy
-         */
-
-        /**
-         * @event metachange
-         * Fires when this store's underlying reader (available via the proxy) provides new metadata.
-         * Metadata usually consists of new field definitions, but can include any configuration data
-         * required by an application, and can be processed as needed in the event handler.
-         * This event is currently only fired for JsonReaders.
-         * @param {Ext.data.Store} this
-         * @param {Object} meta The JSON metadata
-         * @since 1.1.0
-         */
-
-
-        /**
-         * Temporary cache in which removed model instances are kept until successfully
-         * synchronised with a Proxy, at which point this is cleared.
-         *
-         * This cache is maintained unless you set `trackRemoved` to `false`.
-         *
-         * @protected
-         * @property {Ext.data.Model[]} removed
-         */
-        me.removed = [];
+        //</debug>
 
         me.callParent(arguments);
 
@@ -249,7 +264,7 @@ Ext.define('Ext.data.ProxyStore', {
             me.flushLoad();
         }
 
-        // <debug>
+        //<debug>
         if (!me.getModel() && me.useModelWarning !== false && me.getStoreId() !== 'ext-empty-store') {
             // There are a number of ways things could have gone wrong, try to give as much information as possible
             var logMsg = [
@@ -263,7 +278,28 @@ Ext.define('Ext.data.ProxyStore', {
 
             Ext.log.warn(logMsg.join(''));
         }
-        // </debug>
+        //</debug>
+    },
+
+    /**
+     * @private
+     */
+    doDestroy: function() {
+        var me = this,
+            proxy = me.getProxy();
+
+        me.clearLoadTask();
+        Ext.destroy(me.getData());
+        me.data = null;
+        me.setProxy(null);
+
+        if (proxy.autoCreated) {
+            proxy.destroy();
+        }
+
+        me.setModel(null);
+
+        me.callParent();
     },
 
     applyAsynchronousLoad: function(asynchronousLoad) {
@@ -511,6 +547,7 @@ Ext.define('Ext.data.ProxyStore', {
         }
 
         me.isSyncing = false;
+        batch.destroy();
         me.fireEvent('datachanged', me);
     },
 
@@ -531,7 +568,7 @@ Ext.define('Ext.data.ProxyStore', {
      */
     filterNew: function(item) {
         // only want phantom records that are valid
-        return item.phantom === true && item.isValid();
+        return item.phantom && item.isValid();
     },
 
     /**
@@ -566,7 +603,7 @@ Ext.define('Ext.data.ProxyStore', {
      */
     filterUpdated: function(item) {
         // only want dirty records, not phantoms that are valid
-        return item.dirty === true && item.phantom !== true && item.isValid();
+        return item.dirty && !item.phantom && item.isValid();
     },
 
     /**
@@ -768,9 +805,14 @@ Ext.define('Ext.data.ProxyStore', {
         var me = this,
             options = me.pendingLoadOptions,
             operation;
+        
+        if (me.destroying || me.destroyed) {
+            return;
+        }
 
         // If it gets called programatically before the timer fired, the listener will need cancelling.
         me.clearLoadTask();
+        
         if (!options) {
             return;
         }
@@ -794,6 +836,11 @@ Ext.define('Ext.data.ProxyStore', {
         if (me.fireEvent('beforeload', me, operation) !== false) {
             me.onBeforeLoad(operation);
             me.loading = true;
+            // Internal event, fired after the flag is set, we need
+            // to fire this beforeload is too early
+            if (me.hasListeners.beginload) {
+                me.fireEvent('beginload', me, operation);
+            }
             operation.execute();
         }
     },
@@ -878,16 +925,19 @@ Ext.define('Ext.data.ProxyStore', {
         if (me.contains(record)) {
             me.onUpdate(record, Ext.data.Model.REJECT, null);
             me.fireEvent('update', me, record, Ext.data.Model.REJECT, null);
+            me.fireEvent('datachanged', me);
         }
     },
 
     /**
-     * @private
-     * A model instance should call this method on the Store it has been {@link Ext.data.Model#join joined} to.
-     * @param {Ext.data.Model} record The model instance that was edited
+     * A model instance should call this method on the Store it has been
+     * {@link Ext.data.Model#join joined} to.
+     * @param {Ext.data.Model} record The model instance that was edited.
+     * @param {String[]} [modifiedFieldNames] (private)
      * @since 3.4.0
+     * @private
      */
-    afterCommit: function(record, modifiedFieldNames) {
+    afterCommit: function (record, modifiedFieldNames) {
         var me = this;
         if (!modifiedFieldNames) {
             modifiedFieldNames = null;
@@ -895,6 +945,7 @@ Ext.define('Ext.data.ProxyStore', {
         if (me.contains(record)) {
             me.onUpdate(record, Ext.data.Model.COMMIT, modifiedFieldNames);
             me.fireEvent('update', me, record, Ext.data.Model.COMMIT, modifiedFieldNames);
+            me.fireEvent('datachanged', me);
         }
     },
     
@@ -905,27 +956,6 @@ Ext.define('Ext.data.ProxyStore', {
     onErase: Ext.emptyFn,
 
     onUpdate: Ext.emptyFn,
-
-    /**
-     * @private
-     */
-    doDestroy: function() {
-        var me = this,
-            proxy = me.getProxy();
-
-        me.clearLoadTask();
-        me.getData().destroy();
-        me.data = null;
-        me.setProxy(null);
-        
-        if (proxy.autoCreated) {
-            proxy.destroy();
-        }
-        
-        me.setModel(null);
-        
-        me.callParent();
-    },
 
     /**
      * Returns true if the store has a pending load task.
@@ -1013,11 +1043,7 @@ Ext.define('Ext.data.ProxyStore', {
         },
 
         clearLoadTask: function() {
-            if (this.loadTimer) {
-                Ext.asapCancel(this.loadTimer);
-            }
-            
-            this.pendingLoadOptions = this.loadTimer = null;
+            this.pendingLoadOptions = this.loadTimer = Ext.unasap(this.loadTimer);
         },
 
         cleanRemoved: function() {

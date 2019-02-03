@@ -1,6 +1,9 @@
-/* global Ext, xit, expect, jasmine */
+/* global Ext, xit, expect, jasmine, MockAjaxManager */
 
-describe("Ext.GlobalEvents", function() {
+topSuite("Ext.GlobalEvents",
+    ['Ext.data.Store', 'Ext.Ajax', 'Ext.data.JsonP', 'Ext.data.proxy.JsonP', 'Ext.TaskManager',
+     'Ext.Panel'],
+function() {
     describe('idle event', function() {
         var delay = Ext.isIE ? 50 : 10,
             store, loadSpy, idleSpy,
@@ -61,13 +64,8 @@ describe("Ext.GlobalEvents", function() {
         });
 
         it("should fire after DOM event handler are invoked, but before control is returned to the browser", function() {
-            var element = Ext.getBody().createChild();
-
-            function expectFalse() {
-                expect(idleSpy).not.toHaveBeenCalled();
-            }
-            
-            var mousedownSpy = jasmine.createSpy('mousedown');
+            var element = Ext.getBody().createChild(),
+                mousedownSpy = jasmine.createSpy('mousedown');
 
             // attach a couple mousedown listeners, the idle event should fire after both
             // handlers have fired
@@ -76,10 +74,12 @@ describe("Ext.GlobalEvents", function() {
                 mousedownSpy();
             });
 
-            jasmine.fireMouseEvent(element, 'mousedown');
+            Ext.testHelper.touchStart(element);
 
             expect(mousedownSpy.callCount).toBe(2);
             expect(idleSpy).toHaveBeenCalled();
+            
+            Ext.testHelper.touchCancel(element);
 
             element.destroy();
         });
@@ -164,6 +164,45 @@ describe("Ext.GlobalEvents", function() {
         });
     });
     
+    TODO(Ext.isClassic).
+    describe("pressedComponent", function() {
+        var button;
+        
+        beforeEach(function() {
+            button = new Ext.Button({
+                renderTo: Ext.getBody(),
+                text: 'foo'
+            });
+        });
+        
+        afterEach(function() {
+            button = Ext.destroy(button);
+        });
+        
+        it("should capture the pressed component on mousedown", function() {
+            jasmine.fireMouseEvent(button.el, 'mousedown');
+            
+            expect(Ext.GlobalEvents.pressedComponent).toBe(button);
+            
+            jasmine.fireMouseEvent(button.el, 'mouseup');
+        });
+        
+        it("should call onRelease method when mouse is released", function() {
+            var event,
+                spy = spyOn(button, 'onRelease');
+            
+            spy.andCallFake(function(e) {
+                event = e;
+            });
+            
+            jasmine.fireMouseEvent(button.el, 'click');
+            
+            expect(spy).toHaveBeenCalled();
+            expect(event.type).toBe('mouseup');
+            expect(event.target).toBe(button.el.dom);
+        });
+    });
+    
     describe('scroll event', function() {
         var stretcher,
             scrollingPanel,
@@ -187,6 +226,9 @@ describe("Ext.GlobalEvents", function() {
         });
 
         it('should fire the global scroll event whenever anything scrolls', function() {
+            var viewportScrollEndSpy = jasmine.createSpy('viewport sceollend spy'),
+                panelScrollEndSpy = jasmine.createSpy('scrollingPanel scrollend spy');
+
             stretcher = Ext.getBody().createChild({
                 style: 'height:10000px'
             });
@@ -213,23 +255,38 @@ describe("Ext.GlobalEvents", function() {
             Ext.on({
                 scroll: onGlobalScroll
             });
-            Ext.getViewportScroller().scrollBy(null, 100);
+            
+            var viewportScroller = Ext.getViewportScroller();
+
+            viewportScroller.on({
+                scrollend: viewportScrollEndSpy
+            });
+            
+            viewportScroller.scrollBy(null, 100);
 
             // Wait for scroll events to fire (may be async)
-            waitsFor(function() {
-                return scrolledElements.length === 1 &&
-                       scrolledElements[0] === Ext.scroll.Scroller.viewport.getElement();
-            }, 'Scroll of document to fire through the Ext.scroll.Scroller.viewport Scroller');
+            waitsForSpy(viewportScrollEndSpy);
+            
+            runs(function() {
+                expect(scrolledElements.length).toBe(1);
+                expect(scrolledElements[0]).toBe(Ext.scroll.Scroller.viewport.getElement());
+            });
+
+            scrollingPanel.getScrollable().on({
+                scrollend: panelScrollEndSpy
+            });
             
             runs(function() {
                 scrollingPanel.getScrollable().scrollBy(null, 100);
             });
-            
+
             // Wait for scroll events to fire (may be async)
-            waitsFor(function() {
-                return scrolledElements.length === 2 &&
-                       scrolledElements[1] === scrollingPanel.getScrollable().getElement();
-            }, 'Scroll of panel to fire through the Ext.scroll.Scroller.viewport Scroller');
+            waitsForSpy(panelScrollEndSpy);
+
+            runs(function() {
+                expect(scrolledElements.length).toBe(2);
+                expect(scrolledElements[1]).toBe(scrollingPanel.getScrollable().getElement());
+            });
         });
     });
 });

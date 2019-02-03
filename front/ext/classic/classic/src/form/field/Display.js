@@ -38,6 +38,10 @@ Ext.define('Ext.form.field.Display', {
     requires: ['Ext.util.Format', 'Ext.XTemplate'],
     alternateClassName: ['Ext.form.DisplayField', 'Ext.form.Display'],
     
+    /**
+     * @cfg fieldSubTpl
+     * @inheritdoc
+     */
     fieldSubTpl: [
         '<div id="{id}" data-ref="inputEl" role="textbox" aria-readonly="true"',
         ' aria-labelledby="{cmpId}-labelEl" {inputAttrTpl}',
@@ -51,8 +55,16 @@ Ext.define('Ext.form.field.Display', {
     ],
     
     // We have the ARIA markup pre-rendered so we don't want it to be applied
+    /**
+     * @property ariaRole
+     * @inheritdoc
+     */
     ariaRole: undefined,
     
+    /**
+     * @property focusable
+     * @inheritdoc
+     */
     focusable: false,
 
     // Display fields are divs not real input fields, so rendering
@@ -60,17 +72,22 @@ Ext.define('Ext.form.field.Display', {
     skipLabelForAttribute: true,
 
     /**
-     * @cfg {Boolean} readOnly
+     * @cfg readOnly
+     * @inheritdoc
      * @private
      */
     readOnly: true,
 
     /**
-     * @cfg {String} [fieldCls="x-form-display-field"]
-     * The default CSS class for the field.
+     * @cfg fieldCls
+     * @inheritdoc
      */
     fieldCls: Ext.baseCSSPrefix + 'form-display-field',
 
+    /**
+     * @cfg fieldBodyCls
+     * @inheritdoc
+     */
     fieldBodyCls: Ext.baseCSSPrefix + 'form-display-field-body',
 
     /**
@@ -80,7 +97,7 @@ Ext.define('Ext.form.field.Display', {
     htmlEncode: false,
     
     /**
-     * @cfg {Function} renderer
+     * @cfg {Function/String} renderer
      * A function to transform the raw value for display in the field.
      * 
      *     Ext.create('Ext.form.Panel', {
@@ -103,6 +120,7 @@ Ext.define('Ext.form.field.Display', {
      * @param {Object} value The raw field {@link #value}
      * @param {Ext.form.field.Display} field The display field
      * @return {String} displayValue The HTML string to be rendered
+     * @controllable
      */
     
     /**
@@ -110,22 +128,35 @@ Ext.define('Ext.form.field.Display', {
      * The scope to execute the {@link #renderer} function. Defaults to this.
      */
 
+    /**
+     * @property noWrap
+     * @inheritdoc
+     */
     noWrap: false,
     
     /**
-     * @cfg {Boolean} validateOnChange
+     * @cfg validateOnChange
+     * @inheritdoc
      * @private
      */
     validateOnChange: false,
 
+    /**
+     * @method initEvents
+     * @inheritdoc
+     */
     initEvents: Ext.emptyFn,
 
+    /**
+     * @cfg submitValue
+     * @inheritdoc
+     */
     submitValue: false,
 
     getValue: function() {
         return this.value;
     },
-    
+
     valueToRaw: function(value) {
         if (value || value === 0 || value === false) {
             return value;
@@ -165,9 +196,11 @@ Ext.define('Ext.form.field.Display', {
     getDisplayValue: function() {
         var me = this,
             value = this.getRawValue(),
+            renderer = me.renderer,
             display;
-        if (me.renderer) {
-             display = me.renderer.call(me.scope || me, value, me);
+
+        if (renderer) {
+             display = Ext.callback(renderer, me.scope, [value, me], 0, me);
         } else {
              display = me.htmlEncode ? Ext.util.Format.htmlEncode(value) : value;
         }

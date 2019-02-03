@@ -1,7 +1,6 @@
 /* global Ext, expect, spyOn, jasmine */
 
-describe("Ext.grid.Tree", function() {
-
+topSuite("Ext.grid.Tree", ['Ext.data.TreeStore', 'Ext.layout.Fit', 'Ext.app.ViewModel'], function() {
     var TreeItem = Ext.define(null, {
             extend: 'Ext.data.TreeModel',
             fields: ['id', 'text', 'secondaryId'],
@@ -10,14 +9,21 @@ describe("Ext.grid.Tree", function() {
             }
         }),
         tree,
-        container,
         store,
         rootNode,
-        recordCount,
         testNodes,
         synchronousLoad = true,
         treeStoreLoad = Ext.data.TreeStore.prototype.load,
-        loadStore;
+        loadStore,
+        navModel,
+        colMap;
+
+    function setColMap() {
+        colMap = {};
+        tree.query('column').forEach(function(col) {
+            colMap[col.getItemId()] = col;
+        });
+    }
 
     function getRow(row) {
         var rec = store.getAt(row);
@@ -29,15 +35,6 @@ describe("Ext.grid.Tree", function() {
         return row.cells[column];
     }
 
-    function spyOnEvent(object, eventName, fn) {
-        var obj = {
-            fn: fn || Ext.emptyFn
-        },
-        spy = spyOn(obj, "fn");
-        object.addListener(eventName, obj.fn);
-        return spy;
-    }
-
     // Force any flex sizes to be published internally
     function refreshColSizes() {
         var cols = tree.query('column');
@@ -45,29 +42,33 @@ describe("Ext.grid.Tree", function() {
     }
 
     function makeTree(nodes, cfg, storeCfg, rootCfg) {
+        var rootConfig = {
+            id: 'root',
+            secondaryId: 'root',
+            text: 'Root',
+
+            // Add cls. Tests must not throw errors with this present.
+            cls: 'test-EXTJS-16367'
+        };
+        if (nodes) {
+            rootConfig.children = nodes;
+        }
+
         tree = new Ext.grid.Tree(Ext.apply({
             renderTo: Ext.getBody(),
             store: store = new Ext.data.TreeStore(Ext.apply({
                 model: TreeItem,
-                root: Ext.apply({
-                    id: 'root',
-                    secondaryId: 'root',
-                    text: 'Root',
-
-                    // Add cls. Tests must not throw errors with this present.
-                    cls: 'test-EXTJS-16367',
-                    children: nodes
-                }, rootCfg)
+                root: Ext.apply(rootConfig, rootCfg)
             }, storeCfg)),
             width: 200,
             height: 300
         }, cfg));
-        rootNode = store.getRootNode();
-        container = tree.container;
-        tree.onContainerResize(container, { height: container.element.getHeight() });
+        rootNode = store.getRoot();
+        navModel = tree.getNavigationModel();
 
         // Need because of async response to flex
         refreshColSizes();
+        setColMap();
     }
 
     beforeEach(function() {
@@ -157,7 +158,7 @@ describe("Ext.grid.Tree", function() {
     afterEach(function(){
         // Undo the overrides.
         Ext.data.TreeStore.prototype.load = treeStoreLoad;
-        Ext.destroy(tree);
+        Ext.destroy(tree, store);
         MockAjaxManager.removeMethods();
     });
     
@@ -385,7 +386,8 @@ describe("Ext.grid.Tree", function() {
 
             // Wait until the store has been bound
             waitsFor(function() {
-                return treepanel.getStore() && treepanel.getRootNode().childNodes.length === 3 && treepanel.query('gridrow').length === 4;
+                var root = treepanel.getRootNode();
+                return root && root.childNodes.length === 3 && treepanel.query('gridrow').length === 4;
             }, 'new store to be bound to');
         });
     });
@@ -416,7 +418,7 @@ describe("Ext.grid.Tree", function() {
                     expander = getCell(1, 0).expanderElement;
 
                 tree.on('itemexpand', spy);
-                tree.on('itemtap', itemClickSpy);
+                tree.on('childtap', itemClickSpy);
                 jasmine.fireMouseEvent(expander, 'click');
                 waitsFor(function() {
                     return spy.callCount > 0;
@@ -435,7 +437,7 @@ describe("Ext.grid.Tree", function() {
 
             beforeEach(function() {
                 errorSpy = jasmine.createSpy();
-                onError = window.onError;
+                onError = window.onerror;
                 // We can't catch any exceptions thrown by synthetic events,
                 // so a standard toThrow() or even try/catch won't do the job
                 // here. They will hit onerror though, so use that.
@@ -447,7 +449,7 @@ describe("Ext.grid.Tree", function() {
             });
 
             afterEach(function() {
-                window.onError = onError;
+                window.onerror = onError;
                 errorSpy = null;
             });
 
@@ -674,6 +676,99 @@ describe("Ext.grid.Tree", function() {
                     expect(store.getNodeById('M').isExpanded()).toBe(false);      
                 });  
                 
+            });
+    
+            describe('expanded nodes', function () {
+                var ModelProxy, resp1, resp2, resp3;
+    
+                beforeEach(function () {
+                    var responses = [
+                        {
+                            id: 'root',
+                            text: 'Root',
+                            children: [{
+                                id: 2,
+                                text: 'node1',
+                                expanded: false
+                            }]
+                        },
+                        [{
+                            id: 3,
+                            text: 'child1',
+                            expanded: false
+                        }, {
+                            id: 4,
+                            text: 'child2',
+                            expanded: true
+                        }],
+                        [{
+                            id: 5,
+                            text: 'child2.1',
+                            expanded: false
+                        }, {
+                            id: 6,
+                            text: 'child2.2',
+                            expanded: false
+                        }]
+                    ];
+        
+                    resp1 = responses[0];
+                    resp2 = responses[1];
+                    resp3 = responses[2];
+                    tree.destroy();
+                    ModelProxy = Ext.define(null, {
+                        extend: 'Ext.data.TreeModel',
+                        fields: ['id', 'text', 'secondaryId'],
+                        proxy: {
+                            type: 'ajax',
+                            url: 'fakeUrl'
+                        }
+                    });
+                });
+    
+                afterEach(function () {
+                    ModelProxy = Ext.destroy(ModelProxy);
+                });
+        
+                it('should expand nodes in the correct order', function () {
+                    var store, root;
+    
+                    makeTree(null, null, {
+                        model: ModelProxy
+                    });
+                    store = tree.getStore();
+                    root = store.getRoot();
+    
+                    // expand root and load response
+                    root.expand();
+                    Ext.Ajax.mockComplete({
+                        status: 200,
+                        responseText: Ext.encode(resp1)
+                    });
+    
+                    // expand node1 and load response
+                    store.getNodeById(2).expand();
+                    Ext.Ajax.mockComplete({
+                        status: 200,
+                        responseText: Ext.encode(resp2)
+                    });
+    
+                    // immediately load response for expanded child2
+                    Ext.Ajax.mockComplete({
+                        status: 200,
+                        responseText: Ext.encode(resp3)
+                    });
+                    
+                    Ext.Array.forEach(tree.query('gridrow'), function (node, index) {
+                        var id = node.getRecord().getId();
+                        
+                        // each node, except for root, should have an ID that increments to
+                        // the index count
+                        if (id !== 'root') {
+                            expect(id).toEqual(++index);
+                        }
+                    });
+                });
             });
         });
         
@@ -1129,5 +1224,119 @@ describe("Ext.grid.Tree", function() {
             expect(tree.query('gridrow').length).toBe(5);
         });
     });
+    
+    describe('cell tpl', function() {
+        beforeEach(function() {
+            makeTree(testNodes, {
+                columns: [{
+                    xtype: 'treecolumn',
+                    cell: {
+                        tpl: '{text} id:{secondaryId}'
+                    },
+                    flex: 1
+                }]
+            });
+            tree.expandAll();
+        });
 
+        it('should use the tpl to render the cell text', function() {
+            expect(tree.down('treecell').getRawValue()).toBe("Root id:root");
+        });
+    });
+
+    describe('keyboard navigation', function() {
+        describe('Simple Tree', function() {
+            it('should navigate correctly', function() {
+                makeTree(testNodes);
+                navModel.setLocation([0, 0]);
+
+                // RIGHT expands
+                jasmine.fireKeyEvent(document.activeElement, 'keydown', Ext.event.Event.RIGHT);
+                expect(rootNode.isExpanded()).toBe(true);
+
+                jasmine.fireKeyEvent(document.activeElement, 'keydown', Ext.event.Event.DOWN);
+
+                // RIGHT expands
+                jasmine.fireKeyEvent(document.activeElement, 'keydown', Ext.event.Event.RIGHT);
+                expect(rootNode.childNodes[0].isExpanded()).toBe(true);
+
+                // LEFT collapses
+                jasmine.fireKeyEvent(document.activeElement, 'keydown', Ext.event.Event.LEFT);
+                expect(rootNode.childNodes[0].isExpanded()).toBe(false);
+            });
+        });
+
+        describe('TreeGrid', function() {
+            it('should navigate correctly', function() {
+                makeTree(testNodes, {
+                    columns: [{
+                        xtype: 'treecolumn',
+                        cell: {
+                            tpl: '{text} id:{secondaryId}'
+                        },
+                        flex: 1
+                    }, {
+                        text: 'Sec. Id.',
+                        dataIndex: 'secondaryId',
+                        flex: 1
+                    }]
+                });
+                navModel.setLocation([0, 0]);
+
+                // CTRL+RIGHT expands because RIGHT navigates in a TreeGrid
+                jasmine.fireKeyEvent(document.activeElement, 'keydown', Ext.event.Event.RIGHT, false, true);
+                expect(rootNode.isExpanded()).toBe(true);
+
+                jasmine.fireKeyEvent(document.activeElement, 'keydown', Ext.event.Event.DOWN);
+
+                // CTRL+RIGHT expands because RIGHT navigates in a TreeGrid
+                jasmine.fireKeyEvent(document.activeElement, 'keydown', Ext.event.Event.RIGHT, false, true);
+                expect(rootNode.childNodes[0].isExpanded()).toBe(true);
+
+                // CTRL+LEFT collapses because LEFT navigates in a TreeGrid
+                jasmine.fireKeyEvent(document.activeElement, 'keydown', Ext.event.Event.LEFT, false, true);
+                expect(rootNode.childNodes[0].isExpanded()).toBe(false);
+            });
+        });
+    });
+
+    describe('header menu', function() {
+        it('should hide "group by this field" if there is no dataIndex on that column', function () {
+            makeTree(testNodes, {
+                columns: [{
+                    itemId: 'colf1',
+                    xtype: 'treecolumn',
+                    cell: {
+                        tpl: '{text} id:{secondaryId}'
+                    },
+                    flex: 1
+                }, {
+                    itemId: 'colf2',
+                    text: 'Sec. Id.',
+                    dataIndex: 'secondaryId',
+                    flex: 1
+                }]
+            });
+            navModel.setLocation([0, 0]);
+
+            colMap.colf1.showMenu();
+
+            var menu = colMap.colf1.getMenu(),
+                groupByThis = menu.getComponent('groupByThis'),
+                showInGroups = menu.getComponent('showInGroups');
+
+            expect(showInGroups.getHidden()).toBe(true);
+            expect(groupByThis.getHidden()).toBe(true);
+            menu.hide();
+
+            colMap.colf2.showMenu();
+            menu = colMap.colf2.getMenu();
+            groupByThis = menu.getComponent('groupByThis');
+            showInGroups = menu.getComponent('showInGroups');
+
+            expect(showInGroups.getHidden()).toBe(true);
+            expect(groupByThis.getHidden()).toBe(true);
+            menu.hide();
+        });
+    });
 });
