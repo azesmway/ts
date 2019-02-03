@@ -1,24 +1,20 @@
 Ext.define('etp.view.login.Form', {
     extend: 'Ext.form.Panel',
-    xtype: 'loginForm',
 
-    requires: [
-        'Ext.form.Panel',
-        'Ext.field.Text',
-        'Ext.field.Password',
-        'Ext.Button'
-    ],
+    xtype: 'loginForm',
 
     title: 'Вход в систему',
     cls: 'login-form',
     border: true,
+    // bodyBorder: true,
     bodyPadding: 0,
     autoSize: true,
+    shadow: true,
 
     items: [{
         xtype: 'textfield',
-        name: 'login',
-        itemId: 'login',
+        name: 'username',
+        itemId: 'username',
         label: 'Имя пользователя',
         placeholder: 'Имя пользователя',
         required: true
@@ -31,7 +27,7 @@ Ext.define('etp.view.login.Form', {
         required: true
     }],
 
-    buttons: [{
+    bbar: ['->', {
         xtype: 'button',
         text: 'Войти',
         ui: 'action',

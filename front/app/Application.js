@@ -15,6 +15,8 @@ Ext.define('etp.Application', {
         }
     },
 
+    defaultToken: 'home',
+    loginToken: 'login',
     initEtp: false,
 
     controllers: [
@@ -25,9 +27,6 @@ Ext.define('etp.Application', {
         // TODO: add global / shared stores here
     ],
 
-    defaultToken: 'home',
-    loginToken: 'login',
-
     launch: function () {
         var me = this;
 
@@ -36,7 +35,7 @@ Ext.define('etp.Application', {
     },
 
     isLoggedIn: function () {
-        return localStorage.getItem("etpLoggedIn") === '1';
+        return Ext.util.Cookies.get("DomAuthSessId");
     },
 
     onAppUpdate: function () {

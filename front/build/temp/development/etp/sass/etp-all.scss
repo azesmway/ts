@@ -1,5 +1,5 @@
 $app-name:  dynamic( 'etp' );
-$image-search-path: '/Users/azesm/Sites/front/etp/build/development/etp/resources';
+$image-search-path: '/Users/azesm/Sites/ts/front/build/development/etp/resources';
 $theme-name:  dynamic( 'theme-material' );
 $include-ext-abstractcomponent: dynamic(true);;
 $include-ext-abstractmanager: dynamic(true);;
@@ -759,6 +759,7 @@ $include-etp-profile-desktop: dynamic(true);;
 $include-etp-profile-phone: dynamic(true);;
 $include-etp-profile-tablet: dynamic(true);;
 $include-etp-store-personnel: dynamic(true);;
+$include-etp-view-viewportmodel: dynamic(true);;
 $include-etp-view-login-form: dynamic(true);;
 $include-etp-view-login-main: dynamic(true);;
 $include-etp-view-login-maincontroller: dynamic(true);;
@@ -1265,10 +1266,10 @@ $current-resource-root: $default-resource-root;
 $relative-image-path-for-uis: $default-resource-path;
 @import '../../../../../app/view/login/Form';
 
-/* including scss file adjacent to ../../../../../app/view/main_old/List.js */
+/* including scss file adjacent to ../../../../../app/view/main/List.js */
 $default-resource-root: '' !default;
 $default-resource-path: 'images' !default;
 $current-package: false;
 $current-resource-root: $default-resource-root;
 $relative-image-path-for-uis: $default-resource-path;
-@import '../../../../../app/view/main_old/List';
+@import '../../../../../app/view/main/List';

@@ -1,1 +1,1 @@
-cache_path = '/Users/azesm/Sites/front/etp/build/.sass-cache'
+cache_path = '/Users/azesm/Sites/ts/front/build/.sass-cache'
